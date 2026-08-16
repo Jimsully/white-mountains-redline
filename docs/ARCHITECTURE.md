@@ -4,23 +4,39 @@
 - Next.js App Router + TypeScript.
 - MapLibre GL JS for interactive rendering.
 - Server-rendered/indexable trail pages where possible.
-- Client components only for map interaction and optimistic completion toggles.
+- Client components only for map interaction, filters, and optimistic completion toggles.
+- Trail data enters UI through the repository layer; UI components do not import demo data directly.
+
+## Trail repository layer
+`createTrailRepository()` selects a `TrailRepository` adapter:
+
+- `DemoTrailRepository` is the default and keeps the prototype operational without credentials.
+- `SupabaseTrailRepository` is selected only when `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present.
+
+This keeps the app buildable and browsable before a Supabase project exists, while preserving a stable seam for production trail reads.
 
 ## Backend
 - Supabase Auth for accounts.
 - PostgreSQL + PostGIS for trail/activity geometry.
 - Row-level security for private user activity/completion data.
 - Public, read-only verified trail geometry.
+- Public, read-only raw source staging tables for inspection and reconciliation.
 
 ## Data pipeline
 1. Acquire public/open trail linework (USFS as a primary government source; OSM as a reconciliation/enrichment source subject to its license).
-2. Clip to White Mountains project bounds.
-3. Normalize names and source IDs into staging records.
-4. Reconcile geometry against the challenge inventory.
-5. Split trails into stable challenge segments at meaningful junctions/endpoints.
-6. Store source provenance on every segment.
-7. Human-verify before setting `data_status = verified`.
-8. Publish only verified geometry to the production challenge layer.
+2. Store raw source records in `import_batches` and `source_trail_features` with source properties, geometry, import metadata, and reconciliation status.
+3. Clip/filter only for ingestion or review convenience. Do not treat an ingestion envelope as a canonical challenge region.
+4. Normalize names and source IDs into staging records.
+5. Reconcile geometry against the challenge inventory.
+6. Split trails into stable challenge segments at meaningful junctions/endpoints.
+7. Store source provenance on every segment, including raw source feature IDs and manual modification state.
+8. Human-verify before setting `data_status = verified` or `verification_status = human_verified`.
+9. Publish only verified geometry to the production challenge layer.
+
+Authoritative-source geometry is not equivalent to challenge verification. An imported USFS line is raw source evidence until a human review confirms challenge identity, endpoints, and geometry.
+
+## USFS importer
+`npm run data:import:usfs` queries the USDA Forest Service ArcGIS service using pagination and an approximate Franconia/Pemigewasset ingestion envelope. It writes deterministic staging artifacts under `data/staging/usfs/franconia-pemi/` and does not require Supabase credentials.
 
 ## GPX matching v1
 - Parse uploaded GPX to a MultiLineString.
