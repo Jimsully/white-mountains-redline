@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1001,
+      "properties": {
+        "objectid": 1001,
+        "trail_name": "Fixture Ridge Trail",
+        "trail_cn": "TRL-1001",
+        "segment_length": 1.25,
+        "admin_org": "White Mountain National Forest",
+        "managing_org": "USFS",
+        "attributesubset": "TrailNFS_Publish",
+        "trail_class": "3",
+        "trail_type": "Standard/Terra Trail"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-71.7, 44.1], [-71.69, 44.11]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1002,
+      "properties": {
+        "objectid": 1002,
+        "trail_name": "Fixture Brook Trail",
+        "trail_cn": "TRL-1002",
+        "segment_length": "2.5"
+      },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [[[-71.6, 44.0], [-71.59, 44.01]], [[-71.59, 44.01], [-71.58, 44.02]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1003,
+      "properties": {
+        "objectid": 1003,
+        "trail_name": "Bad Polygon"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 0]]]
+      }
+    }
+  ]
+}
