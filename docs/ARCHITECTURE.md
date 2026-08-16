@@ -77,3 +77,10 @@ Keep the interactive app useful without login; require login only to save person
 
 ## Basemap warning
 The scaffold uses OpenStreetMap's standard raster tiles for local development only. Before public launch, select a production-appropriate tile/style provider and comply with its terms and attribution requirements.
+
+## CI and security hardening
+GitHub Actions validates pull requests and pushes to `main` with `npm ci`, `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. The live USFS importer is excluded from CI so tests do not depend on an external service.
+
+Migration 004 restricts `public.load_source_trail_feature_batch(jsonb, jsonb)` execution to `service_role` and keeps it as an invoker-rights function, not `SECURITY DEFINER`. The service-role key is only for controlled server-side/admin import tooling and must never be exposed to browser code or committed.
+
+Migration 004 also makes the intended `public.trail_segment_api` permission explicit: `SELECT` for `anon` and `authenticated`, with mutation privileges revoked.

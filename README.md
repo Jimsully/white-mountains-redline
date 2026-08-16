@@ -87,3 +87,8 @@ Open `prototype/index.html` directly in a browser. This prototype uses only HTML
 
 ## Naming
 "White Mountains Redline" is a working independent name. Do not imply AMC sponsorship or endorsement.
+
+## CI and Security Notes
+GitHub Actions runs `npm ci`, tests, typecheck, lint, and build on pull requests and pushes to `main`. CI intentionally does not run the live USFS importer because validation must not depend on external GIS service availability.
+
+The Supabase service-role key is only for controlled server-side/admin import tooling such as `npm run data:import:usfs -- --load`. It must never be exposed to browser code, committed to the repository, or placed in `NEXT_PUBLIC_*` variables.
