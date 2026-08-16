@@ -8,7 +8,7 @@ Independent White Mountains trail-completion tracker intended to live alongside 
 - Trail repository abstraction with demo and Supabase adapters.
 - Demo trail segment completion toggles, filtering, and progress calculation.
 - Indexable demo trail route.
-- Supabase/PostGIS production schema plus raw source GIS staging schema.
+- Supabase/PostGIS production schema, raw source GIS staging schema, and read-only API projection view.
 - Repeatable USFS ArcGIS importer for a Franconia/Pemigewasset pilot ingestion envelope.
 - Product, architecture, data-model, data-pipeline, IP/data, and roadmap docs.
 - `AGENTS.md` for Codex.
@@ -44,20 +44,32 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-The current Supabase adapter expects public read access to `trail_segments` joined to `trails`, and a GeoJSON projection column or view field named `geom_geojson`.
+The Supabase adapter reads from `public.trail_segment_api`, a read-only projection view created by migration 003. The view joins `trails` and `trail_segments`, exposes LineString coordinates via `ST_AsGeoJSON`, and uses `security_invoker` so base table RLS policies continue to apply. Clients never parse PostGIS WKB/hex.
 
 ## Import raw USFS source data
+Download and write deterministic staging artifacts only:
+
 ```bash
 npm run data:import:usfs
 ```
 
-This uses the ArcGIS query API for the USDA Forest Service National Forest System Trails service and an approximate Franconia/Pemigewasset ingestion envelope. The envelope is not a canonical region boundary.
+Download, write staging artifacts, and load raw source features into Supabase staging tables:
+
+```bash
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+npm run data:import:usfs -- --load
+```
+
+`--load` requires a service-role key in the environment. Do not expose or commit that key. The loader creates an `import_batches` record and upserts `source_trail_features`; it never creates `trails`, never creates `trail_segments`, and never marks source data verified.
+
+The importer uses the ArcGIS query API for the USDA Forest Service National Forest System Trails service and an approximate Franconia/Pemigewasset ingestion envelope. The envelope is not a canonical region boundary.
 
 Generated staging files are written to:
 
 `data/staging/usfs/franconia-pemi/`
 
-Those files are source GIS artifacts only. Review and reconcile them before any production challenge segment is created.
+Those files are broad source GIS artifacts only. Snowmobile, XC, mountain-bike, climbing, and other trail records remain in the raw layer so later reconciliation can decide what belongs in a hiking/redlining challenge dataset.
 
 ## Preview without npm
 Open `prototype/index.html` directly in a browser. This prototype uses only HTML/CSS/JS and contains no real trail geography.

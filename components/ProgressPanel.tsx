@@ -1,29 +1,32 @@
 "use client";
 
 import type { TrailFilters } from "@/lib/trail-filters";
+import { hasActiveTrailFilters } from "@/lib/trail-filters";
 import type { TrailRegion, TrailSegment } from "@/types/trails";
 import { calculateProgress } from "@/lib/progress";
 
 type Props = {
   segments: TrailSegment[];
+  visibleSegments: TrailSegment[];
   selected?: TrailSegment;
   onToggle: (id: string) => void;
   filters: TrailFilters;
   onFiltersChange: (filters: TrailFilters) => void;
   availableRegions: TrailRegion[];
-  totalSegmentCount: number;
 };
 
 export function ProgressPanel({
   segments,
+  visibleSegments,
   selected,
   onToggle,
   filters,
   onFiltersChange,
   availableRegions,
-  totalSegmentCount,
 }: Props) {
   const progress = calculateProgress(segments);
+  const filteredProgress = calculateProgress(visibleSegments);
+  const filtersActive = hasActiveTrailFilters(filters);
 
   return (
     <aside className="panel">
@@ -36,13 +39,18 @@ export function ProgressPanel({
           <strong>{progress.completedMiles.toFixed(1)}</strong>
           <span>/ {progress.totalMiles.toFixed(1)} demo mi</span>
         </div>
-        <div className="progressTrack" aria-label="Mileage progress">
+        <div className="progressTrack" aria-label="Overall mileage progress">
           <div className="progressFill" style={{ width: `${progress.mileagePercent}%` }} />
         </div>
         <div className="progressMeta">
-          <span>{progress.mileagePercent.toFixed(1)}% mileage</span>
-          <span>{progress.completedSegments}/{progress.totalSegments} shown segments</span>
+          <span>{progress.mileagePercent.toFixed(1)}% overall mileage</span>
+          <span>{progress.completedSegments}/{progress.totalSegments} segments</span>
         </div>
+        {filtersActive ? (
+          <div className="filteredProgress">
+            Filtered: {filteredProgress.completedMiles.toFixed(1)} / {filteredProgress.totalMiles.toFixed(1)} mi · {filteredProgress.mileagePercent.toFixed(1)}%
+          </div>
+        ) : null}
       </div>
 
       <div className="notice">
@@ -84,7 +92,7 @@ export function ProgressPanel({
             ))}
           </div>
         </fieldset>
-        <p className="filterCount">Showing {segments.length} of {totalSegmentCount} segments.</p>
+        <p className="filterCount">Showing {visibleSegments.length} of {segments.length} segments.</p>
       </div>
 
       <div className="sectionHeading">Selected segment</div>

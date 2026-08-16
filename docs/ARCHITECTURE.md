@@ -6,6 +6,7 @@
 - Server-rendered/indexable trail pages where possible.
 - Client components only for map interaction, filters, and optimistic completion toggles.
 - Trail data enters UI through the repository layer; UI components do not import demo data directly.
+- Overall progress is calculated from the full loaded challenge/demo dataset. Filters affect map visibility and show secondary filtered progress only.
 
 ## Trail repository layer
 `createTrailRepository()` selects a `TrailRepository` adapter:
@@ -13,7 +14,19 @@
 - `DemoTrailRepository` is the default and keeps the prototype operational without credentials.
 - `SupabaseTrailRepository` is selected only when `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present.
 
-This keeps the app buildable and browsable before a Supabase project exists, while preserving a stable seam for production trail reads.
+This keeps the app buildable and browsable before a Supabase project exists, while preserving a stable contract for production trail reads.
+
+## Supabase API contract
+Migration 003 creates `public.trail_segment_api`, the REST projection used by `SupabaseTrailRepository`.
+
+The view:
+- joins `trail_segments` to `trails`
+- exposes explicit verification/provenance fields
+- exposes LineString coordinates with `ST_AsGeoJSON(...)->'coordinates'`
+- is read-only from the app's perspective
+- uses `security_invoker = true` so RLS policies on base tables apply to view reads
+
+Do not point the REST adapter at raw PostGIS geometry columns or require the client to parse WKB/hex.
 
 ## Backend
 - Supabase Auth for accounts.
@@ -36,7 +49,11 @@ This keeps the app buildable and browsable before a Supabase project exists, whi
 Authoritative-source geometry is not equivalent to challenge verification. An imported USFS line is raw source evidence until a human review confirms challenge identity, endpoints, and geometry.
 
 ## USFS importer
-`npm run data:import:usfs` queries the USDA Forest Service ArcGIS service using pagination and an approximate Franconia/Pemigewasset ingestion envelope. It writes deterministic staging artifacts under `data/staging/usfs/franconia-pemi/` and does not require Supabase credentials.
+`npm run data:import:usfs` queries the USDA Forest Service ArcGIS service using deterministic `objectid ASC` ordering, offset pagination, and the service's `exceededTransferLimit` signal. It writes deterministic staging artifacts under `data/staging/usfs/franconia-pemi/` and does not require Supabase credentials.
+
+`npm run data:import:usfs -- --load` requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It calls the migration-003 staging RPC to create one import batch and upsert raw `source_trail_features`. This mode is staging-only and does not create production trails or trail segments.
+
+The raw source layer intentionally remains broad. Snowmobile, XC, mountain-bike, climbing, and other trail features are not filtered out during ingestion; later reconciliation decides challenge membership.
 
 ## GPX matching v1
 - Parse uploaded GPX to a MultiLineString.

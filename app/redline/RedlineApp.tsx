@@ -41,13 +41,13 @@ export function RedlineApp({ initialSegments }: Props) {
   return (
     <main className="appShell">
       <ProgressPanel
-        segments={visibleSegments}
+        segments={segments}
+        visibleSegments={visibleSegments}
         selected={selected}
         onToggle={toggleSegment}
         filters={filters}
         onFiltersChange={updateFilters}
         availableRegions={availableRegions}
-        totalSegmentCount={segments.length}
       />
       <RedlineMap segments={visibleSegments} selectedId={selectedId} onSelect={selectSegment} />
     </main>

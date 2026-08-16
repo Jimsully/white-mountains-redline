@@ -35,3 +35,7 @@ export function filterTrailSegments(segments: TrailSegment[], filters: TrailFilt
 export function getAvailableRegions(segments: TrailSegment[]) {
   return Array.from(new Set(segments.map((segment) => segment.region))).sort();
 }
+
+export function hasActiveTrailFilters(filters: TrailFilters) {
+  return filters.region !== "all" || filters.completion !== "all" || filters.query.trim().length > 0;
+}

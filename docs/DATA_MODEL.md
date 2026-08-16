@@ -6,7 +6,7 @@ A named trail is not the atomic completion unit. The atomic unit is a **segment*
 ## Raw source data
 `import_batches` records each ingestion run: provider, dataset, URL, requested envelope, requested fields, import timestamp, summary counts, and notes.
 
-`source_trail_features` stores individual source GIS records exactly as source evidence. Each row keeps provider, dataset, source feature ID, source URL/reference, import timestamp, original properties as JSONB, EPSG:4326 geometry, optional region hint, and reconciliation status.
+`source_trail_features` stores individual source GIS records exactly as source evidence. Each row keeps provider, dataset, source feature ID, canonical source URL, optional query URL/record reference, import timestamp, original properties as JSONB, EPSG:4326 geometry, optional region hint, reconciliation status, source length fields, and `gis_miles` when provided.
 
 Raw source features are not production challenge segments. A USFS source line can be authoritative for its own dataset and still be unverified for this product's challenge semantics.
 
@@ -14,7 +14,7 @@ Raw source features are not production challenge segments. A USFS source line ca
 Canonical named route concept: name, slug, region, source/provenance, data status, and verification state.
 
 ## `trail_segments`
-The completion unit: stable segment key, parent trail, miles, LineString geometry, provenance, verification notes/status, and data status.
+The completion unit: stable segment key, parent trail, miles, LineString geometry, provenance, source feature IDs, manual geometry modification flag, verification notes/status, and data status.
 
 A production segment must retain provenance sufficient to answer:
 - Where did this geometry come from?
@@ -23,6 +23,9 @@ A production segment must retain provenance sufficient to answer:
 - When was it reviewed?
 - What is the verification state?
 
+## `trail_segment_api`
+Read-only REST projection for the app repository. It returns application fields plus GeoJSON LineString coordinates derived in SQL. It uses `security_invoker` so RLS on `trails` and `trail_segments` remains authoritative.
+
 ## `activities`
 A user's hike/import: date, title, source, optional GPS geometry, total distance, notes, trip-report URL.
 
@@ -30,7 +33,7 @@ A user's hike/import: date, title, source, optional GPS geometry, total distance
 Join between user and segment. It records completion date, method, linked activity, optional confidence, notes. Unique per user+segment.
 
 ## TypeScript domain concepts
-- `SourceTrailFeature`: raw source GIS feature, original attributes, raw geometry, and reconciliation status.
+- `SourceTrailFeature`: raw source GIS feature, original attributes, raw geometry, source URLs/record refs, and reconciliation status.
 - `Trail`: named route concept after reconciliation.
 - `TrailSegment`: junction-to-junction completion unit with challenge provenance.
 - `DataStatus`: publication/data lifecycle such as `demo`, `unverified`, `verified`, or `retired`.

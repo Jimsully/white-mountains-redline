@@ -74,6 +74,8 @@ export type SourceTrailFeature = {
   sourceDataset: string;
   sourceFeatureId: string;
   sourceUrl: string;
+  sourceQueryUrl?: string;
+  sourceRecordRef?: string;
   importedAt: string;
   originalProperties: Record<string, unknown>;
   geometry: LineString | MultiLineString;
@@ -81,4 +83,5 @@ export type SourceTrailFeature = {
   reconciliationStatus: ReconciliationStatus;
   trailName?: string;
   segmentLength?: number;
+  gisMiles?: number;
 };

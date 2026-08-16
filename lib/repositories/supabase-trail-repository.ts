@@ -1,23 +1,25 @@
 import type { TrailRepository } from "@/lib/repositories/trail-repository";
 import type { DataStatus, TrailRegion, TrailSegment, VerificationStatus } from "@/types/trails";
 
-type SupabaseSegmentRow = {
-  id: number | string;
+type TrailSegmentApiRow = {
+  id: string;
+  slug: string;
   segment_key: string;
   segment_name: string;
   miles: number | string;
   data_status: DataStatus;
-  verification_status?: VerificationStatus;
+  verification_status: VerificationStatus;
   source_label?: string | null;
   source_ref?: string | null;
+  source_feature_ids?: string[] | null;
+  geometry_manually_modified?: boolean | null;
+  reviewed_at?: string | null;
   provenance?: Record<string, unknown> | null;
-  geom_geojson?: { type: "LineString"; coordinates: [number, number][] } | null;
-  trails?: {
-    id: number | string;
-    slug: string;
-    name: string;
-    region: TrailRegion;
-  } | null;
+  trail_id: string;
+  trail_slug: string;
+  trail_name: string;
+  trail_region: TrailRegion;
+  coordinates?: unknown;
 };
 
 export class SupabaseTrailRepository implements TrailRepository {
@@ -28,19 +30,24 @@ export class SupabaseTrailRepository implements TrailRepository {
 
   async listSegments() {
     const params = new URLSearchParams({
-      select: "id,segment_key,segment_name,miles,data_status,verification_status,source_label,source_ref,provenance,geom_geojson,trails(id,slug,name,region)",
+      select: "*",
       order: "segment_name.asc",
     });
-    const rows = await this.fetchRows(`/rest/v1/trail_segments?${params.toString()}`);
-    return rows.map(mapSupabaseSegment).filter((segment): segment is TrailSegment => Boolean(segment));
+    const rows = await this.fetchRows(`/rest/v1/trail_segment_api?${params.toString()}`);
+    return rows.map(mapSupabaseSegmentRow).filter((segment): segment is TrailSegment => Boolean(segment));
   }
 
   async getSegmentBySlug(slug: string) {
-    const segments = await this.listSegments();
-    return segments.find((segment) => segment.slug === slug);
+    const params = new URLSearchParams({
+      select: "*",
+      slug: `eq.${slug}`,
+      limit: "1",
+    });
+    const rows = await this.fetchRows(`/rest/v1/trail_segment_api?${params.toString()}`);
+    return mapSupabaseSegmentRow(rows[0]);
   }
 
-  private async fetchRows(path: string): Promise<SupabaseSegmentRow[]> {
+  private async fetchRows(path: string): Promise<TrailSegmentApiRow[]> {
     const response = await fetch(`${this.supabaseUrl.replace(/\/$/, "")}${path}`, {
       headers: {
         apikey: this.anonKey,
@@ -53,35 +60,62 @@ export class SupabaseTrailRepository implements TrailRepository {
       throw new Error(`Supabase trail query failed: ${response.status} ${response.statusText}`);
     }
 
-    return response.json() as Promise<SupabaseSegmentRow[]>;
+    return response.json() as Promise<TrailSegmentApiRow[]>;
   }
 }
 
-function mapSupabaseSegment(row: SupabaseSegmentRow): TrailSegment | undefined {
-  if (!row.trails || !row.geom_geojson?.coordinates?.length) return undefined;
+export function mapSupabaseSegmentRow(row?: TrailSegmentApiRow): TrailSegment | undefined {
+  if (!row) return undefined;
+  const coordinates = normalizeCoordinates(row.coordinates);
+  if (!coordinates) return undefined;
 
-  const sourceFeatureIds = Array.isArray(row.provenance?.sourceFeatureIds)
-    ? row.provenance.sourceFeatureIds.filter((id): id is string => typeof id === "string")
+  const provenance = row.provenance ?? {};
+  const sourceFeatureIds = Array.isArray(row.source_feature_ids)
+    ? row.source_feature_ids.filter((id): id is string => typeof id === "string")
     : [];
 
   return {
-    id: String(row.id),
-    slug: row.segment_key,
-    trailId: String(row.trails.id),
-    trailName: row.trails.name,
+    id: row.id,
+    slug: row.slug,
+    trailId: row.trail_id,
+    trailName: row.trail_name,
     segmentName: row.segment_name,
-    region: row.trails.region,
+    region: row.trail_region,
     miles: Number(row.miles),
     completed: false,
-    coordinates: row.geom_geojson.coordinates,
+    coordinates,
     dataStatus: row.data_status,
-    verificationStatus: row.verification_status ?? "needs_reconciliation",
+    verificationStatus: row.verification_status,
     provenance: {
-      provider: "other",
-      dataset: row.source_label ?? "Supabase trail_segments",
+      provider: sourceProviderFrom(provenance.provider),
+      dataset: stringFrom(provenance.dataset) ?? row.source_label ?? "Supabase trail_segment_api",
       sourceFeatureIds,
-      sourceUrl: row.source_ref ?? undefined,
-      manuallyModified: Boolean(row.provenance?.manuallyModified),
+      sourceUrl: stringFrom(provenance.sourceUrl) ?? row.source_ref ?? undefined,
+      importedAt: stringFrom(provenance.importedAt),
+      manuallyModified: row.geometry_manually_modified ?? Boolean(provenance.manuallyModified),
+      reviewedAt: row.reviewed_at ?? stringFrom(provenance.reviewedAt),
+      notes: stringFrom(provenance.notes),
     },
   };
+}
+
+function normalizeCoordinates(value: unknown): [number, number][] | undefined {
+  if (!Array.isArray(value) || value.length < 2) return undefined;
+
+  const coordinates = value.filter((coordinate): coordinate is [number, number] => Array.isArray(coordinate)
+    && coordinate.length >= 2
+    && typeof coordinate[0] === "number"
+    && typeof coordinate[1] === "number");
+
+  return coordinates.length === value.length ? coordinates : undefined;
+}
+
+function sourceProviderFrom(value: unknown) {
+  return value === "USFS" || value === "OSM" || value === "manual" || value === "demo" || value === "other"
+    ? value
+    : "other";
+}
+
+function stringFrom(value: unknown) {
+  return typeof value === "string" && value.trim() ? value : undefined;
 }

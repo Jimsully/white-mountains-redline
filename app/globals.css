@@ -54,3 +54,4 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .segmented button:last-child { border-right: 0; }
 .segmented button.active { background: var(--ink); color: white; }
 .filterCount { margin: 0; font-size: 12px; color: var(--muted); }
+.filteredProgress { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }

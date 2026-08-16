@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { demoTrails } from "@/data/demo-trails";
 import { calculateProgress } from "@/lib/progress";
+import { filterTrailSegments, hasActiveTrailFilters } from "@/lib/trail-filters";
 
 describe("calculateProgress", () => {
   it("calculates mileage and segment completion", () => {
@@ -22,5 +23,17 @@ describe("calculateProgress", () => {
       mileagePercent: 0,
       segmentPercent: 0,
     });
+  });
+
+  it("keeps overall progress separate from filtered progress", () => {
+    const filters = { region: "all" as const, query: "North segment", completion: "completed" as const };
+    const visibleSegments = filterTrailSegments(demoTrails, filters);
+    const overall = calculateProgress(demoTrails);
+    const filtered = calculateProgress(visibleSegments);
+
+    expect(hasActiveTrailFilters(filters)).toBe(true);
+    expect(visibleSegments).toHaveLength(1);
+    expect(filtered.mileagePercent).toBe(100);
+    expect(overall.mileagePercent).toBeLessThan(100);
   });
 });

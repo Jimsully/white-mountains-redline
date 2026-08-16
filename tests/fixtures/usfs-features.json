@@ -9,6 +9,7 @@
         "trail_name": "Fixture Ridge Trail",
         "trail_cn": "TRL-1001",
         "segment_length": 1.25,
+        "gis_miles": 1.1,
         "admin_org": "White Mountain National Forest",
         "managing_org": "USFS",
         "attributesubset": "TrailNFS_Publish",
@@ -27,7 +28,8 @@
         "objectid": 1002,
         "trail_name": "Fixture Brook Trail",
         "trail_cn": "TRL-1002",
-        "segment_length": "2.5"
+        "segment_length": "2.5",
+        "gis_miles": "2.25"
       },
       "geometry": {
         "type": "MultiLineString",

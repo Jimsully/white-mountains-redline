@@ -3,6 +3,18 @@ import type { SourceTrailFeature } from "@/types/trails";
 
 export const USFS_TRAILS_SERVICE_URL = "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_TrailNFSPublishWithDataStatus_01/MapServer/0";
 export const USFS_TRAILS_QUERY_URL = `${USFS_TRAILS_SERVICE_URL}/query`;
+export const USFS_REQUESTED_FIELDS = [
+  "objectid",
+  "trail_name",
+  "trail_cn",
+  "segment_length",
+  "gis_miles",
+  "admin_org",
+  "managing_org",
+  "attributesubset",
+  "trail_class",
+  "trail_type",
+] as const;
 export const FRANCONIA_PEMI_STAGING_ENVELOPE = {
   west: -71.95,
   south: 43.75,
@@ -29,6 +41,7 @@ export function normalizeUsfsFeature(
 
   const trailName = stringifyFirst(properties.trail_name, properties.TRAIL_NAME);
   const segmentLength = numberFrom(properties.segment_length ?? properties.SEGMENT_LENGTH);
+  const gisMiles = numberFrom(properties.gis_miles ?? properties.GIS_MILES);
 
   return {
     feature: {
@@ -36,7 +49,9 @@ export function normalizeUsfsFeature(
       sourceProvider: "USFS",
       sourceDataset: "EDW_TrailNFSPublishWithDataStatus_01/MapServer/0",
       sourceFeatureId,
-      sourceUrl: `${USFS_TRAILS_SERVICE_URL}/${sourceFeatureId}`,
+      sourceUrl: USFS_TRAILS_SERVICE_URL,
+      sourceQueryUrl: USFS_TRAILS_QUERY_URL,
+      sourceRecordRef: `objectid=${sourceFeatureId}`,
       importedAt,
       originalProperties: properties,
       geometry,
@@ -44,6 +59,7 @@ export function normalizeUsfsFeature(
       reconciliationStatus: "raw",
       trailName,
       segmentLength,
+      gisMiles,
     },
   };
 }
@@ -52,6 +68,7 @@ export function buildSourceFeatureSummary(features: SourceTrailFeature[], skippe
   const namedFeatures = features.filter((feature) => Boolean(feature.trailName?.trim()));
   const uniqueTrailNames = Array.from(new Set(namedFeatures.map((feature) => feature.trailName?.trim()).filter(Boolean))).sort();
   const totalSourceSegmentLength = features.reduce((sum, feature) => sum + (feature.segmentLength ?? 0), 0);
+  const totalSourceGisMiles = features.reduce((sum, feature) => sum + (feature.gisMiles ?? 0), 0);
 
   return {
     sourceFeatureCount: features.length,
@@ -60,6 +77,7 @@ export function buildSourceFeatureSummary(features: SourceTrailFeature[], skippe
     uniqueTrailNameCount: uniqueTrailNames.length,
     uniqueTrailNames,
     totalSourceSegmentLength,
+    totalSourceGisMiles,
     malformedOrSkippedFeatureCount: skippedFeatures.length,
     skippedFeatures,
   };
