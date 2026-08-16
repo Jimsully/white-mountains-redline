@@ -1,13 +1,16 @@
-import { demoTrails } from "@/data/demo-trails";
+import { createTrailRepository } from "@/lib/repositories";
 import { notFound } from "next/navigation";
 
-export function generateStaticParams() {
-  return demoTrails.map((trail) => ({ slug: trail.slug }));
+export async function generateStaticParams() {
+  const repository = createTrailRepository();
+  const segments = await repository.listSegments();
+  return segments.map((trail) => ({ slug: trail.slug }));
 }
 
 export default async function TrailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const trail = demoTrails.find((item) => item.slug === slug);
+  const repository = createTrailRepository();
+  const trail = await repository.getSegmentBySlug(slug);
   if (!trail) notFound();
 
   return (

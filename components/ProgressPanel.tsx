@@ -1,16 +1,32 @@
 "use client";
 
-import type { TrailSegment } from "@/types/trails";
+import type { TrailFilters } from "@/lib/trail-filters";
+import { hasActiveTrailFilters } from "@/lib/trail-filters";
+import type { TrailRegion, TrailSegment } from "@/types/trails";
 import { calculateProgress } from "@/lib/progress";
 
 type Props = {
   segments: TrailSegment[];
+  visibleSegments: TrailSegment[];
   selected?: TrailSegment;
   onToggle: (id: string) => void;
+  filters: TrailFilters;
+  onFiltersChange: (filters: TrailFilters) => void;
+  availableRegions: TrailRegion[];
 };
 
-export function ProgressPanel({ segments, selected, onToggle }: Props) {
+export function ProgressPanel({
+  segments,
+  visibleSegments,
+  selected,
+  onToggle,
+  filters,
+  onFiltersChange,
+  availableRegions,
+}: Props) {
   const progress = calculateProgress(segments);
+  const filteredProgress = calculateProgress(visibleSegments);
+  const filtersActive = hasActiveTrailFilters(filters);
 
   return (
     <aside className="panel">
@@ -23,17 +39,60 @@ export function ProgressPanel({ segments, selected, onToggle }: Props) {
           <strong>{progress.completedMiles.toFixed(1)}</strong>
           <span>/ {progress.totalMiles.toFixed(1)} demo mi</span>
         </div>
-        <div className="progressTrack" aria-label="Mileage progress">
+        <div className="progressTrack" aria-label="Overall mileage progress">
           <div className="progressFill" style={{ width: `${progress.mileagePercent}%` }} />
         </div>
         <div className="progressMeta">
-          <span>{progress.mileagePercent.toFixed(1)}% mileage</span>
+          <span>{progress.mileagePercent.toFixed(1)}% overall mileage</span>
           <span>{progress.completedSegments}/{progress.totalSegments} segments</span>
         </div>
+        {filtersActive ? (
+          <div className="filteredProgress">
+            Filtered: {filteredProgress.completedMiles.toFixed(1)} / {filteredProgress.totalMiles.toFixed(1)} mi · {filteredProgress.mileagePercent.toFixed(1)}%
+          </div>
+        ) : null}
       </div>
 
       <div className="notice">
         Prototype data only. Trail geometry is deliberately simplified and must not be used for navigation.
+      </div>
+
+      <div className="sectionHeading">Filters</div>
+      <div className="filters" aria-label="Trail filters">
+        <label>
+          <span>Search</span>
+          <input
+            value={filters.query}
+            onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
+            placeholder="Trail or segment"
+          />
+        </label>
+        <label>
+          <span>Region</span>
+          <select
+            value={filters.region}
+            onChange={(event) => onFiltersChange({ ...filters, region: event.target.value as TrailFilters["region"] })}
+          >
+            <option value="all">All regions</option>
+            {availableRegions.map((region) => <option key={region} value={region}>{region}</option>)}
+          </select>
+        </label>
+        <fieldset>
+          <legend>Completion</legend>
+          <div className="segmented">
+            {(["all", "completed", "incomplete"] as const).map((completion) => (
+              <button
+                key={completion}
+                type="button"
+                className={filters.completion === completion ? "active" : ""}
+                onClick={() => onFiltersChange({ ...filters, completion })}
+              >
+                {completion === "all" ? "All" : completion === "completed" ? "Done" : "Open"}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <p className="filterCount">Showing {visibleSegments.length} of {segments.length} segments.</p>
       </div>
 
       <div className="sectionHeading">Selected segment</div>
@@ -49,14 +108,14 @@ export function ProgressPanel({ segments, selected, onToggle }: Props) {
           <p>{selected.segmentName}</p>
           <dl>
             <div><dt>Region</dt><dd>{selected.region}</dd></div>
-            <div><dt>Gain</dt><dd>{selected.elevationGainFt?.toLocaleString() ?? "—"} ft</dd></div>
+            <div><dt>Gain</dt><dd>{selected.elevationGainFt?.toLocaleString() ?? "-"} ft</dd></div>
           </dl>
           <button onClick={() => onToggle(selected.id)}>
             {selected.completed ? "Mark unfinished" : "Mark completed"}
           </button>
         </div>
       ) : (
-        <p className="muted">Click a trail segment on the map.</p>
+        <p className="muted">No visible segment matches the current filters.</p>
       )}
     </aside>
   );
