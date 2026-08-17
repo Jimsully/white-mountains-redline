@@ -1,4 +1,4 @@
-# AGENTS.md — White Mountains Redline
+# AGENTS.md - White Mountains Redline
 
 ## Mission
 Build an independent, excellent White Mountains trail-completion tracker for jamesscottsullivan.com. It is a redlining/progress product first, not a general-purpose navigation app.
@@ -14,19 +14,20 @@ Build an independent, excellent White Mountains trail-completion tracker for jam
 8. Mobile usability is a first-class requirement.
 9. Do not commit guide-derived challenge inventories. Use `data/local/challenge-inventory/` for private local inventory inputs.
 10. Accepted reconciliation is not a verified trail segment.
+11. Proposed or accepted segment-construction candidates are not published completion segments.
 
 ## Current stack
 - Next.js App Router / TypeScript
 - MapLibre GL JS
 - Supabase/Postgres/PostGIS (schema in `supabase/migrations`)
-- Local CSV/JSON reconciliation tooling for challenge-inventory review
+- Local CSV/JSON reconciliation and segment-construction tooling for admin review
 
 ## Working style
-- Before large changes, read `docs/PRODUCT_SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, and `docs/RECONCILIATION.md` when present.
+- Before large changes, read `docs/PRODUCT_SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/DATA_PIPELINE.md`, and `docs/RECONCILIATION.md` when present.
 - Prefer small, reviewable commits.
-- Add tests for geometry/progress/reconciliation logic when a test framework is introduced.
+- Add tests for geometry/progress/reconciliation/segment-construction logic when a test framework is introduced.
 - Do not invent source trail facts. Add placeholders marked `demo`/`unverified` instead.
 - Keep accessibility: keyboard reachable controls, adequate target sizes, labels, reduced-motion friendly transitions.
 
 ## Current Codex task focus
-Milestone 2 builds the challenge-inventory reconciliation workspace without committing a real guide-derived inventory and without creating verified completion segments.
+Milestone 3 builds proposed topology/junction-to-junction segment construction from accepted demo reconciliation evidence without publishing verified production trail segments.

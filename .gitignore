@@ -12,3 +12,4 @@ tsconfig.tsbuildinfo
 data/local/challenge-inventory/*
 !data/local/challenge-inventory/.gitkeep
 data/generated/reconciliation/*.local.*
+data/generated/segments/*.local.*

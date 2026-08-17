@@ -112,3 +112,10 @@ Migration 005 adds tables for future persisted reconciliation:
 - `reconciliation_decisions`
 
 Public app users do not have mutation access. These tables are for controlled admin/review workflows.
+
+## Segment construction handoff
+Milestone 3 consumes only accepted reconciliation decisions as `AcceptedTrailSource` inputs for topology construction. This handoff still does not create verified production segments.
+
+Accepted reconciliation != verified segment. Proposed junction != verified junction. Accepted segment-construction candidate != published completion segment.
+
+See `docs/SEGMENT_CONSTRUCTION.md` for the junction/segment candidate lifecycle.

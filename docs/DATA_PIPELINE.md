@@ -85,3 +85,34 @@ redline completion network
 A real challenge inventory must be supplied from an ignored local path such as `data/local/challenge-inventory/`. Committed reconciliation artifacts must use demo/test inventory data only.
 
 Accepted reconciliation is not a verified trail segment.
+
+## 10. Segment construction
+Milestone 3 inserts a topology construction stage after accepted trail-level reconciliation and before production Trail/TrailSegment publishing:
+
+```text
+raw source feature
+    ->
+source trail group
+    ->
+challenge inventory item
+    ->
+accepted trail-level reconciliation
+    ->
+accepted trail source geometry
+    ->
+junction candidates
+    ->
+segment candidates
+    ->
+human topology review
+    ->
+approved segment construction
+    ->
+production Trail / TrailSegments
+    ->
+human segment verification
+    ->
+completion network
+```
+
+The builder uses explicit meter tolerances, records provenance, and emits proposed candidates with review status. It does not publish verified trail segments automatically.

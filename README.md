@@ -106,3 +106,16 @@ npm run data:reconcile -- --inventory data/demo/challenge-inventory.demo.csv
 ```
 
 Accepted reconciliation is not a verified trail segment. It is only a trail-level review decision; production Trail and junction-to-junction TrailSegment creation come later.
+
+## Segment Construction
+Milestone 3 adds proposed topology construction from accepted reconciliation decisions. It does not create verified production `TrailSegment` records.
+
+Run the demo segment build:
+
+```bash
+npm run data:segments:build -- --reconciliation data/generated/reconciliation/demo-reconciliation.json --decisions data/demo/reconciliation-decisions.demo.json
+```
+
+Open `/admin/segments` in development to review demo junction and segment candidates. Private segment artifacts may be loaded only with server-side `SEGMENT_CONSTRUCTION_ARTIFACT_PATH` during local development; production loading is blocked until authenticated admin access exists.
+
+Accepted reconciliation != verified segment. Proposed junction != verified junction. Accepted segment-construction candidate != published completion segment.
