@@ -92,3 +92,7 @@ Private artifact loading is blocked in production until authenticated admin acce
 `SEGMENT CONSTRUCTION WORKSPACE * NOT FOR NAVIGATION * NOT SEGMENT VERIFIED`
 
 Prototype decisions remain in localStorage and can be exported as `segment-construction-decisions.prototype.json`. Exported decisions do not publish production segments. The builder runs a topology integrity validator and fails before writing an artifact when hard invariants are violated.
+
+## Activity Matching
+
+Milestone 4 adds a local, review-first activity matching layer after segment construction: approved canonical matching segments plus historical GPS activity traces produce algorithmic match candidates and human-reviewed completion evidence. GPS traces are evidence, not canonical geometry; strong candidates are not completions; accepted evidence is not a production SegmentCompletion row. See docs/ACTIVITY_MATCHING.md.

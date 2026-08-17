@@ -116,3 +116,8 @@ completion network
 ```
 
 The builder uses explicit meter tolerances, records provenance, and emits proposed candidates with review status. It does not publish verified trail segments automatically.
+
+
+## Activity Matching
+
+Milestone 4 adds a local, review-first activity matching layer after segment construction: approved canonical matching segments plus historical GPS activity traces produce algorithmic match candidates and human-reviewed completion evidence. GPS traces are evidence, not canonical geometry; strong candidates are not completions; accepted evidence is not a production SegmentCompletion row. See docs/ACTIVITY_MATCHING.md.

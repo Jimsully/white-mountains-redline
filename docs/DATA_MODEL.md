@@ -70,3 +70,8 @@ Milestone 3 adds segment-construction concepts separate from production `TrailSe
 - `SegmentReviewDecision`: prototype review decision for a junction or segment candidate.
 
 These records are review artifacts. They are not production `trails`, not production `trail_segments`, and not human-verified completion units.
+
+
+## Activity Matching
+
+Milestone 4 adds a local, review-first activity matching layer after segment construction: approved canonical matching segments plus historical GPS activity traces produce algorithmic match candidates and human-reviewed completion evidence. GPS traces are evidence, not canonical geometry; strong candidates are not completions; accepted evidence is not a production SegmentCompletion row. See docs/ACTIVITY_MATCHING.md.

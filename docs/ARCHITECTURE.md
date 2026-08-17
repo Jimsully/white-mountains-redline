@@ -125,3 +125,8 @@ raw source feature
 ```
 
 Accepted reconciliation is not a verified segment. A proposed junction is not a verified junction. An accepted segment-construction candidate is not a published completion segment.
+
+
+## Activity Matching
+
+Milestone 4 adds a local, review-first activity matching layer after segment construction: approved canonical matching segments plus historical GPS activity traces produce algorithmic match candidates and human-reviewed completion evidence. GPS traces are evidence, not canonical geometry; strong candidates are not completions; accepted evidence is not a production SegmentCompletion row. See docs/ACTIVITY_MATCHING.md.

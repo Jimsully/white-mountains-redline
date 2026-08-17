@@ -30,4 +30,4 @@ Build an independent, excellent White Mountains trail-completion tracker for jam
 - Keep accessibility: keyboard reachable controls, adequate target sizes, labels, reduced-motion friendly transitions.
 
 ## Current Codex task focus
-Milestone 3 builds proposed topology/junction-to-junction segment construction from accepted demo reconciliation evidence without publishing verified production trail segments.
+Milestone 4 builds historical GPS activity-to-segment evidence matching from explicitly accepted prototype segment-construction candidates without marking completions.
