@@ -58,3 +58,30 @@ Human verification confirms challenge identity, endpoints, geometry, and provena
 
 ## 8. Public production layer
 Only verified production challenge segments should be presented as part of the public completion layer. Demo geometry and raw source GIS must remain visibly marked as not for navigation and not challenge verified.
+
+## 9. Trail-level reconciliation
+Milestone 2 inserts an explicit trail-level reconciliation stage before production Trail creation:
+
+```text
+raw USFS source feature
+    ↓
+source trail group
+    ↓
+challenge inventory item
+    ↓
+reconciliation candidate
+    ↓
+human accepted trail-level match
+    ↓
+production Trail
+    ↓
+junction-to-junction TrailSegments
+    ↓
+human segment verification
+    ↓
+redline completion network
+```
+
+A real challenge inventory must be supplied from an ignored local path such as `data/local/challenge-inventory/`. Committed reconciliation artifacts must use demo/test inventory data only.
+
+Accepted reconciliation is not a verified trail segment.

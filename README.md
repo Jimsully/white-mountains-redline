@@ -92,3 +92,17 @@ Open `prototype/index.html` directly in a browser. This prototype uses only HTML
 GitHub Actions runs `npm ci`, tests, typecheck, lint, and build on pull requests and pushes to `main`. CI intentionally does not run the live USFS importer because validation must not depend on external GIS service availability.
 
 The Supabase service-role key is only for controlled server-side/admin import tooling such as `npm run data:import:usfs -- --load`. It must never be exposed to browser code, committed to the repository, or placed in `NEXT_PUBLIC_*` variables.
+
+## Challenge Inventory Reconciliation
+Milestone 2 adds private inventory validation, deterministic source grouping/matching, and an admin review workspace at `/admin/reconciliation`.
+
+Real guide-derived inventory files must stay local under `data/local/challenge-inventory/` and are ignored by git. The committed demo inventory is demo data only and is not a White Mountain Guide inventory.
+
+Run the demo reconciliation:
+
+```bash
+npm run data:inventory:validate -- data/demo/challenge-inventory.demo.csv
+npm run data:reconcile -- --inventory data/demo/challenge-inventory.demo.csv
+```
+
+Accepted reconciliation is not a verified trail segment. It is only a trail-level review decision; production Trail and junction-to-junction TrailSegment creation come later.
