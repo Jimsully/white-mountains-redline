@@ -87,7 +87,7 @@ The CLI validates the inventory, loads committed staged USFS source data, groups
 Demo output may be committed only when the input inventory path is under `data/demo/`. A filename ending in `.demo.csv` somewhere else is still private. Real local inventory-derived output is written as `*.local.*`, ignored, and records `local/private inventory path omitted` instead of the original absolute path.
 
 ## Review workspace
-Open `/admin/reconciliation` in development. By default it loads the committed demo reconciliation artifact. To review a private local artifact, set the server-only `RECONCILIATION_ARTIFACT_PATH` environment variable before starting Next.js; do not use `NEXT_PUBLIC_*` for this path.
+Open `/admin/reconciliation` in development. By default it loads the committed demo reconciliation artifact. To review a private local artifact, set the server-only `RECONCILIATION_ARTIFACT_PATH` environment variable before starting Next.js; do not use `NEXT_PUBLIC_*` for this path. Private artifacts are local-development only until authenticated admin access exists. If `RECONCILIATION_ARTIFACT_PATH` is configured while `NODE_ENV=production`, the page fails safely with `Private reconciliation artifacts are local-development only until authenticated admin access is implemented.` rather than falling back to demo.
 
 PowerShell example:
 

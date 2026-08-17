@@ -3,12 +3,10 @@
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 
-const shim = path.resolve(__dirname, "tsx-windows-shim.cjs").replace(/\\/g, "/");
-const cli = path.resolve(__dirname, "..", "node_modules", "tsx", "dist", "cli.cjs");
-const existingOptions = process.env.NODE_OPTIONS ? `${process.env.NODE_OPTIONS} ` : "";
-const result = spawnSync(process.execPath, [cli, ...process.argv.slice(2)], {
+const shim = path.resolve(__dirname, "tsx-windows-shim.cjs");
+const result = spawnSync(process.execPath, ["--require", shim, "--import", "tsx", ...process.argv.slice(2)], {
   stdio: "inherit",
-  env: { ...process.env, NODE_OPTIONS: `${existingOptions}--require=${shim}` },
+  env: process.env,
 });
 
 if (result.error) {

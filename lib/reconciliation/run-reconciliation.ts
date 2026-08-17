@@ -21,16 +21,17 @@ export type ReconciliationRunResult = {
 
 export function runReconciliation(options: ReconciliationRunOptions): ReconciliationRunResult {
   const repositoryRoot = options.repositoryRoot ?? process.cwd();
-  const inventoryPath = path.resolve(repositoryRoot, options.inventoryPath);
+  const inventoryPath = path.isAbsolute(options.inventoryPath) ? path.resolve(options.inventoryPath) : path.resolve(repositoryRoot, options.inventoryPath);
   const demoOnly = isDemoInventoryPath(inventoryPath, repositoryRoot);
+  const outputPath = getReconciliationOutputPath(inventoryPath, repositoryRoot, options.timestamp);
+  const generatedAt = options.generatedAt ?? getDefaultGeneratedAt(outputPath, demoOnly);
   const csv = fs.readFileSync(inventoryPath, "utf8");
   const source = JSON.parse(fs.readFileSync(path.resolve(repositoryRoot, SOURCE_PATH), "utf8")) as { features?: SourceTrailFeature[] };
   const features = source.features ?? [];
-  const artifact = buildReconciliationArtifact(csv, features, options.generatedAt ?? new Date().toISOString(), demoOnly);
+  const artifact = buildReconciliationArtifact(csv, features, generatedAt, demoOnly);
   artifact.metadata.inventoryPath = formatInventoryPathForArtifact(inventoryPath, repositoryRoot);
   artifact.sourceTrailGroups = sourceTrailGroupsReferencedByCandidates(artifact);
 
-  const outputPath = getReconciliationOutputPath(inventoryPath, repositoryRoot, options.timestamp);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(artifact)}\n`);
   return { artifact, outputPath };
@@ -46,6 +47,18 @@ export function printReconciliationSummary(result: ReconciliationRunResult) {
   console.log(`Source feature count: ${artifact.metadata.sourceFeatureCount}`);
   console.log(`Source trail groups: ${artifact.summary.sourceTrailGroupCount}`);
   console.log(`Output: ${path.relative(process.cwd(), outputPath)}`);
+}
+
+function getDefaultGeneratedAt(outputPath: string, demoOnly: boolean) {
+  if (demoOnly && fs.existsSync(outputPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(outputPath, "utf8")) as Partial<ReconciliationArtifact>;
+      if (typeof existing.metadata?.generatedAt === "string") return existing.metadata.generatedAt;
+    } catch {
+      return new Date().toISOString();
+    }
+  }
+  return new Date().toISOString();
 }
 
 function sourceTrailGroupsReferencedByCandidates(artifact: ReconciliationArtifact): SourceTrailGroup[] {
