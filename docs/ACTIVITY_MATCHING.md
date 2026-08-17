@@ -62,3 +62,7 @@ Artifact-level ignoredActivityEdgeCount counts unique ignored activity edges onc
 Match evidence keeps both awActivityTraceLengthMeters and 	rustedActivityEvidenceLengthMeters; raw length may include GPS gaps that were not used as continuous traversal evidence.
 
 Private generated and loaded artifacts redact filesystem provenance from activity sourceMetadata, including obvious Windows/POSIX absolute paths and nested path-like metadata keys, while preserving ordinary safe metadata.
+
+## Verified Network Input
+Activity matching can now run from data/generated/publication/demo-verified-network.json with --verified-network. This keeps GPS evidence downstream of the publication gate. Matching still creates evidence candidates only; it never creates completions.
+

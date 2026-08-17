@@ -42,3 +42,7 @@
 - Cluster by access/junction proximity.
 - Estimate efficient candidate outings.
 - Add user filters for mileage/elevation/time.
+
+## Milestone 5
+Adds the verified publication gate, deterministic demo verified-network artifact, read-only public verified Supabase projection, and service-role-only production publication loader. Completion records remain future work.
+

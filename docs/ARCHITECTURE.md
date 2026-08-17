@@ -134,3 +134,7 @@ Milestone 4 adds a local, review-first activity matching layer after segment con
 Activity matching hardening: GPS edges beyond maximumInterpolatedActivityEdgeMeters are evidence gaps, separate activity components cannot combine into strong evidence, bbox matching is meter-aware, and source activity IDs dominate stable activity identity. See docs/ACTIVITY_MATCHING.md.
 
 Milestone 4 final hardening stores explicit per-component componentEvidence, requires estStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
+
+## Publication Boundary
+The public trail repository consumes TrailSegment-shaped records. Demo mode now adapts the committed verified network artifact into that shape, while Supabase reads from 	rail_segment_api, which is hardened to verified human-reviewed records only.
+

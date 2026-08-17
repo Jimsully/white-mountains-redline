@@ -271,7 +271,8 @@ function validateApprovalEvidence(segment: EligibleMatchingSegment, errors: stri
     errors.push(`Eligible segment ${segment.segmentKey} is missing approval evidence.`);
     return;
   }
-  if (evidence.segmentDecision.targetType !== "segment" || evidence.segmentDecision.targetKey !== segment.segmentKey || evidence.segmentDecision.decision !== "accepted") errors.push(`Eligible segment ${segment.segmentKey} is missing an accepted segment decision.`);
+  const acceptedSegmentKeys = new Set([segment.segmentKey, segment.sourceSegmentCandidate.key]);
+  if (evidence.segmentDecision.targetType !== "segment" || !acceptedSegmentKeys.has(evidence.segmentDecision.targetKey) || evidence.segmentDecision.decision !== "accepted") errors.push(`Eligible segment ${segment.segmentKey} is missing an accepted segment decision.`);
   if (evidence.startJunctionDecision.targetType !== "junction" || evidence.startJunctionDecision.targetKey !== segment.startJunctionKey || evidence.startJunctionDecision.decision !== "accepted") errors.push(`Eligible segment ${segment.segmentKey} is missing an accepted start-junction decision.`);
   if (evidence.endJunctionDecision.targetType !== "junction" || evidence.endJunctionDecision.targetKey !== segment.endJunctionKey || evidence.endJunctionDecision.decision !== "accepted") errors.push(`Eligible segment ${segment.segmentKey} is missing an accepted end-junction decision.`);
   if (evidence.decisionArtifactAlgorithmVersion !== segment.segmentConstructionAlgorithmVersion) errors.push(`Eligible segment ${segment.segmentKey} approval decision version does not match segment construction version.`);
@@ -316,3 +317,4 @@ function validateComponentEvidence(matchKey: string, component: ComponentMatchEv
   if (!values.every((value) => Number.isFinite(value))) errors.push(`Match ${matchKey} has non-finite component evidence.`);
   if (component.coverageRatio < 0 || component.coverageRatio > 1 || component.longestUncoveredGapRatio < 0 || component.longestUncoveredGapRatio > 1) errors.push(`Match ${matchKey} has component ratios outside 0..1.`);
 }
+

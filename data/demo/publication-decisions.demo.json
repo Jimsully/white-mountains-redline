@@ -1,0 +1,77 @@
+{
+  "exportedAt": "2026-08-17T00:00:00.000Z",
+  "warning": "DEMO DATA ONLY. Publication decisions mark demo topology candidates as verified publication fixtures only; not AMC data, not navigation, and not user completion.",
+  "algorithmVersion": "publication-v1",
+  "sourceArtifact": {
+    "generatedAt": "2026-08-17T00:59:29.631Z",
+    "demoOnly": true,
+    "algorithmVersion": "segment-construction-v1"
+  },
+  "sourceSegmentDecisions": {
+    "exportedAt": "2026-08-17T00:00:00.000Z",
+    "algorithmVersion": "segment-construction-v1",
+    "sourceArtifact": {
+      "generatedAt": "2026-08-17T00:59:29.631Z",
+      "demoOnly": true,
+      "algorithmVersion": "segment-construction-v1"
+    }
+  },
+  "decisions": [
+    {
+      "targetType": "trail",
+      "targetKey": "candidate_trail_470a11f134de9ca8",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "trail",
+      "targetKey": "candidate_trail_da91901d4d7afe9b",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "trail",
+      "targetKey": "candidate_trail_5bf8c8147315c59e",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_202ad19dd3bcc9f5",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_7fa885048f35931b",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_bbbb1da407bd1281",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_dd8204c0e42510eb",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    }
+  ]
+}

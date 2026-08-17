@@ -87,3 +87,7 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .activityShell { min-height: 100vh; background: var(--paper); color: var(--ink); }
 .activityGrid { display: grid; grid-template-columns: 340px minmax(380px, 1fr) 420px; min-height: calc(100vh - 116px); }
 @media (max-width: 980px) { .activityGrid { grid-template-columns: 1fr; } }
+
+.publicationShell { min-height: 100vh; background: var(--paper); color: var(--ink); }
+.publicationGrid { display: grid; grid-template-columns: 340px minmax(380px, 1fr) 420px; min-height: calc(100vh - 116px); }
+@media (max-width: 980px) { .publicationGrid { grid-template-columns: 1fr; } }
