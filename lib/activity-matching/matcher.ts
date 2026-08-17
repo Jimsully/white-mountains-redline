@@ -1,19 +1,11 @@
 import crypto from "node:crypto";
 import type { MultiLineString, Position } from "geojson";
-import type { ActivityMatchArtifact, ActivityMatchingConfig, ActivityRecord, EligibleMatchingSegment, SegmentMatchCandidate, SegmentMatchClassification, SegmentMatchEvidence } from "@/types/activity-matching";
+import type { ActivityMatchArtifact, ActivityMatchingConfig, ActivityRecord, ComponentMatchEvidence, EligibleMatchingSegment, SegmentMatchCandidate, SegmentMatchClassification, SegmentMatchEvidence } from "@/types/activity-matching";
 import { ACTIVITY_MATCHING_ALGORITHM_VERSION } from "@/types/activity-matching";
 import { DEFAULT_ACTIVITY_MATCHING_CONFIG } from "@/lib/activity-matching/config";
 import { bboxForCoordinates, bboxForMultiLine, expandedBboxIntersects, longestFalseRun, median, minDistanceToTrace, multiLineLengthMeters, percentile, sampleLine } from "@/lib/activity-matching/geometry";
+import { buildTrustedActivityTraceEvidence, type TrustedActivityTraceEvidence } from "@/lib/activity-matching/trusted-trace";
 import { distanceMeters, lineLengthMeters, round } from "@/lib/segment-construction/geometry";
-
-type TraceEvidence = {
-  componentLines: Position[][][];
-  componentPoints: Position[][];
-  allLines: Position[][];
-  allPoints: Position[];
-  pointGapsMeters: number[];
-  ignoredLongActivityEdgeCount: number;
-};
 
 export function buildActivityMatchArtifact(args: {
   activities: ActivityRecord[];
@@ -27,6 +19,7 @@ export function buildActivityMatchArtifact(args: {
   integrityWarnings?: string[];
 }): ActivityMatchArtifact {
   const config = args.config ?? DEFAULT_ACTIVITY_MATCHING_CONFIG;
+  const trustedByActivity = new Map(args.activities.map((activity) => [activity.activityKey, buildTrustedActivityTraceEvidence(activity.trace.geometry, config.maximumInterpolatedActivityEdgeMeters)]));
   const matchCandidates: SegmentMatchCandidate[] = [];
   let pairsConsidered = 0;
   let bboxRejectedPairs = 0;
@@ -34,15 +27,16 @@ export function buildActivityMatchArtifact(args: {
 
   for (const activity of args.activities) {
     const activityBbox = safeActivityBbox(activity.trace.geometry);
+    const traceEvidence = trustedByActivity.get(activity.activityKey);
     for (const segment of args.eligibleSegments) {
       pairsConsidered += 1;
       const segmentBbox = bboxForCoordinates(segment.geometry.coordinates);
-      if (!activityBbox || !expandedBboxIntersects(segmentBbox, activityBbox, config.candidateSearchRadiusMeters)) {
+      if (!activityBbox || !traceEvidence || !expandedBboxIntersects(segmentBbox, activityBbox, config.candidateSearchRadiusMeters)) {
         bboxRejectedPairs += 1;
         continue;
       }
       fullyScoredPairs += 1;
-      matchCandidates.push(scoreSegmentActivityPair(activity, segment, activityBbox, segmentBbox, config));
+      matchCandidates.push(scoreSegmentActivityPair(activity, segment, activityBbox, segmentBbox, config, traceEvidence));
     }
   }
 
@@ -61,7 +55,7 @@ export function buildActivityMatchArtifact(args: {
     unmatchedActivityCount: args.activities.length - candidateActivityKeys.size,
     activitiesWithCandidateCount: candidateActivityKeys.size,
     segmentsWithCandidateCount: candidateSegmentKeys.size,
-    ignoredLongActivityEdgeCount: matchCandidates.reduce((sum, match) => sum + match.evidence.ignoredLongActivityEdgeCount, 0),
+    ignoredActivityEdgeCount: [...trustedByActivity.values()].reduce((sum, trace) => sum + trace.ignoredLongActivityEdgeCount, 0),
     componentDiscontinuityBlockedStrongCount: matchCandidates.filter((match) => match.evidence.blockedStrongByComponentDiscontinuity).length,
     integrityWarnings: args.integrityWarnings ?? [],
     integrityErrors: [] as string[],
@@ -88,9 +82,8 @@ export function buildActivityMatchArtifact(args: {
   return artifact;
 }
 
-export function scoreSegmentActivityPair(activity: ActivityRecord, segment: EligibleMatchingSegment, activityBbox: [number, number, number, number], segmentBbox: [number, number, number, number], config: ActivityMatchingConfig): SegmentMatchCandidate {
+export function scoreSegmentActivityPair(activity: ActivityRecord, segment: EligibleMatchingSegment, activityBbox: [number, number, number, number], segmentBbox: [number, number, number, number], config: ActivityMatchingConfig, traceEvidence = buildTrustedActivityTraceEvidence(activity.trace.geometry, config.maximumInterpolatedActivityEdgeMeters)): SegmentMatchCandidate {
   const samples = sampleLine(segment.geometry.coordinates, config.coverageSampleIntervalMeters);
-  const traceEvidence = buildTraceEvidence(activity.trace.geometry, config.maximumInterpolatedActivityEdgeMeters);
   const sampleDistances = samples.map((sample) => minDistanceToEvidence(sample, traceEvidence.allLines, traceEvidence.allPoints));
   const covered = sampleDistances.map((distance) => distance.distanceMeters <= config.matchedPointToleranceMeters);
   const coveredSampleCount = covered.filter(Boolean).length;
@@ -102,19 +95,15 @@ export function scoreSegmentActivityPair(activity: ActivityRecord, segment: Elig
   const startJunctionDistanceMeters = minDistanceToEvidence(start, traceEvidence.allLines, traceEvidence.allPoints).distanceMeters;
   const endJunctionDistanceMeters = minDistanceToEvidence(end, traceEvidence.allLines, traceEvidence.allPoints).distanceMeters;
   const longestUncoveredRunSamples = longestFalseRun(covered);
-  const componentCoverage = traceEvidence.componentLines.map((lines, index) => {
-    const points = traceEvidence.componentPoints[index] ?? [];
-    const componentCovered = samples.filter((sample) => minDistanceToEvidence(sample, lines, points).distanceMeters <= config.matchedPointToleranceMeters).length;
-    const startDistance = minDistanceToEvidence(start, lines, points).distanceMeters;
-    const endDistance = minDistanceToEvidence(end, lines, points).distanceMeters;
-    return { ratio: round(samples.length ? componentCovered / samples.length : 0, 4), startDistance, endDistance };
-  });
-  const best = componentCoverage.reduce<{ ratio: number; startDistance: number; endDistance: number; index?: number }>((bestCandidate, candidate, index) => candidate.ratio > bestCandidate.ratio ? { ...candidate, index } : bestCandidate, { ratio: 0, startDistance: Number.POSITIVE_INFINITY, endDistance: Number.POSITIVE_INFINITY });
-  const singleComponentReachesBothEndpoints = componentCoverage.some((component) => component.startDistance <= config.endpointToleranceMeters && component.endDistance <= config.endpointToleranceMeters);
+  const componentEvidence = buildComponentEvidence(samples, start, end, traceEvidence, config);
+  const bestByCoverage = componentEvidence.reduce<ComponentMatchEvidence | undefined>((best, candidate) => !best || candidate.coverageRatio > best.coverageRatio ? candidate : best, undefined);
+  const bestStrongComponent = componentEvidence.find((component) => satisfiesStrongComponentThresholds(component, config));
 
   const evidence: SegmentMatchEvidence = {
     canonicalSegmentLengthMeters: round(lineLengthMeters(segment.geometry.coordinates), 3),
     activityTraceLengthMeters: round(multiLineLengthMeters(activity.trace.geometry), 3),
+    rawActivityTraceLengthMeters: round(multiLineLengthMeters(activity.trace.geometry), 3),
+    trustedActivityEvidenceLengthMeters: traceEvidence.trustedLengthMeters,
     segmentSampleCount: samples.length,
     coveredSampleCount,
     segmentCoverageRatio: round(samples.length ? coveredSampleCount / samples.length : 0, 4),
@@ -128,10 +117,12 @@ export function scoreSegmentActivityPair(activity: ActivityRecord, segment: Elig
     maximumActivityPointGapMeters: round(Math.max(0, ...traceEvidence.pointGapsMeters), 3),
     p95ActivityPointGapMeters: round(percentile(traceEvidence.pointGapsMeters, 0.95), 3),
     ignoredLongActivityEdgeCount: traceEvidence.ignoredLongActivityEdgeCount,
-    componentCoverageRatios: componentCoverage.map((component) => component.ratio),
-    bestSingleComponentCoverageRatio: best.ratio,
-    bestSingleComponentIndex: best.index,
-    singleComponentReachesBothEndpoints,
+    componentEvidence,
+    componentCoverageRatios: componentEvidence.map((component) => component.coverageRatio),
+    bestSingleComponentCoverageRatio: bestByCoverage?.coverageRatio ?? 0,
+    bestSingleComponentIndex: bestByCoverage?.componentIndex,
+    bestStrongComponentIndex: bestStrongComponent?.componentIndex,
+    singleComponentReachesBothEndpoints: componentEvidence.some((component) => component.startJunctionDistanceMeters <= config.endpointToleranceMeters && component.endJunctionDistanceMeters <= config.endpointToleranceMeters),
     blockedStrongByComponentDiscontinuity: false,
     sourceActivityKey: activity.activityKey,
     sourceActivityId: activity.sourceActivityId,
@@ -143,7 +134,7 @@ export function scoreSegmentActivityPair(activity: ActivityRecord, segment: Elig
     activityBbox,
     segmentBbox,
   };
-  evidence.blockedStrongByComponentDiscontinuity = satisfiesStrongUnionThresholds(evidence, config) && !satisfiesStrongComponentContinuity(evidence, config);
+  evidence.blockedStrongByComponentDiscontinuity = satisfiesStrongUnionThresholds(evidence, config) && evidence.bestStrongComponentIndex === undefined;
 
   return {
     key: stableMatchKey(activity.activityKey, segment.segmentKey),
@@ -203,8 +194,28 @@ export function classifyEvidence(evidence: SegmentMatchEvidence, config: Activit
   return "insufficient_coverage";
 }
 
+function buildComponentEvidence(samples: Position[], start: Position, end: Position, traceEvidence: TrustedActivityTraceEvidence, config: ActivityMatchingConfig): ComponentMatchEvidence[] {
+  return traceEvidence.componentLines.map((lines, componentIndex) => {
+    const points = traceEvidence.componentPoints[componentIndex] ?? [];
+    const sampleDistances = samples.map((sample) => minDistanceToEvidence(sample, lines, points));
+    const covered = sampleDistances.map((distance) => distance.distanceMeters <= config.matchedPointToleranceMeters);
+    const distances = sampleDistances.map((distance) => distance.distanceMeters);
+    return {
+      componentIndex,
+      coverageRatio: round(samples.length ? covered.filter(Boolean).length / samples.length : 0, 4),
+      coveredSampleCount: covered.filter(Boolean).length,
+      startJunctionDistanceMeters: minDistanceToEvidence(start, lines, points).distanceMeters,
+      endJunctionDistanceMeters: minDistanceToEvidence(end, lines, points).distanceMeters,
+      medianSampleDistanceMeters: round(median(distances), 3),
+      p95SampleDistanceMeters: round(percentile(distances, 0.95), 3),
+      maxSampleDistanceMeters: round(Math.max(...distances), 3),
+      longestUncoveredGapRatio: round(samples.length ? longestFalseRun(covered) / samples.length : 0, 4),
+    };
+  });
+}
+
 function satisfiesStrongThresholds(evidence: SegmentMatchEvidence, config: ActivityMatchingConfig) {
-  return satisfiesStrongUnionThresholds(evidence, config) && satisfiesStrongComponentContinuity(evidence, config);
+  return satisfiesStrongUnionThresholds(evidence, config) && evidence.bestStrongComponentIndex !== undefined;
 }
 
 function satisfiesStrongUnionThresholds(evidence: SegmentMatchEvidence, config: ActivityMatchingConfig) {
@@ -216,8 +227,13 @@ function satisfiesStrongUnionThresholds(evidence: SegmentMatchEvidence, config: 
     && evidence.longestUncoveredGapRatio <= config.maximumGapRatio;
 }
 
-function satisfiesStrongComponentContinuity(evidence: SegmentMatchEvidence, config: ActivityMatchingConfig) {
-  return evidence.bestSingleComponentCoverageRatio >= config.strongCoverageRatio && evidence.singleComponentReachesBothEndpoints;
+function satisfiesStrongComponentThresholds(evidence: ComponentMatchEvidence, config: ActivityMatchingConfig) {
+  return evidence.coverageRatio >= config.strongCoverageRatio
+    && evidence.startJunctionDistanceMeters <= config.endpointToleranceMeters
+    && evidence.endJunctionDistanceMeters <= config.endpointToleranceMeters
+    && evidence.medianSampleDistanceMeters <= config.strongMaximumMedianDistanceMeters
+    && evidence.p95SampleDistanceMeters <= config.strongMaximumP95DistanceMeters
+    && evidence.longestUncoveredGapRatio <= config.maximumGapRatio;
 }
 
 function isPotentialEvidence(match: SegmentMatchCandidate) {
@@ -227,45 +243,6 @@ function isPotentialEvidence(match: SegmentMatchCandidate) {
 function safeActivityBbox(geometry: MultiLineString) {
   const coordinates = geometry.coordinates.flat();
   return coordinates.length ? bboxForMultiLine(geometry) : undefined;
-}
-
-function buildTraceEvidence(trace: MultiLineString, maximumInterpolatedActivityEdgeMeters: number): TraceEvidence {
-  const componentLines: Position[][][] = [];
-  const componentPoints: Position[][] = [];
-  const pointGapsMeters: number[] = [];
-  let ignoredLongActivityEdgeCount = 0;
-
-  for (const component of trace.coordinates) {
-    const lines: Position[][] = [];
-    let currentLine: Position[] = [];
-    for (let index = 0; index < component.length; index += 1) {
-      const point = component[index];
-      if (!currentLine.length) currentLine.push(point);
-      if (index === component.length - 1) continue;
-      const next = component[index + 1];
-      const gap = distanceMeters(point, next);
-      pointGapsMeters.push(gap);
-      if (gap <= maximumInterpolatedActivityEdgeMeters) {
-        currentLine.push(next);
-      } else {
-        if (currentLine.length >= 2) lines.push(currentLine);
-        currentLine = [next];
-        ignoredLongActivityEdgeCount += 1;
-      }
-    }
-    if (currentLine.length >= 2) lines.push(currentLine);
-    componentLines.push(lines);
-    componentPoints.push(component);
-  }
-
-  return {
-    componentLines,
-    componentPoints,
-    allLines: componentLines.flat(),
-    allPoints: componentPoints.flat(),
-    pointGapsMeters,
-    ignoredLongActivityEdgeCount,
-  };
 }
 
 function minDistanceToEvidence(point: Position, lines: Position[][], points: Position[]) {
@@ -298,6 +275,7 @@ function validateApprovalEvidence(segment: EligibleMatchingSegment, errors: stri
   if (evidence.startJunctionDecision.targetType !== "junction" || evidence.startJunctionDecision.targetKey !== segment.startJunctionKey || evidence.startJunctionDecision.decision !== "accepted") errors.push(`Eligible segment ${segment.segmentKey} is missing an accepted start-junction decision.`);
   if (evidence.endJunctionDecision.targetType !== "junction" || evidence.endJunctionDecision.targetKey !== segment.endJunctionKey || evidence.endJunctionDecision.decision !== "accepted") errors.push(`Eligible segment ${segment.segmentKey} is missing an accepted end-junction decision.`);
   if (evidence.decisionArtifactAlgorithmVersion !== segment.segmentConstructionAlgorithmVersion) errors.push(`Eligible segment ${segment.segmentKey} approval decision version does not match segment construction version.`);
+  if (!evidence.sourceSegmentArtifact.generatedAt || typeof evidence.sourceSegmentArtifact.demoOnly !== "boolean" || !evidence.sourceSegmentArtifact.algorithmVersion) errors.push(`Eligible segment ${segment.segmentKey} approval source artifact identity is incomplete.`);
   if (evidence.sourceSegmentArtifact.algorithmVersion !== segment.segmentConstructionAlgorithmVersion) errors.push(`Eligible segment ${segment.segmentKey} approval source artifact version does not match segment construction version.`);
 }
 
@@ -305,6 +283,8 @@ function validateFiniteEvidence(matchKey: string, evidence: SegmentMatchEvidence
   const numericFields: Array<keyof SegmentMatchEvidence> = [
     "canonicalSegmentLengthMeters",
     "activityTraceLengthMeters",
+    "rawActivityTraceLengthMeters",
+    "trustedActivityEvidenceLengthMeters",
     "segmentSampleCount",
     "coveredSampleCount",
     "segmentCoverageRatio",
@@ -325,7 +305,14 @@ function validateFiniteEvidence(matchKey: string, evidence: SegmentMatchEvidence
     if (typeof value !== "number" || !Number.isFinite(value)) errors.push(`Match ${matchKey} has non-finite evidence metric ${field}.`);
   }
   for (const value of evidence.componentCoverageRatios) if (!Number.isFinite(value) || value < 0 || value > 1) errors.push(`Match ${matchKey} has invalid component coverage.`);
+  for (const component of evidence.componentEvidence) validateComponentEvidence(matchKey, component, errors);
   if (evidence.segmentCoverageRatio < 0 || evidence.segmentCoverageRatio > 1) errors.push(`Match ${matchKey} has coverage outside 0..1.`);
   if (evidence.longestUncoveredGapRatio < 0 || evidence.longestUncoveredGapRatio > 1) errors.push(`Match ${matchKey} has gap ratio outside 0..1.`);
   if (evidence.startJunctionDistanceMeters < 0 || evidence.endJunctionDistanceMeters < 0 || evidence.medianSampleDistanceMeters < 0 || evidence.p95SampleDistanceMeters < 0 || evidence.maxSampleDistanceMeters < 0) errors.push(`Match ${matchKey} has a negative distance metric.`);
+}
+
+function validateComponentEvidence(matchKey: string, component: ComponentMatchEvidence, errors: string[]) {
+  const values = [component.coverageRatio, component.coveredSampleCount, component.startJunctionDistanceMeters, component.endJunctionDistanceMeters, component.medianSampleDistanceMeters, component.p95SampleDistanceMeters, component.maxSampleDistanceMeters, component.longestUncoveredGapRatio];
+  if (!values.every((value) => Number.isFinite(value))) errors.push(`Match ${matchKey} has non-finite component evidence.`);
+  if (component.coverageRatio < 0 || component.coverageRatio > 1 || component.longestUncoveredGapRatio < 0 || component.longestUncoveredGapRatio > 1) errors.push(`Match ${matchKey} has component ratios outside 0..1.`);
 }

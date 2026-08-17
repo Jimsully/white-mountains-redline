@@ -6,6 +6,7 @@ import { loadActivitiesFromPath, summarizeActivities } from "@/lib/activity-matc
 import { buildActivityMatchArtifact } from "@/lib/activity-matching/matcher";
 import { getActivityMatchingOutputPath, formatActivityMatchingInputPathForArtifact, isDemoActivityMatchingInput, isSafePrivateMetadataPath } from "@/lib/activity-matching/paths";
 import { resolveEligibleMatchingSegments } from "@/lib/activity-matching/segments";
+import { sanitizePrivateActivityMetadata } from "@/lib/activity-matching/private-metadata";
 
 export type ActivityMatchingRunResult = {
   artifact: ActivityMatchArtifact;
@@ -23,8 +24,9 @@ export function runActivityMatching(args: { segmentArtifactPath: string; segment
   const segmentResolution = resolveEligibleMatchingSegments(segmentArtifact, segmentDecisions);
   if (segmentResolution.errors.length) throw new Error(`Accepted segment input failed integrity validation:\n${segmentResolution.errors.join("\n")}`);
 
-  const activities = loadActivitiesFromPath(activitiesPath);
+  const loadedActivities = loadActivitiesFromPath(activitiesPath);
   const demoOnly = isDemoActivityMatchingInput(args.segmentArtifactPath, args.segmentDecisionsPath, args.activitiesPath, repositoryRoot);
+  const activities = demoOnly ? loadedActivities : loadedActivities.map(sanitizePrivateActivityMetadata);
   const artifact = buildActivityMatchArtifact({
     activities,
     eligibleSegments: segmentResolution.eligibleSegments,
@@ -57,7 +59,7 @@ export function printActivityMatchingSummary(result: ActivityMatchingRunResult) 
   console.log(`unmatched activities: ${artifact.diagnostics.unmatchedActivityCount}`);
   console.log(`activities with at least one candidate: ${artifact.diagnostics.activitiesWithCandidateCount}`);
   console.log(`segments with at least one candidate: ${artifact.diagnostics.segmentsWithCandidateCount}`);
-  console.log(`long activity edges ignored: ${artifact.diagnostics.ignoredLongActivityEdgeCount}`);
+  console.log(`unique ignored activity edges: ${artifact.diagnostics.ignoredActivityEdgeCount}`);
   console.log(`matches blocked from strong by component discontinuity: ${artifact.diagnostics.componentDiscontinuityBlockedStrongCount}`);
   console.log(`integrity warnings: ${artifact.diagnostics.integrityWarnings.length}`);
   console.log(`integrity errors: ${artifact.diagnostics.integrityErrors.length}`);

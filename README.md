@@ -133,3 +133,5 @@ npm run data:activity:match -- --segments data/generated/segments/demo-segment-c
 GPS traces are evidence, not canonical trail geometry. Strong candidates are not completions, and accepted completion evidence does not create production SegmentCompletion rows. Real activity files belong in ignored data/local/activities/; private activity artifacts are blocked in production admin loading until authenticated admin access exists.
 
 Activity matching hardening: GPS edges beyond maximumInterpolatedActivityEdgeMeters are evidence gaps, separate activity components cannot combine into strong evidence, bbox matching is meter-aware, and source activity IDs dominate stable activity identity. See docs/ACTIVITY_MATCHING.md.
+
+Milestone 4 final hardening stores explicit per-component componentEvidence, requires estStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.

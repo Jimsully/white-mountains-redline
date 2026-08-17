@@ -49,3 +49,16 @@ Strong candidates also require one activity trace component to satisfy the cover
 The spatial prefilter expands latitude and longitude independently using meter-aware conversion at the relevant latitude. It is intentionally conservative: false positives are acceptable because full scoring follows; false negatives are not.
 
 Activity identity is stable when a source activity ID exists: the key is derived from the activity-key version, source, and source activity ID, not mutable title or filename text. Without a source ID, fallback identity uses source, start time, and an orientation-stable geometry fingerprint.
+
+
+## Final Integrity Corrections
+
+Each match now stores componentEvidence records with per-component coverage, endpoint distances, median/p95/max sample distance, and uncovered gap ratio. estStrongComponentIndex is set only when one same activity component independently satisfies every strong threshold; coverage from one component cannot be combined with endpoint or proximity evidence from another.
+
+Admin map previews are rendered from the shared trusted-trace helper used by scoring. Edges longer than maximumInterpolatedActivityEdgeMeters are split and shown as dashed evidence gaps instead of continuous traversed lines.
+
+Artifact-level ignoredActivityEdgeCount counts unique ignored activity edges once per activity. Per-match ignoredLongActivityEdgeCount remains available as evidence, but global diagnostics are not multiplied by the number of segments scored.
+
+Match evidence keeps both awActivityTraceLengthMeters and 	rustedActivityEvidenceLengthMeters; raw length may include GPS gaps that were not used as continuous traversal evidence.
+
+Private generated and loaded artifacts redact filesystem provenance from activity sourceMetadata, including obvious Windows/POSIX absolute paths and nested path-like metadata keys, while preserving ordinary safe metadata.

@@ -9,6 +9,9 @@ import { SEGMENT_CONSTRUCTION_ALGORITHM_VERSION } from "@/types/segment-construc
 import { parseGpxActivity, parseNormalizedActivities } from "@/lib/activity-matching/activities";
 import { DEFAULT_ACTIVITY_MATCHING_CONFIG } from "@/lib/activity-matching/config";
 import { expandedBboxIntersects, sampleLine } from "@/lib/activity-matching/geometry";
+import { sanitizePrivateActivityMetadata } from "@/lib/activity-matching/private-metadata";
+import { PRIVATE_PATH_OMITTED } from "@/lib/activity-matching/paths";
+import { buildTrustedActivityTraceEvidence } from "@/lib/activity-matching/trusted-trace";
 import { buildActivityMatchArtifact, stableMatchKey } from "@/lib/activity-matching/matcher";
 import { isDemoActivityMatchingInput } from "@/lib/activity-matching/paths";
 import { PRIVATE_ACTIVITY_MATCHING_ARTIFACT_PRODUCTION_ERROR, loadActivityMatchArtifact } from "@/lib/activity-matching/server-artifact";
@@ -216,6 +219,33 @@ describe("activity matching classifier", () => {
     expect(matchClass(activity("dense-forward", denseLine([[-71, 44], [-70.9875, 44]], 16)), segment)).toBe("strong_candidate");
   });
 
+  it("requires the same component to carry coverage, endpoints, and proximity for strong traversal", () => {
+    const segment = eligible("same-component", [[-71, 44], [-70.9875, 44]]);
+    const dense = denseLine([[-71, 44], [-70.9875, 44]], 20);
+    const componentA = dense.filter((_, index) => index < Math.floor(dense.length * 0.95));
+    const componentB = [[-71, 44], [-70.9875, 44]];
+    const artifact = buildActivityMatchArtifact({ activities: [activity("split-proof", [componentA, componentB], "MultiLineString")], eligibleSegments: [segment], demoOnly: true, config: { ...config, strongMaximumP95DistanceMeters: 30 } });
+    const match = artifact.matchCandidates[0];
+    expect(match.classification).not.toBe("strong_candidate");
+    expect(match.evidence.bestStrongComponentIndex).toBeUndefined();
+    expect(match.evidence.blockedStrongByComponentDiscontinuity).toBe(true);
+  });
+
+  it("does not let proximity from one component repair an offset coverage component", () => {
+    const segment = eligible("component-proximity", [[-71, 44], [-70.9875, 44]]);
+    const offsetFull = denseLine([[-71, 44.00018], [-70.9875, 44.00018]], 20);
+    const endpointOnly = [[-71, 44], [-70.9875, 44]];
+    const artifact = buildActivityMatchArtifact({ activities: [activity("offset-plus-endpoints", [offsetFull, endpointOnly], "MultiLineString")], eligibleSegments: [segment], demoOnly: true, config });
+    expect(artifact.matchCandidates[0].classification).not.toBe("strong_candidate");
+    expect(artifact.matchCandidates[0].evidence.bestStrongComponentIndex).toBeUndefined();
+  });
+
+  it("allows a self-contained qualifying component to remain strong in reverse", () => {
+    const segment = eligible("self-contained", [[-71, 44], [-70.9875, 44]]);
+    const dense = denseLine([[-71, 44], [-70.9875, 44]], 20);
+    expect(matchClass(activity("self-contained-reverse", [[...dense].reverse(), [[-71.01, 44], [-71.011, 44]]], "MultiLineString"), segment)).toBe("strong_candidate");
+  });
+
   it("requires one component to carry strong traversal continuity", () => {
     const segment = eligible("component", [[-71, 44], [-70.9875, 44]]);
     const discontinuous = buildActivityMatchArtifact({ activities: [activity("component-gap", [[[-71, 44], [-70.994, 44]], [[-70.9935, 44], [-70.9875, 44]]], "MultiLineString")], eligibleSegments: [segment], demoOnly: true, config: { ...config, maximumInterpolatedActivityEdgeMeters: 1000 } });
@@ -231,6 +261,12 @@ describe("activity matching classifier", () => {
     expect(artifact.matchCandidates.find((match) => match.segmentKey === "parallel-segment")?.classification).not.toBe("strong_candidate");
   });
 
+  it("splits trusted render lines at ignored activity edges", () => {
+    const evidence = buildTrustedActivityTraceEvidence({ type: "MultiLineString", coordinates: [[[-71, 44], [-70.999, 44], [-70.99, 44], [-70.989, 44]]] }, 120);
+    expect(evidence.allLines).toHaveLength(2);
+    expect(evidence.ignoredGaps).toHaveLength(1);
+  });
+
   it("creates stable match keys and deterministic classifications", () => {
     const sourceActivity = activity("stable", lineA);
     const segment = eligible("s1", lineA);
@@ -239,6 +275,8 @@ describe("activity matching classifier", () => {
     expect(match.evidence.activityMatchingAlgorithmVersion).toBe(ACTIVITY_MATCHING_ALGORITHM_VERSION);
     expect(() => buildActivityMatchArtifact({ activities: [sourceActivity, sourceActivity], eligibleSegments: [segment], demoOnly: true, config })).toThrow("Duplicate activity key");
     expect(() => buildActivityMatchArtifact({ activities: [sourceActivity], eligibleSegments: [segment, segment], demoOnly: true, config })).toThrow("Duplicate eligible segment key");
+    const missingIdentitySegment = { ...segment, approvalEvidence: { ...segment.approvalEvidence, sourceSegmentArtifact: { algorithmVersion: SEGMENT_CONSTRUCTION_ALGORITHM_VERSION } } };
+    expect(() => buildActivityMatchArtifact({ activities: [sourceActivity], eligibleSegments: [missingIdentitySegment], demoOnly: true, config })).toThrow("approval source artifact identity is incomplete");
   });
 });
 
@@ -251,6 +289,29 @@ describe("activity matching privacy and review state", () => {
 
   it("blocks private activity artifacts in production", () => {
     expect(() => loadActivityMatchArtifact({} as never, { NODE_ENV: "production", ACTIVITY_MATCHING_ARTIFACT_PATH: "local.json" } as NodeJS.ProcessEnv)).toThrow(PRIVATE_ACTIVITY_MATCHING_ARTIFACT_PRODUCTION_ERROR);
+  });
+
+  it("redacts private filesystem paths from source metadata", () => {
+    const sourceActivity = activity("private-metadata", lineA);
+    sourceActivity.sourceMetadata = { safe: "kept", originalPath: "C:\\Users\\James\\secret.gpx", nested: { exportFile: "/Users/james/private/export.json", label: "okay" } };
+    const sanitized = sanitizePrivateActivityMetadata(sourceActivity);
+    expect(sanitized.sourceMetadata.safe).toBe("kept");
+    expect(sanitized.sourceMetadata.originalPath).toBe(PRIVATE_PATH_OMITTED);
+    expect((sanitized.sourceMetadata.nested as Record<string, unknown>).exportFile).toBe(PRIVATE_PATH_OMITTED);
+    expect((sanitized.sourceMetadata.nested as Record<string, unknown>).label).toBe("okay");
+  });
+
+  it("redacts private filesystem paths from loaded private artifacts", () => {
+    const sourceActivity = activity("loaded-private-metadata", lineA);
+    sourceActivity.sourceMetadata = { originalPath: "C:\\Users\\James\\secret.gpx", nested: { exportFile: "/Users/james/private/export.json" } };
+    const artifact = buildActivityMatchArtifact({ activities: [sourceActivity], eligibleSegments: [eligible("loaded-private", lineA)], demoOnly: false, config });
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "activity-artifact-load-"));
+    const artifactPath = path.join(tempDir, "artifact.json");
+    fs.writeFileSync(artifactPath, JSON.stringify(artifact));
+    const loaded = loadActivityMatchArtifact({} as never, { NODE_ENV: "development", ACTIVITY_MATCHING_ARTIFACT_PATH: artifactPath } as NodeJS.ProcessEnv);
+    expect(loaded.activities[0].sourceMetadata.originalPath).toBe(PRIVATE_PATH_OMITTED);
+    expect((loaded.activities[0].sourceMetadata.nested as Record<string, unknown>).exportFile).toBe(PRIVATE_PATH_OMITTED);
+    fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
   it("ignores malformed localStorage and exports evidence decisions", () => {
@@ -280,5 +341,15 @@ describe("activity matching runner", () => {
     expect(result.artifact.metadata.activitiesPath).toBe("private path omitted");
     expect(fs.readFileSync(trackedArtifactPath, "utf8")).toBe(before);
     fs.rmSync(tempRoot, { recursive: true, force: true });
+  });
+
+  it("does not multiply artifact ignored-edge diagnostics by scored segment count", () => {
+    const sourceActivity = activity("one-gap-many-segments", [[[-71, 44], [-70.999, 44], [-70.99, 44], [-70.989, 44]]], "MultiLineString");
+    const first = eligible("diag-a", [[-71, 44], [-70.989, 44]]);
+    const second = eligible("diag-b", [[-71, 44.00001], [-70.989, 44.00001]]);
+    const result = buildActivityMatchArtifact({ activities: [sourceActivity], eligibleSegments: [first, second], demoOnly: true, config });
+    expect(result.matchCandidates).toHaveLength(2);
+    expect(result.matchCandidates.reduce((sum, match) => sum + match.evidence.ignoredLongActivityEdgeCount, 0)).toBe(2);
+    expect(result.diagnostics.ignoredActivityEdgeCount).toBe(1);
   });
 });

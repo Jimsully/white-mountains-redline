@@ -18475,6 +18475,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 8689.955,
+        "rawActivityTraceLengthMeters": 8689.955,
+        "trustedActivityEvidenceLengthMeters": 8689.955,
         "segmentSampleCount": 462,
         "coveredSampleCount": 462,
         "segmentCoverageRatio": 1,
@@ -18488,11 +18490,25 @@
         "maximumActivityPointGapMeters": 80.855,
         "p95ActivityPointGapMeters": 72.442,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 1,
+            "coveredSampleCount": 462,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 2.803,
+            "p95SampleDistanceMeters": 12.088,
+            "maxSampleDistanceMeters": 18.785,
+            "longestUncoveredGapRatio": 0
+          }
+        ],
         "componentCoverageRatios": [
           1
         ],
         "bestSingleComponentCoverageRatio": 1,
         "bestSingleComponentIndex": 0,
+        "bestStrongComponentIndex": 0,
         "singleComponentReachesBothEndpoints": true,
         "blockedStrongByComponentDiscontinuity": false,
         "sourceActivityKey": "activity_cfd040525a2b4b7f",
@@ -18532,6 +18548,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 8689.955,
+        "rawActivityTraceLengthMeters": 8689.955,
+        "trustedActivityEvidenceLengthMeters": 8689.955,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -18545,6 +18563,19 @@
         "maximumActivityPointGapMeters": 80.855,
         "p95ActivityPointGapMeters": 72.442,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          }
+        ],
         "componentCoverageRatios": [
           0.0161
         ],
@@ -18589,6 +18620,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 8725.051,
+        "rawActivityTraceLengthMeters": 8725.051,
+        "trustedActivityEvidenceLengthMeters": 8725.051,
         "segmentSampleCount": 462,
         "coveredSampleCount": 462,
         "segmentCoverageRatio": 1,
@@ -18602,11 +18635,25 @@
         "maximumActivityPointGapMeters": 79.496,
         "p95ActivityPointGapMeters": 72.42,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 1,
+            "coveredSampleCount": 462,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 2.774,
+            "p95SampleDistanceMeters": 10.574,
+            "maxSampleDistanceMeters": 18.445,
+            "longestUncoveredGapRatio": 0
+          }
+        ],
         "componentCoverageRatios": [
           1
         ],
         "bestSingleComponentCoverageRatio": 1,
         "bestSingleComponentIndex": 0,
+        "bestStrongComponentIndex": 0,
         "singleComponentReachesBothEndpoints": true,
         "blockedStrongByComponentDiscontinuity": false,
         "sourceActivityKey": "activity_e5cb4fd29c32a789",
@@ -18646,6 +18693,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 8725.051,
+        "rawActivityTraceLengthMeters": 8725.051,
+        "trustedActivityEvidenceLengthMeters": 8725.051,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -18659,6 +18708,19 @@
         "maximumActivityPointGapMeters": 79.496,
         "p95ActivityPointGapMeters": 72.42,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          }
+        ],
         "componentCoverageRatios": [
           0.0161
         ],
@@ -18703,6 +18765,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 4401.148,
+        "rawActivityTraceLengthMeters": 4401.148,
+        "trustedActivityEvidenceLengthMeters": 4401.148,
         "segmentSampleCount": 462,
         "coveredSampleCount": 232,
         "segmentCoverageRatio": 0.5022,
@@ -18716,6 +18780,19 @@
         "maximumActivityPointGapMeters": 56.6,
         "p95ActivityPointGapMeters": 48.778,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.5022,
+            "coveredSampleCount": 232,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 3673.347,
+            "medianSampleDistanceMeters": 11.476,
+            "p95SampleDistanceMeters": 3338.939,
+            "maxSampleDistanceMeters": 3673.347,
+            "longestUncoveredGapRatio": 0.4978
+          }
+        ],
         "componentCoverageRatios": [
           0.5022
         ],
@@ -18760,6 +18837,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 4401.148,
+        "rawActivityTraceLengthMeters": 4401.148,
+        "trustedActivityEvidenceLengthMeters": 4401.148,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -18773,6 +18852,19 @@
         "maximumActivityPointGapMeters": 56.6,
         "p95ActivityPointGapMeters": 48.778,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          }
+        ],
         "componentCoverageRatios": [
           0.0161
         ],
@@ -18817,6 +18909,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 1655.54,
+        "rawActivityTraceLengthMeters": 1655.54,
+        "trustedActivityEvidenceLengthMeters": 0,
         "segmentSampleCount": 462,
         "coveredSampleCount": 0,
         "segmentCoverageRatio": 0,
@@ -18830,10 +18924,24 @@
         "maximumActivityPointGapMeters": 1655.54,
         "p95ActivityPointGapMeters": 1655.54,
         "ignoredLongActivityEdgeCount": 1,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0,
+            "coveredSampleCount": 0,
+            "startJunctionDistanceMeters": 3572.334,
+            "endJunctionDistanceMeters": 2879.569,
+            "medianSampleDistanceMeters": 1481.33,
+            "p95SampleDistanceMeters": 3178.427,
+            "maxSampleDistanceMeters": 3572.334,
+            "longestUncoveredGapRatio": 1
+          }
+        ],
         "componentCoverageRatios": [
           0
         ],
         "bestSingleComponentCoverageRatio": 0,
+        "bestSingleComponentIndex": 0,
         "singleComponentReachesBothEndpoints": false,
         "blockedStrongByComponentDiscontinuity": false,
         "sourceActivityKey": "activity_cd4a653f68c6328a",
@@ -18865,6 +18973,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 8689.955,
+        "rawActivityTraceLengthMeters": 8689.955,
+        "trustedActivityEvidenceLengthMeters": 8689.955,
         "segmentSampleCount": 462,
         "coveredSampleCount": 434,
         "segmentCoverageRatio": 0.9394,
@@ -18878,6 +18988,19 @@
         "maximumActivityPointGapMeters": 80.855,
         "p95ActivityPointGapMeters": 72.442,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.9394,
+            "coveredSampleCount": 434,
+            "startJunctionDistanceMeters": 22.256,
+            "endJunctionDistanceMeters": 12.487,
+            "medianSampleDistanceMeters": 12.531,
+            "p95SampleDistanceMeters": 25.417,
+            "maxSampleDistanceMeters": 36.368,
+            "longestUncoveredGapRatio": 0.0065
+          }
+        ],
         "componentCoverageRatios": [
           0.9394
         ],
@@ -18922,6 +19045,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 8689.955,
+        "rawActivityTraceLengthMeters": 8689.955,
+        "trustedActivityEvidenceLengthMeters": 8689.955,
         "segmentSampleCount": 124,
         "coveredSampleCount": 1,
         "segmentCoverageRatio": 0.0081,
@@ -18935,6 +19060,19 @@
         "maximumActivityPointGapMeters": 80.855,
         "p95ActivityPointGapMeters": 72.442,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0081,
+            "coveredSampleCount": 1,
+            "startJunctionDistanceMeters": 2268.665,
+            "endJunctionDistanceMeters": 22.256,
+            "medianSampleDistanceMeters": 1159.773,
+            "p95SampleDistanceMeters": 2198.257,
+            "maxSampleDistanceMeters": 2268.665,
+            "longestUncoveredGapRatio": 0.9919
+          }
+        ],
         "componentCoverageRatios": [
           0.0081
         ],
@@ -18979,6 +19117,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 8690.93,
+        "rawActivityTraceLengthMeters": 8690.93,
+        "trustedActivityEvidenceLengthMeters": 8690.93,
         "segmentSampleCount": 462,
         "coveredSampleCount": 462,
         "segmentCoverageRatio": 1,
@@ -18992,11 +19132,25 @@
         "maximumActivityPointGapMeters": 80.855,
         "p95ActivityPointGapMeters": 72.442,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 1,
+            "coveredSampleCount": 462,
+            "startJunctionDistanceMeters": 1.994,
+            "endJunctionDistanceMeters": 2.002,
+            "medianSampleDistanceMeters": 3.279,
+            "p95SampleDistanceMeters": 12.985,
+            "maxSampleDistanceMeters": 19.948,
+            "longestUncoveredGapRatio": 0
+          }
+        ],
         "componentCoverageRatios": [
           1
         ],
         "bestSingleComponentCoverageRatio": 1,
         "bestSingleComponentIndex": 0,
+        "bestStrongComponentIndex": 0,
         "singleComponentReachesBothEndpoints": true,
         "blockedStrongByComponentDiscontinuity": false,
         "sourceActivityKey": "activity_14c645ad82c91167",
@@ -19036,6 +19190,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 8690.93,
+        "rawActivityTraceLengthMeters": 8690.93,
+        "trustedActivityEvidenceLengthMeters": 8690.93,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -19049,6 +19205,19 @@
         "maximumActivityPointGapMeters": 80.855,
         "p95ActivityPointGapMeters": 72.442,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.278,
+            "endJunctionDistanceMeters": 1.994,
+            "medianSampleDistanceMeters": 1159.574,
+            "p95SampleDistanceMeters": 2197.848,
+            "maxSampleDistanceMeters": 2267.278,
+            "longestUncoveredGapRatio": 0.9839
+          }
+        ],
         "componentCoverageRatios": [
           0.0161
         ],
@@ -19093,6 +19262,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 22271.897,
+        "rawActivityTraceLengthMeters": 22271.897,
+        "trustedActivityEvidenceLengthMeters": 12034.981,
         "segmentSampleCount": 462,
         "coveredSampleCount": 462,
         "segmentCoverageRatio": 1,
@@ -19106,11 +19277,25 @@
         "maximumActivityPointGapMeters": 10236.916,
         "p95ActivityPointGapMeters": 73.736,
         "ignoredLongActivityEdgeCount": 1,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 1,
+            "coveredSampleCount": 462,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 11.786,
+            "medianSampleDistanceMeters": 2.828,
+            "p95SampleDistanceMeters": 12.088,
+            "maxSampleDistanceMeters": 18.785,
+            "longestUncoveredGapRatio": 0
+          }
+        ],
         "componentCoverageRatios": [
           1
         ],
         "bestSingleComponentCoverageRatio": 1,
         "bestSingleComponentIndex": 0,
+        "bestStrongComponentIndex": 0,
         "singleComponentReachesBothEndpoints": true,
         "blockedStrongByComponentDiscontinuity": false,
         "sourceActivityKey": "activity_76485c060c57ee82",
@@ -19150,6 +19335,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 3708.385,
         "activityTraceLengthMeters": 22271.897,
+        "rawActivityTraceLengthMeters": 22271.897,
+        "trustedActivityEvidenceLengthMeters": 12034.981,
         "segmentSampleCount": 187,
         "coveredSampleCount": 184,
         "segmentCoverageRatio": 0.984,
@@ -19163,6 +19350,19 @@
         "maximumActivityPointGapMeters": 10236.916,
         "p95ActivityPointGapMeters": 73.736,
         "ignoredLongActivityEdgeCount": 1,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.984,
+            "coveredSampleCount": 184,
+            "startJunctionDistanceMeters": 54.44,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 2.517,
+            "p95SampleDistanceMeters": 15.196,
+            "maxSampleDistanceMeters": 54.44,
+            "longestUncoveredGapRatio": 0.0107
+          }
+        ],
         "componentCoverageRatios": [
           0.984
         ],
@@ -19207,6 +19407,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 4768.424,
         "activityTraceLengthMeters": 22271.897,
+        "rawActivityTraceLengthMeters": 22271.897,
+        "trustedActivityEvidenceLengthMeters": 12034.981,
         "segmentSampleCount": 240,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0083,
@@ -19220,6 +19422,19 @@
         "maximumActivityPointGapMeters": 10236.916,
         "p95ActivityPointGapMeters": 73.736,
         "ignoredLongActivityEdgeCount": 1,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0083,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 3913.656,
+            "endJunctionDistanceMeters": 0.004,
+            "medianSampleDistanceMeters": 2123.379,
+            "p95SampleDistanceMeters": 3694.301,
+            "maxSampleDistanceMeters": 3913.656,
+            "longestUncoveredGapRatio": 0.9917
+          }
+        ],
         "componentCoverageRatios": [
           0.0083
         ],
@@ -19264,6 +19479,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 22271.897,
+        "rawActivityTraceLengthMeters": 22271.897,
+        "trustedActivityEvidenceLengthMeters": 12034.981,
         "segmentSampleCount": 124,
         "coveredSampleCount": 4,
         "segmentCoverageRatio": 0.0323,
@@ -19277,6 +19494,19 @@
         "maximumActivityPointGapMeters": 10236.916,
         "p95ActivityPointGapMeters": 73.736,
         "ignoredLongActivityEdgeCount": 1,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0323,
+            "coveredSampleCount": 4,
+            "startJunctionDistanceMeters": 0.004,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 564.969,
+            "p95SampleDistanceMeters": 1071.053,
+            "maxSampleDistanceMeters": 1129.638,
+            "longestUncoveredGapRatio": 0.9677
+          }
+        ],
         "componentCoverageRatios": [
           0.0323
         ],
@@ -19321,6 +19551,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 17302.724,
+        "rawActivityTraceLengthMeters": 17302.724,
+        "trustedActivityEvidenceLengthMeters": 17302.724,
         "segmentSampleCount": 462,
         "coveredSampleCount": 462,
         "segmentCoverageRatio": 1,
@@ -19334,12 +19566,37 @@
         "maximumActivityPointGapMeters": 101.928,
         "p95ActivityPointGapMeters": 96.254,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 1,
+            "coveredSampleCount": 462,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 2.94,
+            "p95SampleDistanceMeters": 14.696,
+            "maxSampleDistanceMeters": 24.453,
+            "longestUncoveredGapRatio": 0
+          },
+          {
+            "componentIndex": 1,
+            "coverageRatio": 1,
+            "coveredSampleCount": 462,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 3.236,
+            "p95SampleDistanceMeters": 15.814,
+            "maxSampleDistanceMeters": 23.97,
+            "longestUncoveredGapRatio": 0
+          }
+        ],
         "componentCoverageRatios": [
           1,
           1
         ],
         "bestSingleComponentCoverageRatio": 1,
         "bestSingleComponentIndex": 0,
+        "bestStrongComponentIndex": 0,
         "singleComponentReachesBothEndpoints": true,
         "blockedStrongByComponentDiscontinuity": false,
         "sourceActivityKey": "activity_387ac76950e265a6",
@@ -19379,6 +19636,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 17302.724,
+        "rawActivityTraceLengthMeters": 17302.724,
+        "trustedActivityEvidenceLengthMeters": 17302.724,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -19392,6 +19651,30 @@
         "maximumActivityPointGapMeters": 101.928,
         "p95ActivityPointGapMeters": 96.254,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          },
+          {
+            "componentIndex": 1,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          }
+        ],
         "componentCoverageRatios": [
           0.0161,
           0.0161
@@ -19437,6 +19720,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 7041.486,
+        "rawActivityTraceLengthMeters": 7041.486,
+        "trustedActivityEvidenceLengthMeters": 7041.486,
         "segmentSampleCount": 462,
         "coveredSampleCount": 371,
         "segmentCoverageRatio": 0.803,
@@ -19450,6 +19735,19 @@
         "maximumActivityPointGapMeters": 64.813,
         "p95ActivityPointGapMeters": 60.814,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.803,
+            "coveredSampleCount": 371,
+            "startJunctionDistanceMeters": 1223.041,
+            "endJunctionDistanceMeters": 367.895,
+            "medianSampleDistanceMeters": 3.193,
+            "p95SampleDistanceMeters": 789.606,
+            "maxSampleDistanceMeters": 1223.041,
+            "longestUncoveredGapRatio": 0.1472
+          }
+        ],
         "componentCoverageRatios": [
           0.803
         ],
@@ -19494,6 +19792,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 5251.586,
+        "rawActivityTraceLengthMeters": 5251.586,
+        "trustedActivityEvidenceLengthMeters": 5251.586,
         "segmentSampleCount": 462,
         "coveredSampleCount": 278,
         "segmentCoverageRatio": 0.6017,
@@ -19507,6 +19807,30 @@
         "maximumActivityPointGapMeters": 56.6,
         "p95ActivityPointGapMeters": 48.69,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.3009,
+            "coveredSampleCount": 139,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 5144.608,
+            "medianSampleDistanceMeters": 1620.345,
+            "p95SampleDistanceMeters": 4832.123,
+            "maxSampleDistanceMeters": 5144.608,
+            "longestUncoveredGapRatio": 0.6991
+          },
+          {
+            "componentIndex": 1,
+            "coverageRatio": 0.3009,
+            "coveredSampleCount": 139,
+            "startJunctionDistanceMeters": 5193.787,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1621.032,
+            "p95SampleDistanceMeters": 4905.7,
+            "maxSampleDistanceMeters": 5193.787,
+            "longestUncoveredGapRatio": 0.6991
+          }
+        ],
         "componentCoverageRatios": [
           0.3009,
           0.3009
@@ -19552,6 +19876,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 5251.586,
+        "rawActivityTraceLengthMeters": 5251.586,
+        "trustedActivityEvidenceLengthMeters": 5251.586,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -19565,6 +19891,30 @@
         "maximumActivityPointGapMeters": 56.6,
         "p95ActivityPointGapMeters": 48.69,
         "ignoredLongActivityEdgeCount": 0,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          },
+          {
+            "componentIndex": 1,
+            "coverageRatio": 0,
+            "coveredSampleCount": 0,
+            "startJunctionDistanceMeters": 6951.872,
+            "endJunctionDistanceMeters": 5193.787,
+            "medianSampleDistanceMeters": 6011.231,
+            "p95SampleDistanceMeters": 6843.985,
+            "maxSampleDistanceMeters": 6951.872,
+            "longestUncoveredGapRatio": 1
+          }
+        ],
         "componentCoverageRatios": [
           0.0161,
           0
@@ -19610,6 +19960,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 7478.167,
+        "rawActivityTraceLengthMeters": 7478.167,
+        "trustedActivityEvidenceLengthMeters": 0,
         "segmentSampleCount": 462,
         "coveredSampleCount": 7,
         "segmentCoverageRatio": 0.0152,
@@ -19623,6 +19975,19 @@
         "maximumActivityPointGapMeters": 3816.087,
         "p95ActivityPointGapMeters": 3816.087,
         "ignoredLongActivityEdgeCount": 2,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0152,
+            "coveredSampleCount": 7,
+            "startJunctionDistanceMeters": 0,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1007.66,
+            "p95SampleDistanceMeters": 1872.339,
+            "maxSampleDistanceMeters": 2018.42,
+            "longestUncoveredGapRatio": 0.4935
+          }
+        ],
         "componentCoverageRatios": [
           0.0152
         ],
@@ -19667,6 +20032,8 @@
       "evidence": {
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 7478.167,
+        "rawActivityTraceLengthMeters": 7478.167,
+        "trustedActivityEvidenceLengthMeters": 0,
         "segmentSampleCount": 124,
         "coveredSampleCount": 2,
         "segmentCoverageRatio": 0.0161,
@@ -19680,6 +20047,19 @@
         "maximumActivityPointGapMeters": 3816.087,
         "p95ActivityPointGapMeters": 3816.087,
         "ignoredLongActivityEdgeCount": 2,
+        "componentEvidence": [
+          {
+            "componentIndex": 0,
+            "coverageRatio": 0.0161,
+            "coveredSampleCount": 2,
+            "startJunctionDistanceMeters": 2267.382,
+            "endJunctionDistanceMeters": 0,
+            "medianSampleDistanceMeters": 1159.571,
+            "p95SampleDistanceMeters": 2197.871,
+            "maxSampleDistanceMeters": 2267.382,
+            "longestUncoveredGapRatio": 0.9839
+          }
+        ],
         "componentCoverageRatios": [
           0.0161
         ],
@@ -19729,7 +20109,7 @@
     "unmatchedActivityCount": 3,
     "activitiesWithCandidateCount": 9,
     "segmentsWithCandidateCount": 2,
-    "ignoredLongActivityEdgeCount": 9,
+    "ignoredActivityEdgeCount": 5,
     "componentDiscontinuityBlockedStrongCount": 0,
     "integrityWarnings": [],
     "integrityErrors": []

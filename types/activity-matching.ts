@@ -59,6 +59,18 @@ export type ActivityMatchingConfig = {
   maximumInterpolatedActivityEdgeMeters: number;
 };
 
+export type ComponentMatchEvidence = {
+  componentIndex: number;
+  coverageRatio: number;
+  coveredSampleCount: number;
+  startJunctionDistanceMeters: number;
+  endJunctionDistanceMeters: number;
+  medianSampleDistanceMeters: number;
+  p95SampleDistanceMeters: number;
+  maxSampleDistanceMeters: number;
+  longestUncoveredGapRatio: number;
+};
+
 export type EligibleMatchingSegmentApprovalEvidence = {
   segmentDecision: SegmentReviewDecision;
   startJunctionDecision: SegmentReviewDecision;
@@ -93,6 +105,8 @@ export type SegmentConstructionDecisionExport = {
 export type SegmentMatchEvidence = {
   canonicalSegmentLengthMeters: number;
   activityTraceLengthMeters: number;
+  rawActivityTraceLengthMeters: number;
+  trustedActivityEvidenceLengthMeters: number;
   segmentSampleCount: number;
   coveredSampleCount: number;
   segmentCoverageRatio: number;
@@ -106,9 +120,11 @@ export type SegmentMatchEvidence = {
   maximumActivityPointGapMeters: number;
   p95ActivityPointGapMeters: number;
   ignoredLongActivityEdgeCount: number;
+  componentEvidence: ComponentMatchEvidence[];
   componentCoverageRatios: number[];
   bestSingleComponentCoverageRatio: number;
   bestSingleComponentIndex?: number;
+  bestStrongComponentIndex?: number;
   singleComponentReachesBothEndpoints: boolean;
   blockedStrongByComponentDiscontinuity: boolean;
   sourceActivityKey: string;
@@ -145,7 +161,7 @@ export type ActivityMatchDiagnostics = {
   unmatchedActivityCount: number;
   activitiesWithCandidateCount: number;
   segmentsWithCandidateCount: number;
-  ignoredLongActivityEdgeCount: number;
+  ignoredActivityEdgeCount: number;
   componentDiscontinuityBlockedStrongCount: number;
   integrityWarnings: string[];
   integrityErrors: string[];

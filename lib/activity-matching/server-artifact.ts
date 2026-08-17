@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ActivityMatchArtifact } from "@/types/activity-matching";
-import { PRIVATE_PATH_OMITTED } from "@/lib/activity-matching/paths";
+import { sanitizePrivateActivityMatchArtifact } from "@/lib/activity-matching/private-metadata";
 
 export const PRIVATE_ACTIVITY_MATCHING_ARTIFACT_PRODUCTION_ERROR = "Private activity matching artifacts are local-development only until authenticated admin access is implemented.";
 
@@ -27,15 +27,5 @@ export function isActivityMatchArtifactShape(value: unknown): value is ActivityM
 }
 
 function sanitizeArtifactPaths(artifact: ActivityMatchArtifact): ActivityMatchArtifact {
-  if (artifact.metadata.demoOnly) return artifact;
-  return {
-    ...artifact,
-    metadata: {
-      ...artifact.metadata,
-      segmentArtifactPath: PRIVATE_PATH_OMITTED,
-      segmentDecisionsPath: PRIVATE_PATH_OMITTED,
-      activitiesPath: PRIVATE_PATH_OMITTED,
-    },
-    activities: artifact.activities.map((activity) => ({ ...activity, originalFilename: activity.originalFilename ? "local/private filename omitted" : undefined })),
-  };
+  return sanitizePrivateActivityMatchArtifact(artifact);
 }
