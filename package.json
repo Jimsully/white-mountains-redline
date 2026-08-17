@@ -12,9 +12,13 @@
     "data:import:usfs": "node scripts/import-usfs.mjs",
     "data:inventory:validate": "node scripts/run-tsx.cjs scripts/validate-inventory.ts",
     "data:reconcile": "node scripts/run-tsx.cjs scripts/reconcile.ts",
-    "data:segments:build": "node scripts/run-tsx.cjs scripts/build-segments.ts"
+    "data:segments:build": "node scripts/run-tsx.cjs scripts/build-segments.ts",
+    "data:activity:validate": "node scripts/run-tsx.cjs scripts/validate-activity.ts",
+    "data:activity:normalize": "node scripts/run-tsx.cjs scripts/normalize-activity.ts",
+    "data:activity:match": "node scripts/run-tsx.cjs scripts/match-activities.ts"
   },
   "dependencies": {
+    "fast-xml-parser": "^5.11.0",
     "maplibre-gl": "^6.4.0",
     "next": "16.3.1",
     "react": "latest",

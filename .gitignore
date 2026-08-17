@@ -13,3 +13,6 @@ data/local/challenge-inventory/*
 !data/local/challenge-inventory/.gitkeep
 data/generated/reconciliation/*.local.*
 data/generated/segments/*.local.*
+data/local/activities/*
+!data/local/activities/.gitkeep
+data/generated/activity-matching/*.local.*

@@ -1,0 +1,75 @@
+{
+  "exportedAt": "2026-08-17T00:00:00.000Z",
+  "warning": "DEMO DATA ONLY. Accepted segment-construction candidates are prototype matching inputs only, not production trail_segments or completion records.",
+  "algorithmVersion": "segment-construction-v1",
+  "sourceArtifact": {
+    "generatedAt": "2026-08-17T00:59:29.631Z",
+    "demoOnly": true,
+    "algorithmVersion": "segment-construction-v1"
+  },
+  "decisions": [
+    {
+      "targetType": "junction",
+      "targetKey": "junction_249aa44c27b6919d",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "junction",
+      "targetKey": "junction_3978e5892a96cd15",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "junction",
+      "targetKey": "junction_65fd149ff694e051",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "junction",
+      "targetKey": "junction_67928ba5d8397c4b",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "junction",
+      "targetKey": "junction_a9798db3f8c4963e",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_202ad19dd3bcc9f5",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_7fa885048f35931b",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_bbbb1da407bd1281",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_dd8204c0e42510eb",
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+    }
+  ]
+}

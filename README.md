@@ -119,3 +119,19 @@ npm run data:segments:build -- --reconciliation data/generated/reconciliation/de
 Open `/admin/segments` in development to review demo junction and segment candidates. Private segment artifacts may be loaded only with server-side `SEGMENT_CONSTRUCTION_ARTIFACT_PATH` during local development; production loading is blocked until authenticated admin access exists.
 
 Accepted reconciliation != verified segment. Proposed junction != verified junction. Accepted segment-construction candidate != published completion segment.
+
+
+## Activity Matching
+
+Milestone 4 adds local GPS evidence matching for accepted prototype segment-construction candidates. Demo-only commands:
+
+`ash
+npm run data:activity:validate -- data/demo/activities
+npm run data:activity:match -- --segments data/generated/segments/demo-segment-construction.json --segment-decisions data/demo/segment-construction-decisions.demo.json --activities data/demo/activities
+` 
+
+GPS traces are evidence, not canonical trail geometry. Strong candidates are not completions, and accepted completion evidence does not create production SegmentCompletion rows. Real activity files belong in ignored data/local/activities/; private activity artifacts are blocked in production admin loading until authenticated admin access exists.
+
+Activity matching hardening: GPS edges beyond maximumInterpolatedActivityEdgeMeters are evidence gaps, separate activity components cannot combine into strong evidence, bbox matching is meter-aware, and source activity IDs dominate stable activity identity. See docs/ACTIVITY_MATCHING.md.
+
+Milestone 4 final hardening stores explicit per-component componentEvidence, requires estStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
