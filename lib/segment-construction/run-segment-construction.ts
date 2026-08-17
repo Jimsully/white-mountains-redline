@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 import type { ReconciliationArtifact } from "@/types/reconciliation";
 import type { SegmentConstructionArtifact } from "@/types/segment-construction";
@@ -47,9 +47,16 @@ export function printSegmentConstructionSummary(result: SegmentBuildResult) {
   console.log(`Junction candidates: ${diagnostics.junctionCandidateCount}`);
   console.log(`Exact intersections: ${diagnostics.exactIntersectionCount}`);
   console.log(`Near-intersection warnings: ${diagnostics.nearIntersectionWarningCount}`);
+  console.log(`Same-trail near-connection warnings: ${diagnostics.sameTrailNearConnectionWarningCount}`);
   console.log(`Segment candidates: ${diagnostics.segmentCandidateCount}`);
   console.log(`Short-segment warnings: ${diagnostics.shortSegmentWarningCount}`);
-  console.log(`Disconnected components: ${diagnostics.disconnectedComponentCount}`);
+  console.log(`Disconnected topology components: ${diagnostics.disconnectedComponentCount}`);
+  console.log(`Coarse source component boundaries: ${diagnostics.coarseSourceComponentBoundaryCount}`);
+  console.log(`Same-trail source-boundary snaps: ${diagnostics.sameTrailSourceBoundarySnapCount}`);
+  console.log(`Same-trail source-boundary snap meters: ${diagnostics.sameTrailSourceBoundarySnapMeters}`);
+  console.log(`Input geometry meters: ${diagnostics.inputGeometryMeters}`);
+  console.log(`Output geometry meters: ${diagnostics.outputGeometryMeters}`);
+  console.log(`Length delta meters: ${diagnostics.lengthDeltaMeters}`);
   console.log(`Input geometry miles: ${diagnostics.inputGeometryMiles}`);
   console.log(`Output segment miles: ${diagnostics.outputSegmentMiles}`);
   console.log(`Length delta miles: ${diagnostics.lengthDeltaMiles}`);

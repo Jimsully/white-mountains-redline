@@ -48,7 +48,7 @@ npm run data:segments:build -- \
   --decisions data/demo/reconciliation-decisions.demo.json
 ```
 
-Only accepted reconciliation decisions become `AcceptedTrailSource` records. Accepted decisions must explicitly identify a selected candidate and selected source feature IDs that still match the reconciliation artifact; stale or inconsistent decisions fail deterministically instead of falling back to a first candidate. Private paths are omitted from generated metadata. Only committed demo inputs may write `data/generated/segments/demo-segment-construction.json`; private runs write ignored `segment-construction.local.*.json` files.
+Only accepted reconciliation decisions become `AcceptedTrailSource` records. Accepted decisions must explicitly identify a selected candidate and selected source feature IDs whose set exactly matches the selected candidate/source group in the reconciliation artifact; stale or inconsistent decisions fail deterministically instead of falling back to a first candidate. Private paths are omitted from generated metadata. Only committed demo inputs may write `data/generated/segments/demo-segment-construction.json`; private runs write ignored `segment-construction.local.*.json` files.
 
 ## Topology Model
 
@@ -68,17 +68,20 @@ Topology decisions use centralized meter tolerances in `lib/segment-construction
 
 - `endpointSnapToleranceMeters`
 - `intersectionToleranceMeters`
+- `junctionDeduplicationToleranceMeters`
+- `sameTrailAutoConnectToleranceMeters`
+- `geometryLengthEpsilonMeters`
 - `minimumSegmentLengthMeters`
 
-These are conservative tuning parameters for review, not universal truths.
+`intersectionToleranceMeters` remains the broader point-on-line/topology-review threshold. `junctionDeduplicationToleranceMeters`, `sameTrailAutoConnectToleranceMeters`, and `geometryLengthEpsilonMeters` are intentionally tighter so numerical noise can be handled without hiding real topology decisions. These are conservative tuning parameters for review, not universal truths.
 
 ## Detection Rules
 
 The builder proposes junction candidates from trail endpoints and cross-trail intersections. Near misses inside the configured tolerance become `ambiguous_near_intersection` candidates with measured distance and `needs_review` status.
 
-Same-trail source feature boundaries are recorded in diagnostics but are not automatic completion segment boundaries. Connected same-trail components are merged into a single working topology line so only true outer endpoints become trail endpoint candidates. They should only become split points when they also correspond to real topology or later manual review.
+Coarse same-trail source component boundaries are recorded in diagnostics but are not automatic completion segment boundaries. Same-trail components are auto-joined only when endpoints are within `sameTrailAutoConnectToleranceMeters`; any source-boundary snap is reported with distance diagnostics. Components that are farther apart than that small tolerance but within the broader topology tolerance are preserved as separate topology components and reported as `same_trail_component_near_connection` review warnings. They should only become split points when they also correspond to real topology or later manual review.
 
-Review-only `ambiguous_near_intersection` and excessive-spread clusters remain diagnostics/review candidates and are not used as interior split points before review. Endpoint junctions still bound each source line so review-only interior candidates cannot make an input component disappear. Candidate keys are deterministic and include `SEGMENT_CONSTRUCTION_ALGORITHM_VERSION`, stable participating evidence, reason context, source component fingerprints, and quantized coordinates. Rebuilding unchanged input should preserve keys even if unchanged connected source components arrive in a different order.
+Exact crossing detections are deduplicated only within `junctionDeduplicationToleranceMeters`, not the broader intersection tolerance, so distinct nearby crossings remain separate candidates. Review-only `ambiguous_near_intersection` and excessive-spread clusters remain diagnostics/review candidates and are not used as interior split points before review. Endpoint junctions still bound each source line so review-only interior candidates cannot make an input component disappear. Candidate keys are deterministic and include `SEGMENT_CONSTRUCTION_ALGORITHM_VERSION`, stable participating evidence, reason context, source component fingerprints, and quantized coordinates. Rebuilding unchanged input should preserve keys even if unchanged connected source components arrive in a different order.
 
 ## Review Workspace
 

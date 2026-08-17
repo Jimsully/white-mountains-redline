@@ -18,6 +18,9 @@ export type SourceFeatureProvenancePrecision = "exact" | "coarse";
 export type SegmentConstructionTolerances = {
   endpointSnapToleranceMeters: number;
   intersectionToleranceMeters: number;
+  junctionDeduplicationToleranceMeters: number;
+  sameTrailAutoConnectToleranceMeters: number;
+  geometryLengthEpsilonMeters: number;
   minimumSegmentLengthMeters: number;
 };
 
@@ -93,11 +96,18 @@ export type SegmentConstructionDiagnostics = {
   junctionCandidateCount: number;
   exactIntersectionCount: number;
   nearIntersectionWarningCount: number;
+  sameTrailNearConnectionWarningCount: number;
   segmentCandidateCount: number;
   shortSegmentWarningCount: number;
   disconnectedComponentCount: number;
-  sourceFeatureBoundaryCount: number;
+  coarseSourceComponentBoundaryCount: number;
   excessiveSpreadJunctionCount: number;
+  sameTrailSourceBoundarySnapCount: number;
+  sameTrailSourceBoundarySnapMeters: number;
+  maxSameTrailSourceBoundarySnapMeters: number;
+  inputGeometryMeters: number;
+  outputGeometryMeters: number;
+  lengthDeltaMeters: number;
   inputGeometryMiles: number;
   outputSegmentMiles: number;
   lengthDeltaMiles: number;

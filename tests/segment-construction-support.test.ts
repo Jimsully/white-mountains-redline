@@ -3,39 +3,39 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { acceptedTrailSourcesFromReconciliation, resolveAcceptedTrailSourcesFromReconciliation } from "@/lib/segment-construction/accepted-sources";
-import { buildSegmentDecision, buildSegmentDecisionExport, parseStoredSegmentDecisions } from "@/lib/segment-construction/review-state";
 import { getSegmentConstructionOutputPath, isDemoSegmentInput } from "@/lib/segment-construction/paths";
-import { loadSegmentConstructionArtifact, PRIVATE_SEGMENT_ARTIFACT_PRODUCTION_ERROR } from "@/lib/segment-construction/server-artifact";
+import { buildSegmentDecision, buildSegmentDecisionExport, parseStoredSegmentDecisions } from "@/lib/segment-construction/review-state";
 import { runSegmentConstruction } from "@/lib/segment-construction/run-segment-construction";
+import { loadSegmentConstructionArtifact, PRIVATE_SEGMENT_ARTIFACT_PRODUCTION_ERROR } from "@/lib/segment-construction/server-artifact";
 import type { ReconciliationArtifact, ReconciliationDecision } from "@/types/reconciliation";
 import type { SegmentConstructionArtifact } from "@/types/segment-construction";
 
 const demoArtifact: SegmentConstructionArtifact = {
   metadata: { generatedAt: "2026-01-01T00:00:00Z", demoOnly: true, algorithmVersion: "segment-construction-v1", warning: "demo", reconciliationArtifactPath: "data/generated/reconciliation/demo-reconciliation.json", decisionsPath: "data/demo/reconciliation-decisions.demo.json" },
-  tolerances: { endpointSnapToleranceMeters: 12, intersectionToleranceMeters: 8, minimumSegmentLengthMeters: 20 },
+  tolerances: { endpointSnapToleranceMeters: 12, intersectionToleranceMeters: 8, junctionDeduplicationToleranceMeters: 1, sameTrailAutoConnectToleranceMeters: 1, geometryLengthEpsilonMeters: 0.25, minimumSegmentLengthMeters: 20 },
   acceptedTrailSources: [],
   junctionCandidates: [],
   segmentCandidates: [],
-  diagnostics: { acceptedTrailSourceCount: 0, junctionCandidateCount: 0, exactIntersectionCount: 0, nearIntersectionWarningCount: 0, segmentCandidateCount: 0, shortSegmentWarningCount: 0, disconnectedComponentCount: 0, sourceFeatureBoundaryCount: 0, inputGeometryMiles: 0, outputSegmentMiles: 0, lengthDeltaMiles: 0, warnings: [], excessiveSpreadJunctionCount: 0, integrityWarnings: [], integrityErrors: [] },
+  diagnostics: { acceptedTrailSourceCount: 0, junctionCandidateCount: 0, exactIntersectionCount: 0, nearIntersectionWarningCount: 0, sameTrailNearConnectionWarningCount: 0, segmentCandidateCount: 0, shortSegmentWarningCount: 0, disconnectedComponentCount: 0, coarseSourceComponentBoundaryCount: 0, excessiveSpreadJunctionCount: 0, sameTrailSourceBoundarySnapCount: 0, sameTrailSourceBoundarySnapMeters: 0, maxSameTrailSourceBoundarySnapMeters: 0, inputGeometryMeters: 0, outputGeometryMeters: 0, lengthDeltaMeters: 0, inputGeometryMiles: 0, outputSegmentMiles: 0, lengthDeltaMiles: 0, warnings: [], integrityWarnings: [], integrityErrors: [] },
 };
 
-
-function reconciliationArtifact(): ReconciliationArtifact {
+function reconciliationArtifact(featureIds = ["source-1"]): ReconciliationArtifact {
   return {
-    metadata: { generatedAt: "2026-01-01T00:00:00Z", demoOnly: true, sourceFeatureCount: 1, sourceTrailGroupCount: 1, warning: "demo" },
+    metadata: { generatedAt: "2026-01-01T00:00:00Z", demoOnly: true, sourceFeatureCount: featureIds.length, sourceTrailGroupCount: 1, warning: "demo" },
     summary: { inventoryItemCount: 1, exactMatchCount: 1, candidateFoundCount: 1, unmatchedCount: 0, ambiguousCount: 0, sourceTrailGroupCount: 1 },
     results: [{
       item: { itemKey: "alpha", displayName: "Alpha Trail", normalizedName: "ALPHA", reviewStatus: "candidate_found" },
-      candidates: [{ inventoryItemKey: "alpha", sourceTrailNormalizedName: "ALPHA", sourceTrailDisplayName: "Alpha Trail", score: 100, evidence: { exactNormalizedName: true, normalizedSimilarity: 1, tokenOverlap: 1, sourceFeatureCount: 1, sourceGisMiles: 1.2, sourceFeatureIds: ["source-1"], reasons: ["fixture"] } }],
+      candidates: [{ inventoryItemKey: "alpha", sourceTrailNormalizedName: "ALPHA", sourceTrailDisplayName: "Alpha Trail", score: 100, evidence: { exactNormalizedName: true, normalizedSimilarity: 1, tokenOverlap: 1, sourceFeatureCount: featureIds.length, sourceGisMiles: 1.2, sourceFeatureIds: featureIds, reasons: ["fixture"] } }],
       status: "exact",
     }],
-    sourceTrailGroups: [{ displayName: "Alpha Trail", normalizedName: "ALPHA", sourceFeatureCount: 1, sourceFeatureIds: ["source-1"], totalGisMiles: 1.2, bbox: [0, 0, 1, 1], geometry: { type: "MultiLineString", coordinates: [[[0, 0], [0.001, 0]]] }, sourceProvider: "fixture", originalSourceNames: ["Alpha Trail"] }],
+    sourceTrailGroups: [{ displayName: "Alpha Trail", normalizedName: "ALPHA", sourceFeatureCount: featureIds.length, sourceFeatureIds: featureIds, totalGisMiles: 1.2, bbox: [0, 0, 1, 1], geometry: { type: "MultiLineString", coordinates: [[[0, 0], [0.001, 0]]] }, sourceProvider: "fixture", originalSourceNames: ["Alpha Trail"] }],
   };
 }
 
 function acceptedDecision(overrides: Partial<ReconciliationDecision> = {}): ReconciliationDecision {
   return { inventoryItemKey: "alpha", selectedCandidateNormalizedName: "ALPHA", selectedSourceFeatureIds: ["source-1"], decision: "accepted", reviewTimestamp: "2026-01-01T00:00:00Z", ...overrides };
 }
+
 let tempRoot = "";
 const repoRoot = process.cwd();
 
@@ -54,13 +54,19 @@ describe("segment construction support", () => {
     expect(() => loadSegmentConstructionArtifact(demoArtifact, { NODE_ENV: "production", SEGMENT_CONSTRUCTION_ARTIFACT_PATH: "private.json" })).toThrow(PRIVATE_SEGMENT_ARTIFACT_PRODUCTION_ERROR);
   });
 
-
   it("requires accepted reconciliation decisions to identify a consistent candidate", () => {
     const artifact = reconciliationArtifact();
     expect(resolveAcceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedCandidateNormalizedName: undefined })] }).errors[0]).toContain("selectedCandidateNormalizedName is required");
     expect(resolveAcceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedCandidateNormalizedName: "STALE" })] }).errors[0]).toContain("selected candidate 'STALE' not found");
-    expect(resolveAcceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedSourceFeatureIds: ["missing-source"] })] }).errors[0]).toContain("selectedSourceFeatureIds not present");
     expect(() => acceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedCandidateNormalizedName: "STALE" })] })).toThrow("selected candidate 'STALE' not found");
+  });
+
+  it("requires accepted decisions to select the full source-feature set", () => {
+    const artifact = reconciliationArtifact(["source-1", "source-2"]);
+    expect(resolveAcceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedSourceFeatureIds: ["source-1"] })] }).errors[0]).toContain("must exactly match");
+    expect(resolveAcceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedSourceFeatureIds: ["source-1", "source-3"] })] }).errors[0]).toContain("must exactly match");
+    const accepted = acceptedTrailSourcesFromReconciliation(artifact, { decisions: [acceptedDecision({ selectedSourceFeatureIds: ["source-2", "source-1"] })] });
+    expect(accepted[0].sourceFeatureIds).toEqual(["source-1", "source-2"]);
   });
 
   it("marks accepted source component provenance as coarse", () => {

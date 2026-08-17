@@ -35,8 +35,9 @@ function toAcceptedTrailSource(artifact: ReconciliationArtifact, decision: Recon
   const candidateFeatureIds = new Set(candidate.evidence.sourceFeatureIds);
   const groupFeatureIds = new Set(group.sourceFeatureIds);
   const selectedFeatureIds = decision.selectedSourceFeatureIds ?? [];
-  const inconsistent = selectedFeatureIds.filter((id) => !candidateFeatureIds.has(id) || !groupFeatureIds.has(id));
-  if (inconsistent.length) return `${prefix}: selectedSourceFeatureIds not present in selected candidate/source group: ${inconsistent.join(", ")}`;
+  const selectedFeatureIdSet = new Set(selectedFeatureIds);
+  if (!sameSet(candidateFeatureIds, groupFeatureIds)) return `${prefix}: selected candidate/source group feature IDs do not agree`;
+  if (!sameSet(selectedFeatureIdSet, candidateFeatureIds)) return `${prefix}: selectedSourceFeatureIds must exactly match the selected candidate/source group feature IDs`;
 
   return {
     itemKey: result.item.itemKey,
@@ -52,6 +53,10 @@ function toAcceptedTrailSource(artifact: ReconciliationArtifact, decision: Recon
     warnings: group.geometry.coordinates.length > 1 ? ["multiple_source_components_require_topology_review", "component_source_feature_provenance_is_coarse"] : ["component_source_feature_provenance_is_coarse"],
     componentProvenance: group.geometry.coordinates.map((coordinates) => ({ componentKey: componentFingerprint(coordinates), sourceFeatureIds: group.sourceFeatureIds, provenancePrecision: "coarse" as const })),
   };
+}
+
+function sameSet(a: Set<string>, b: Set<string>) {
+  return a.size === b.size && Array.from(a).every((value) => b.has(value));
 }
 
 function componentFingerprint(coordinates: number[][]) {
