@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import path from "node:path";
 import type { ReconciliationArtifact } from "@/types/reconciliation";
 import type { SegmentConstructionArtifact } from "@/types/segment-construction";
@@ -53,6 +53,8 @@ export function printSegmentConstructionSummary(result: SegmentBuildResult) {
   console.log(`Input geometry miles: ${diagnostics.inputGeometryMiles}`);
   console.log(`Output segment miles: ${diagnostics.outputSegmentMiles}`);
   console.log(`Length delta miles: ${diagnostics.lengthDeltaMiles}`);
+  console.log(`Integrity warnings: ${diagnostics.integrityWarnings.length}`);
+  console.log(`Integrity errors: ${diagnostics.integrityErrors.length}`);
   console.log(`Output: ${path.relative(process.cwd(), result.outputPath)}`);
 }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import type { JunctionCandidate, SegmentCandidate, SegmentConstructionArtifact, SegmentReviewDecision, SegmentDecisionValue } from "@/types/segment-construction";
@@ -34,9 +34,9 @@ export function SegmentConstructionWorkspace({ artifact }: Props) {
     if (filter === "all" || filter === "segments") return true;
     if (filter === "needs_review") return segment.reviewStatus === "needs_review";
     if (filter === "short_segments") return segment.warningFlags.includes("very_short_segment");
-    if (filter === "disconnected") return (artifact.acceptedTrailSources.find((source) => source.itemKey === segment.parentInventoryItemKey)?.geometry.coordinates.length ?? 0) > 1;
+    if (filter === "disconnected") return segment.warningFlags.includes("disconnected_component");
     return false;
-  }), [artifact.acceptedTrailSources, artifact.segmentCandidates, filter]);
+  }), [artifact.segmentCandidates, filter]);
   const selectedJunction = selection?.type === "junction" ? artifact.junctionCandidates.find((item) => item.key === selection.key) : undefined;
   const selectedSegment = selection?.type === "segment" ? artifact.segmentCandidates.find((item) => item.key === selection.key) : undefined;
   const selectedKey = selectedJunction?.key ?? selectedSegment?.key;

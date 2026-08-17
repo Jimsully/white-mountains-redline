@@ -80,3 +80,14 @@ revoke all on public.junction_candidates from anon, authenticated;
 revoke all on public.segment_candidates from anon, authenticated;
 revoke all on public.junction_review_decisions from anon, authenticated;
 revoke all on public.segment_review_decisions from anon, authenticated;
+revoke all on public.segment_construction_runs from public;
+revoke all on public.junction_candidates from public;
+revoke all on public.segment_candidates from public;
+revoke all on public.junction_review_decisions from public;
+revoke all on public.segment_review_decisions from public;
+
+grant select, insert, update, delete on public.segment_construction_runs to service_role;
+grant select, insert, update, delete on public.junction_candidates to service_role;
+grant select, insert, update, delete on public.segment_candidates to service_role;
+grant select, insert, update, delete on public.junction_review_decisions to service_role;
+grant select, insert, update, delete on public.segment_review_decisions to service_role;

@@ -56,6 +56,9 @@ describe("segment construction topology", () => {
     const result = artifact([source("a", "Alpha", [[[0, 0], [0.001, 0]], [[0.001, 0], [0.002, 0]]], ["a-1", "a-2"])]);
     expect(result.junctionCandidates.some((junction) => junction.reasons.includes("same_trail_source_boundary"))).toBe(false);
     expect(result.diagnostics.sourceFeatureBoundaryCount).toBe(1);
+    expect(result.diagnostics.disconnectedComponentCount).toBe(0);
+    expect(result.junctionCandidates).toHaveLength(2);
+    expect(result.segmentCandidates).toHaveLength(1);
   });
 
   it("flags a near miss inside tolerance without treating it as exact", () => {
@@ -65,6 +68,9 @@ describe("segment construction topology", () => {
     ]);
     expect(result.diagnostics.nearIntersectionWarningCount).toBeGreaterThan(0);
     expect(result.junctionCandidates.some((junction) => junction.reasons.includes("ambiguous_near_intersection") && junction.reviewStatus === "needs_review")).toBe(true);
+    expect(result.segmentCandidates.filter((segment) => segment.parentInventoryItemKey === "a")).toHaveLength(1);
+    expect(result.segmentCandidates.filter((segment) => segment.parentInventoryItemKey === "b")).toHaveLength(1);
+    expect(Math.abs(result.diagnostics.lengthDeltaMiles)).toBeLessThan(0.0001);
   });
 
   it("ignores near misses outside tolerance", () => {
@@ -115,5 +121,25 @@ describe("segment construction topology", () => {
   it("reports disconnected MultiLineString components", () => {
     const result = artifact([source("a", "Alpha", [[[0, 0], [0.001, 0]], [[0.01, 0], [0.011, 0]]], ["a-1", "a-2"])]);
     expect(result.diagnostics.disconnectedComponentCount).toBe(1);
+  });
+
+  it("keeps segment keys stable when unchanged source components are reordered", () => {
+    const first = artifact([source("a", "Alpha", [[[0, 0], [0.001, 0]], [[0.001, 0], [0.002, 0]]], ["a-1", "a-2"])]);
+    const second = artifact([source("a", "Alpha", [[[0.001, 0], [0.002, 0]], [[0, 0], [0.001, 0]]], ["a-1", "a-2"])]);
+    expect(second.segmentCandidates.map((segment) => segment.key).sort()).toEqual(first.segmentCandidates.map((segment) => segment.key).sort());
+  });
+
+  it("marks excessive-spread chained clusters as needs review and does not split on them", () => {
+    const tight = { ...tolerances, intersectionToleranceMeters: 10, endpointSnapToleranceMeters: 10 };
+    const result = buildSegmentConstructionArtifact({ acceptedTrailSources: [
+      source("a", "Alpha", [[0, 0], [0.001, 0]]),
+      source("b", "Beta", [[0.0001, -0.0002], [0.0001, 0.0002]]),
+      source("c", "Gamma", [[0.00018, -0.0002], [0.00018, 0.0002]]),
+      source("d", "Delta", [[0.00026, -0.0002], [0.00026, 0.0002]])
+    ], generatedAt: "2026-01-01T00:00:00Z", demoOnly: true, tolerances: tight });
+    const reviewCluster = result.junctionCandidates.find((junction) => junction.maximumClusterSpreadMeters > tight.intersectionToleranceMeters);
+    expect(result.diagnostics.excessiveSpreadJunctionCount).toBeGreaterThan(0);
+    expect(reviewCluster?.reviewStatus).toBe("needs_review");
+    expect(result.segmentCandidates.filter((segment) => segment.parentInventoryItemKey === "a")).toHaveLength(1);
   });
 });

@@ -13,6 +13,7 @@ export type JunctionReason =
 export type JunctionReviewStatus = "proposed" | "accepted" | "rejected" | "needs_review";
 export type SegmentReviewStatus = "proposed" | "accepted" | "rejected" | "needs_review";
 export type SegmentDecisionValue = "accepted" | "rejected" | "needs_review";
+export type SourceFeatureProvenancePrecision = "exact" | "coarse";
 
 export type SegmentConstructionTolerances = {
   endpointSnapToleranceMeters: number;
@@ -36,6 +37,7 @@ export type AcceptedTrailSource = {
     evidence: ReconciliationCandidate["evidence"];
   };
   warnings: string[];
+  componentProvenance?: Array<{ componentKey: string; sourceFeatureIds: string[]; provenancePrecision: SourceFeatureProvenancePrecision }>;
 };
 
 export type JunctionCandidate = {
@@ -77,6 +79,8 @@ export type SegmentCandidate = {
     splitFromAcceptedSource: boolean;
     snappedToJunction: boolean;
     componentIndex: number;
+    sourceComponentKey: string;
+    sourceFeatureProvenancePrecision: SourceFeatureProvenancePrecision;
     startMeasureMeters: number;
     endMeasureMeters: number;
   };
@@ -93,10 +97,13 @@ export type SegmentConstructionDiagnostics = {
   shortSegmentWarningCount: number;
   disconnectedComponentCount: number;
   sourceFeatureBoundaryCount: number;
+  excessiveSpreadJunctionCount: number;
   inputGeometryMiles: number;
   outputSegmentMiles: number;
   lengthDeltaMiles: number;
   warnings: string[];
+  integrityWarnings: string[];
+  integrityErrors: string[];
 };
 
 export type SegmentConstructionArtifact = {

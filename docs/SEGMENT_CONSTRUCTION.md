@@ -48,7 +48,7 @@ npm run data:segments:build -- \
   --decisions data/demo/reconciliation-decisions.demo.json
 ```
 
-Only accepted reconciliation decisions become `AcceptedTrailSource` records. Private paths are omitted from generated metadata. Only committed demo inputs may write `data/generated/segments/demo-segment-construction.json`; private runs write ignored `segment-construction.local.*.json` files.
+Only accepted reconciliation decisions become `AcceptedTrailSource` records. Accepted decisions must explicitly identify a selected candidate and selected source feature IDs that still match the reconciliation artifact; stale or inconsistent decisions fail deterministically instead of falling back to a first candidate. Private paths are omitted from generated metadata. Only committed demo inputs may write `data/generated/segments/demo-segment-construction.json`; private runs write ignored `segment-construction.local.*.json` files.
 
 ## Topology Model
 
@@ -60,7 +60,7 @@ The domain model is separate from production `TrailSegment` and includes:
 - `SegmentConstructionArtifact`
 - `SegmentReviewDecision`
 
-Every candidate keeps source feature IDs, reconciliation evidence, calculated geometry length, algorithm version, review status, and warning flags.
+Every candidate keeps source feature IDs, reconciliation evidence, calculated geometry length, algorithm version, review status, and warning flags. Component-level source-feature provenance is currently coarse: each constructed component carries the full accepted source-feature set until human review can assign finer attribution.
 
 ## Tolerances
 
@@ -76,9 +76,9 @@ These are conservative tuning parameters for review, not universal truths.
 
 The builder proposes junction candidates from trail endpoints and cross-trail intersections. Near misses inside the configured tolerance become `ambiguous_near_intersection` candidates with measured distance and `needs_review` status.
 
-Same-trail source feature boundaries are recorded in diagnostics but are not automatic completion segment boundaries. They should only become split points when they also correspond to real topology or later manual review.
+Same-trail source feature boundaries are recorded in diagnostics but are not automatic completion segment boundaries. Connected same-trail components are merged into a single working topology line so only true outer endpoints become trail endpoint candidates. They should only become split points when they also correspond to real topology or later manual review.
 
-Candidate keys are deterministic and include `SEGMENT_CONSTRUCTION_ALGORITHM_VERSION`, stable participating evidence, and quantized coordinates. Rebuilding unchanged input should preserve keys.
+Review-only `ambiguous_near_intersection` and excessive-spread clusters remain diagnostics/review candidates and are not used as interior split points before review. Endpoint junctions still bound each source line so review-only interior candidates cannot make an input component disappear. Candidate keys are deterministic and include `SEGMENT_CONSTRUCTION_ALGORITHM_VERSION`, stable participating evidence, reason context, source component fingerprints, and quantized coordinates. Rebuilding unchanged input should preserve keys even if unchanged connected source components arrive in a different order.
 
 ## Review Workspace
 
@@ -88,4 +88,4 @@ Private artifact loading is blocked in production until authenticated admin acce
 
 `SEGMENT CONSTRUCTION WORKSPACE * NOT FOR NAVIGATION * NOT SEGMENT VERIFIED`
 
-Prototype decisions remain in localStorage and can be exported as `segment-construction-decisions.prototype.json`. Exported decisions do not publish production segments.
+Prototype decisions remain in localStorage and can be exported as `segment-construction-decisions.prototype.json`. Exported decisions do not publish production segments. The builder runs a topology integrity validator and fails before writing an artifact when hard invariants are violated.
