@@ -103,3 +103,25 @@ raw USFS source feature
 ```
 
 Accepted reconciliation is not a verified trail segment. Prototype decisions stay in browser localStorage and can be exported as JSON for later review.
+
+## Segment Construction Workspace
+Milestone 3 adds a development/admin route at `/admin/segments`. It consumes committed demo segment-construction JSON and is marked not for navigation and not segment verified. Private local artifacts can be loaded only through server-only `SEGMENT_CONSTRUCTION_ARTIFACT_PATH`; production private loading fails until authenticated admin access exists.
+
+Segment construction flow:
+
+```text
+raw source feature
+  -> source trail group
+  -> challenge inventory item
+  -> accepted trail-level reconciliation
+  -> accepted trail source geometry
+  -> junction candidates
+  -> segment candidates
+  -> human topology review
+  -> approved segment construction
+  -> production Trail / TrailSegments
+  -> human segment verification
+  -> completion network
+```
+
+Accepted reconciliation is not a verified segment. A proposed junction is not a verified junction. An accepted segment-construction candidate is not a published completion segment.

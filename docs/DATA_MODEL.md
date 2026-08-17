@@ -59,3 +59,14 @@ Milestone 2 introduces challenge inventory and trail-level reconciliation concep
 - `ReconciliationDecision`: human review decision such as accepted, rejected, or needs review.
 
 Migration 005 creates future persistence tables for these concepts. An accepted reconciliation decision does not create a production Trail and is not a verified junction-to-junction TrailSegment.
+
+## Segment Construction Model
+Milestone 3 adds segment-construction concepts separate from production `TrailSegment`:
+
+- `AcceptedTrailSource`: accepted trail-level reconciliation evidence and source geometry.
+- `JunctionCandidate`: proposed endpoint, crossing, near-miss, manual, or source-boundary topology point with review state.
+- `SegmentCandidate`: proposed junction-to-junction LineString with calculated miles, source feature IDs, split metadata, warnings, and review state.
+- `SegmentConstructionArtifact`: deterministic JSON output containing accepted sources, junction candidates, segment candidates, tolerances, algorithm version, and diagnostics.
+- `SegmentReviewDecision`: prototype review decision for a junction or segment candidate.
+
+These records are review artifacts. They are not production `trails`, not production `trail_segments`, and not human-verified completion units.

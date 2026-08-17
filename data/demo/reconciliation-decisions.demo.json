@@ -1,0 +1,30 @@
+{
+  "exportedAt": "2026-08-17T00:00:00.000Z",
+  "warning": "DEMO DATA ONLY. Prototype accepted reconciliation decisions for segment-construction testing; not a White Mountain Guide inventory and not segment verified.",
+  "decisions": [
+    {
+      "inventoryItemKey": "demo-franconia-ridge",
+      "selectedCandidateNormalizedName": "FRANCONIA RIDGE",
+      "selectedSourceFeatureIds": ["6646428", "6646429"],
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO accepted source for topology construction testing only."
+    },
+    {
+      "inventoryItemKey": "demo-falling-waters",
+      "selectedCandidateNormalizedName": "FALLING WATERS",
+      "selectedSourceFeatureIds": ["6597421"],
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO accepted source for topology construction testing only."
+    },
+    {
+      "inventoryItemKey": "demo-garfield-ridge",
+      "selectedCandidateNormalizedName": "GARFIELD RIDGE",
+      "selectedSourceFeatureIds": ["6624048", "6627561"],
+      "decision": "accepted",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "notes": "DEMO accepted source for topology construction testing only."
+    }
+  ]
+}

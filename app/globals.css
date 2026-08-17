@@ -80,3 +80,6 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .candidateSelect { width: 100%; display: flex; justify-content: space-between; gap: 16px; align-items: center; border: 0; background: transparent; color: inherit; padding: 0; text-align: left; cursor: pointer; }
 .candidateSelect span { color: var(--muted); font-weight: 700; }
 .candidateCard.active .candidateSelect span { color: #8d261c; }
+.segmentShell { min-height: 100vh; background: var(--paper); color: var(--ink); }
+.segmentGrid { display: grid; grid-template-columns: 320px minmax(360px, 1fr) 420px; min-height: calc(100vh - 116px); }
+@media (max-width: 980px) { .segmentGrid { grid-template-columns: 1fr; } }
