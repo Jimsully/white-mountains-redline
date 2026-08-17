@@ -19,21 +19,21 @@ The demo inventory is not a White Mountain Guide inventory and does not claim ch
 
 ```text
 raw USFS source feature
-    ↓
+    ->
 source trail group
-    ↓
+    ->
 challenge inventory item
-    ↓
+    ->
 reconciliation candidate
-    ↓
+    ->
 human accepted trail-level match
-    ↓
+    ->
 production Trail
-    ↓
+    ->
 junction-to-junction TrailSegments
-    ↓
+    ->
 human segment verification
-    ↓
+    ->
 redline completion network
 ```
 
@@ -72,6 +72,8 @@ Geometries are not destructively merged.
 ## Candidate scoring
 Candidate evidence is inspectable and deterministic. It includes exact normalized-name matches, normalized-name similarity, token overlap, region hint presence, feature count, GIS miles, and source feature IDs.
 
+Region hints are human review context only. They are not geographic compatibility evidence and do not add score until explicit boundaries or region rules are introduced.
+
 Scores are candidate-generation aids only. No candidate automatically becomes verified.
 
 ## Reconciliation CLI
@@ -82,12 +84,21 @@ npm run data:reconcile -- --inventory data/demo/challenge-inventory.demo.csv
 
 The CLI validates the inventory, loads committed staged USFS source data, groups source features, ranks candidates, prints summary counts, and writes JSON under `data/generated/reconciliation/`.
 
-Demo output may be committed. Real local inventory-derived output is written as `*.local.*` and ignored.
+Demo output may be committed only when the input inventory path is under `data/demo/`. A filename ending in `.demo.csv` somewhere else is still private. Real local inventory-derived output is written as `*.local.*`, ignored, and records `local/private inventory path omitted` instead of the original absolute path.
 
 ## Review workspace
-Open `/admin/reconciliation` in development. The page is a source reconciliation workspace, not a public redlining page. It is marked:
+Open `/admin/reconciliation` in development. By default it loads the committed demo reconciliation artifact. To review a private local artifact, set the server-only `RECONCILIATION_ARTIFACT_PATH` environment variable before starting Next.js; do not use `NEXT_PUBLIC_*` for this path.
 
-`SOURCE RECONCILIATION WORKSPACE · NOT FOR NAVIGATION · NOT CHALLENGE VERIFIED`
+PowerShell example:
+
+```powershell
+$env:RECONCILIATION_ARTIFACT_PATH="C:\Users\james\Documents\Codex\2026-08-16\white-mountains-redline-work\data\generated\reconciliation\reconciliation.local.123.json"
+npm run dev
+```
+
+The private inventory path is never sent to the browser. The page is a source reconciliation workspace, not a public redlining page. It is marked:
+
+`SOURCE RECONCILIATION WORKSPACE * NOT FOR NAVIGATION * NOT CHALLENGE VERIFIED`
 
 Prototype review decisions are stored in browser `localStorage`. Exported JSON contains the inventory item key, selected candidate normalized name, selected source feature IDs, decision, timestamp, and optional notes.
 

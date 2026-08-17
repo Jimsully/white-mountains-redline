@@ -2,6 +2,7 @@ import { normalizedNameSimilarity, tokenOverlap } from "@/lib/reconciliation/nam
 import type { ChallengeInventoryItem, ReconciliationCandidate, ReconciliationItemResult, SourceTrailGroup } from "@/types/reconciliation";
 
 const MIN_CANDIDATE_SCORE = 45;
+const REGION_HINT_REVIEW_REASON = "Region hint available; geographic compatibility not yet evaluated";
 
 export function matchChallengeItems(items: ChallengeInventoryItem[], groups: SourceTrailGroup[]): ReconciliationItemResult[] {
   return items.map((item) => {
@@ -22,7 +23,6 @@ export function scoreCandidate(item: ChallengeInventoryItem, group: SourceTrailG
   const exact = item.normalizedName === group.normalizedName;
   const similarity = normalizedNameSimilarity(item.normalizedName, group.normalizedName);
   const overlap = tokenOverlap(item.normalizedName, group.normalizedName);
-  const regionHintCompatible = item.regionHint ? true : undefined;
   let score = Math.max(similarity * 75, overlap * 70);
   const reasons: string[] = [];
 
@@ -31,7 +31,7 @@ export function scoreCandidate(item: ChallengeInventoryItem, group: SourceTrailG
     if (similarity >= 0.82) { score += 15; reasons.push("High normalized-name similarity"); }
     if (overlap >= 0.66) { score += 10; reasons.push("Strong token overlap"); }
   }
-  if (item.regionHint) { score += 2; reasons.push("Region hint available for human review"); }
+  if (item.regionHint) reasons.push(REGION_HINT_REVIEW_REASON);
   if (!reasons.length) reasons.push("Weak fuzzy name similarity");
 
   return {
@@ -43,7 +43,6 @@ export function scoreCandidate(item: ChallengeInventoryItem, group: SourceTrailG
       exactNormalizedName: exact,
       normalizedSimilarity: round(similarity),
       tokenOverlap: round(overlap),
-      regionHintCompatible,
       sourceFeatureCount: group.sourceFeatureCount,
       sourceGisMiles: group.totalGisMiles,
       sourceFeatureIds: group.sourceFeatureIds,

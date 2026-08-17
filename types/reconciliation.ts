@@ -81,6 +81,7 @@ export type ReconciliationArtifact = {
     sourceFeatureCount: number;
     sourceTrailGroupCount: number;
     warning: string;
+    inventoryPath?: string;
   };
   summary: {
     inventoryItemCount: number;

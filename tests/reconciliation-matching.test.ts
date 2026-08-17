@@ -34,7 +34,9 @@ describe("source grouping and candidate matching", () => {
     expect(results.find((result) => result.item.itemKey === "exact")?.status).toBe("exact");
     expect(results.find((result) => result.item.itemKey === "ambiguous")?.status).toBe("ambiguous");
     expect(results.find((result) => result.item.itemKey === "fuzzy")?.candidates[0].sourceTrailNormalizedName).toBe("GARFIELD RIDGE");
-    expect(results.find((result) => result.item.itemKey === "fuzzy")?.candidates[0].evidence.regionHintCompatible).toBe(true);
+    const fuzzyEvidence = results.find((result) => result.item.itemKey === "fuzzy")?.candidates[0].evidence;
+    expect(fuzzyEvidence?.regionHintCompatible).toBeUndefined();
+    expect(fuzzyEvidence?.reasons).toContain("Region hint available; geographic compatibility not yet evaluated");
     expect(results.find((result) => result.item.itemKey === "unmatched")?.status).toBe("unmatched");
   });
 
