@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "data:import:usfs": "node scripts/import-usfs.mjs"
+    "data:import:usfs": "node scripts/import-usfs.mjs",
+    "data:inventory:validate": "node scripts/validate-inventory.mjs",
+    "data:reconcile": "node scripts/reconcile.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^6.4.0",
