@@ -36,3 +36,16 @@ npm run data:activity:match -- --segments data/generated/segments/demo-segment-c
 ```
 
 The v1 matcher samples canonical segment geometry at configured meter intervals and measures each sample's distance to the activity trace. It does not define completion by counting GPS points near a trail.
+
+## Matcher Integrity
+
+Activity edges longer than maximumInterpolatedActivityEdgeMeters are treated as GPS evidence gaps. The endpoint points remain evidence, but the matcher does not interpolate across that distance and call it observed traversal.
+
+Strong candidates use stricter proximity thresholds (strongMaximumMedianDistanceMeters and strongMaximumP95DistanceMeters) than general review candidates. A high-coverage nearby parallel trace that misses those strong thresholds is held for 
+eeds_review rather than treated as complete-quality evidence.
+
+Strong candidates also require one activity trace component to satisfy the coverage and endpoint requirements on its own. Separate GPX 	rkseg components can produce useful union evidence, but they cannot silently combine into strong traversal continuity.
+
+The spatial prefilter expands latitude and longitude independently using meter-aware conversion at the relevant latitude. It is intentionally conservative: false positives are acceptable because full scoring follows; false negatives are not.
+
+Activity identity is stable when a source activity ID exists: the key is derived from the activity-key version, source, and source activity ID, not mutable title or filename text. Without a source ID, fallback identity uses source, start time, and an orientation-stable geometry fingerprint.

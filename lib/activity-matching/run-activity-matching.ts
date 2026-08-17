@@ -4,7 +4,7 @@ import type { SegmentConstructionArtifact } from "@/types/segment-construction";
 import type { ActivityMatchArtifact, SegmentConstructionDecisionExport } from "@/types/activity-matching";
 import { loadActivitiesFromPath, summarizeActivities } from "@/lib/activity-matching/activities";
 import { buildActivityMatchArtifact } from "@/lib/activity-matching/matcher";
-import { getActivityMatchingOutputPath, formatActivityMatchingInputPathForArtifact, isDemoActivityMatchingInput } from "@/lib/activity-matching/paths";
+import { getActivityMatchingOutputPath, formatActivityMatchingInputPathForArtifact, isDemoActivityMatchingInput, isSafePrivateMetadataPath } from "@/lib/activity-matching/paths";
 import { resolveEligibleMatchingSegments } from "@/lib/activity-matching/segments";
 
 export type ActivityMatchingRunResult = {
@@ -35,7 +35,7 @@ export function runActivityMatching(args: { segmentArtifactPath: string; segment
     activitiesPath: formatActivityMatchingInputPathForArtifact(args.activitiesPath, repositoryRoot, demoOnly),
     integrityWarnings: segmentResolution.warnings,
   });
-  if (!demoOnly && Object.values(artifact.metadata).some((value) => typeof value === "string" && value.includes(path.sep))) throw new Error("Private source path leaked into activity matching metadata.");
+  if (!demoOnly && (!isSafePrivateMetadataPath(artifact.metadata.segmentArtifactPath) || !isSafePrivateMetadataPath(artifact.metadata.segmentDecisionsPath) || !isSafePrivateMetadataPath(artifact.metadata.activitiesPath))) throw new Error("Private source path leaked into activity matching metadata.");
 
   const outputPath = getActivityMatchingOutputPath(args.segmentArtifactPath, args.segmentDecisionsPath, args.activitiesPath, repositoryRoot);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
@@ -57,6 +57,8 @@ export function printActivityMatchingSummary(result: ActivityMatchingRunResult) 
   console.log(`unmatched activities: ${artifact.diagnostics.unmatchedActivityCount}`);
   console.log(`activities with at least one candidate: ${artifact.diagnostics.activitiesWithCandidateCount}`);
   console.log(`segments with at least one candidate: ${artifact.diagnostics.segmentsWithCandidateCount}`);
+  console.log(`long activity edges ignored: ${artifact.diagnostics.ignoredLongActivityEdgeCount}`);
+  console.log(`matches blocked from strong by component discontinuity: ${artifact.diagnostics.componentDiscontinuityBlockedStrongCount}`);
   console.log(`integrity warnings: ${artifact.diagnostics.integrityWarnings.length}`);
   console.log(`integrity errors: ${artifact.diagnostics.integrityErrors.length}`);
   console.log(`output: ${path.relative(process.cwd(), outputPath)}`);

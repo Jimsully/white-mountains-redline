@@ -16,8 +16,11 @@ export function bboxForCoordinates(coordinates: Position[]): [number, number, nu
 }
 
 export function expandedBboxIntersects(a: [number, number, number, number], b: [number, number, number, number], radiusMeters: number) {
-  const expansion = radiusMeters / 111_320;
-  return !(a[2] + expansion < b[0] || a[0] - expansion > b[2] || a[3] + expansion < b[1] || a[1] - expansion > b[3]);
+  const latitudeDegrees = Math.max(Math.abs(a[1]), Math.abs(a[3]), Math.abs(b[1]), Math.abs(b[3]));
+  const latitudeExpansion = radiusMeters / 111_320;
+  const longitudeMetersPerDegree = Math.max(111_320 * Math.cos(latitudeDegrees * Math.PI / 180), 1);
+  const longitudeExpansion = radiusMeters / longitudeMetersPerDegree;
+  return !(a[2] + longitudeExpansion < b[0] || a[0] - longitudeExpansion > b[2] || a[3] + latitudeExpansion < b[1] || a[1] - latitudeExpansion > b[3]);
 }
 
 export function sampleLine(coordinates: Position[], intervalMeters: number): Position[] {

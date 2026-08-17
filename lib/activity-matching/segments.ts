@@ -41,7 +41,7 @@ export function resolveEligibleMatchingSegments(artifact: SegmentConstructionArt
       continue;
     }
     if (segmentDecision.decision !== "accepted" || startDecision.decision !== "accepted" || endDecision.decision !== "accepted") continue;
-    eligibleSegments.push(segmentToEligible(segment, artifact.metadata.algorithmVersion));
+    eligibleSegments.push(segmentToEligible(segment, artifact.metadata.algorithmVersion, segmentDecision, startDecision, endDecision, decisionExport));
   }
 
   return { eligibleSegments, errors, warnings };
@@ -53,7 +53,7 @@ export function requireEligibleMatchingSegments(artifact: SegmentConstructionArt
   return resolution.eligibleSegments;
 }
 
-function segmentToEligible(segment: SegmentCandidate, segmentConstructionAlgorithmVersion: string): EligibleMatchingSegment {
+function segmentToEligible(segment: SegmentCandidate, segmentConstructionAlgorithmVersion: string, segmentDecision: SegmentReviewDecision, startJunctionDecision: SegmentReviewDecision, endJunctionDecision: SegmentReviewDecision, decisionExport: SegmentConstructionDecisionExport): EligibleMatchingSegment {
   return {
     segmentKey: segment.key,
     parentInventoryItemKey: segment.parentInventoryItemKey,
@@ -67,5 +67,12 @@ function segmentToEligible(segment: SegmentCandidate, segmentConstructionAlgorit
     sourceProvider: segment.sourceProvider,
     segmentConstructionAlgorithmVersion,
     sourceSegmentCandidate: segment,
+    approvalEvidence: {
+      segmentDecision,
+      startJunctionDecision,
+      endJunctionDecision,
+      decisionArtifactAlgorithmVersion: decisionExport.algorithmVersion,
+      sourceSegmentArtifact: decisionExport.sourceArtifact ?? {},
+    },
   };
 }

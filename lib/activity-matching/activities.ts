@@ -4,6 +4,7 @@ import path from "node:path";
 import { XMLParser } from "fast-xml-parser";
 import type { MultiLineString, Position } from "geojson";
 import type { ActivityImportSummary, ActivityRecord, ActivitySource } from "@/types/activity-matching";
+import { ACTIVITY_KEY_VERSION } from "@/types/activity-matching";
 import { multiLineLengthMeters, stableCoordinateFingerprint } from "@/lib/activity-matching/geometry";
 
 export function loadActivitiesFromPath(inputPath: string): ActivityRecord[] {
@@ -65,11 +66,14 @@ export function parseGpxActivity(raw: string, originalFilename = "activity.gpx")
         components.push(points);
         times.push(pointTimes);
         elevations.push(pointElevations);
+      } else {
+        malformedPointCount += points.length;
       }
     }
   }
 
   const geometry: MultiLineString = { type: "MultiLineString", coordinates: components };
+  if (!geometry.coordinates.length) throw new Error("Activity contains no usable track component with at least two valid points.");
   const startTime = times.flat().filter((value): value is string => Boolean(value)).sort()[0];
   return makeActivityRecord({ source: "gpx", title, startTime, geometry, originalPointCount, malformedPointCount, originalFilename, times, elevations, sourceMetadata: { parser: "fast-xml-parser" } });
 }
@@ -83,9 +87,10 @@ export function parseNormalizedActivities(raw: string, originalFilename = "activ
 function normalizedRecordToActivity(record: unknown, fallbackName: string): ActivityRecord {
   if (!record || typeof record !== "object") throw new Error(`Invalid activity record in ${fallbackName}`);
   const candidate = record as Record<string, unknown>;
-  const geometry = normalizeGeometry(candidate.trace ?? candidate.geometry);
-  const originalPointCount = Number(candidate.originalPointCount ?? geometry.coordinates.flat().length);
-  const malformedPointCount = Number(candidate.malformedPointCount ?? 0);
+  const normalized = normalizeGeometry(candidate.trace ?? candidate.geometry);
+  const geometry = normalized.geometry;
+  const originalPointCount = Number(candidate.originalPointCount ?? normalized.originalPointCount);
+  const malformedPointCount = Number(candidate.malformedPointCount ?? 0) + normalized.malformedPointCount;
   return makeActivityRecord({
     source: (candidate.source as ActivitySource | undefined) ?? "normalized_json",
     sourceActivityId: stringOrUndefined(candidate.sourceActivityId),
@@ -106,7 +111,7 @@ function normalizedRecordToActivity(record: unknown, fallbackName: string): Acti
 
 function makeActivityRecord(args: { source: ActivitySource; sourceActivityId?: string; title?: string; startTime?: string; activityType?: string; suppliedDistanceMeters?: number; suppliedElevationGainMeters?: number; elapsedDurationSeconds?: number; movingDurationSeconds?: number; geometry: MultiLineString; originalPointCount: number; malformedPointCount: number; originalFilename?: string; times?: Array<Array<string | undefined>>; elevations?: Array<Array<number | undefined>>; sourceMetadata: Record<string, unknown> }): ActivityRecord {
   const normalizedPointCount = args.geometry.coordinates.reduce((sum, line) => sum + line.length, 0);
-  const activityKey = stableActivityKey(args.source, args.sourceActivityId, args.startTime, args.title, args.geometry);
+  const activityKey = stableActivityKey(args.source, args.sourceActivityId, args.startTime, args.geometry);
   return {
     activityKey,
     source: args.source,
@@ -132,32 +137,58 @@ function normalizeGpxPoint(point: unknown) {
   const candidate = point as Record<string, unknown>;
   const lon = Number(candidate["@_lon"]);
   const lat = Number(candidate["@_lat"]);
-  if (!Number.isFinite(lon) || !Number.isFinite(lat) || lon < -180 || lon > 180 || lat < -90 || lat > 90) return undefined;
+  if (!isValidCoordinate([lon, lat])) return undefined;
   return { coordinate: [lon, lat] as Position, time: stringOrUndefined(candidate.time), elevationMeters: numberOrUndefined(candidate.ele) };
 }
 
-function normalizeGeometry(value: unknown): MultiLineString {
+function normalizeGeometry(value: unknown): { geometry: MultiLineString; originalPointCount: number; malformedPointCount: number } {
   if (!value || typeof value !== "object") throw new Error("Activity geometry is required.");
   const geometry = value as { type?: string; coordinates?: unknown };
-  if (geometry.type === "LineString" && Array.isArray(geometry.coordinates)) return { type: "MultiLineString", coordinates: [normalizeLine(geometry.coordinates)] };
-  if (geometry.type === "MultiLineString" && Array.isArray(geometry.coordinates)) return { type: "MultiLineString", coordinates: geometry.coordinates.map(normalizeLine).filter((line) => line.length >= 2) };
-  throw new Error("Activity geometry must be LineString or MultiLineString.");
-}
+  let lines: unknown[];
+  if (geometry.type === "LineString" && Array.isArray(geometry.coordinates)) lines = [geometry.coordinates];
+  else if (geometry.type === "MultiLineString" && Array.isArray(geometry.coordinates)) lines = geometry.coordinates;
+  else throw new Error("Activity geometry must be LineString or MultiLineString.");
 
-function normalizeLine(value: unknown): Position[] {
-  if (!Array.isArray(value)) return [];
-  const coordinates: Position[] = [];
-  for (const point of value) {
-    if (!Array.isArray(point)) continue;
-    const coordinate: Position = [Number(point[0]), Number(point[1])];
-    if (Number.isFinite(coordinate[0]) && Number.isFinite(coordinate[1])) coordinates.push(coordinate);
+  let originalPointCount = 0;
+  let malformedPointCount = 0;
+  const coordinates: Position[][] = [];
+  for (const line of lines) {
+    const normalized = normalizeLine(line);
+    originalPointCount += normalized.originalPointCount;
+    malformedPointCount += normalized.malformedPointCount;
+    if (normalized.coordinates.length >= 2) coordinates.push(normalized.coordinates);
+    else malformedPointCount += normalized.coordinates.length;
   }
-  return coordinates;
+  if (!coordinates.length) throw new Error("Activity contains no usable track component with at least two valid points.");
+  return { geometry: { type: "MultiLineString", coordinates }, originalPointCount, malformedPointCount };
 }
 
-function stableActivityKey(source: ActivitySource, sourceActivityId: string | undefined, startTime: string | undefined, title: string | undefined, geometry: MultiLineString) {
-  const fingerprint = geometry.coordinates.map(stableCoordinateFingerprint).join("|");
-  return `activity_${crypto.createHash("sha1").update([source, sourceActivityId, startTime, title, fingerprint].join("|")).digest("hex").slice(0, 16)}`;
+function normalizeLine(value: unknown): { coordinates: Position[]; originalPointCount: number; malformedPointCount: number } {
+  if (!Array.isArray(value)) return { coordinates: [], originalPointCount: 0, malformedPointCount: 0 };
+  const coordinates: Position[] = [];
+  let malformedPointCount = 0;
+  for (const point of value) {
+    if (!Array.isArray(point)) {
+      malformedPointCount += 1;
+      continue;
+    }
+    const coordinate: Position = [Number(point[0]), Number(point[1])];
+    if (isValidCoordinate(coordinate)) coordinates.push(coordinate);
+    else malformedPointCount += 1;
+  }
+  return { coordinates, originalPointCount: value.length, malformedPointCount };
+}
+
+function stableActivityKey(source: ActivitySource, sourceActivityId: string | undefined, startTime: string | undefined, geometry: MultiLineString) {
+  if (sourceActivityId) return `activity_${crypto.createHash("sha1").update([ACTIVITY_KEY_VERSION, source, sourceActivityId].join("|")).digest("hex").slice(0, 16)}`;
+  const fingerprint = geometry.coordinates.map(orientationStableFingerprint).sort().join("|");
+  return `activity_${crypto.createHash("sha1").update([ACTIVITY_KEY_VERSION, source, startTime, fingerprint].join("|")).digest("hex").slice(0, 16)}`;
+}
+
+function orientationStableFingerprint(coordinates: Position[]) {
+  const forward = stableCoordinateFingerprint(coordinates);
+  const reverse = stableCoordinateFingerprint([...coordinates].reverse());
+  return forward < reverse ? forward : reverse;
 }
 
 function asArray(value: unknown): unknown[] {
@@ -172,6 +203,11 @@ function stringOrUndefined(value: unknown) {
 function numberOrUndefined(value: unknown) {
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+function isValidCoordinate(coordinate: Position) {
+  const [lon, lat] = coordinate;
+  return Number.isFinite(lon) && Number.isFinite(lat) && lon >= -180 && lon <= 180 && lat >= -90 && lat <= 90;
 }
 
 function sanitizeFilename(input: string) {

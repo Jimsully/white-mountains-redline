@@ -1,5 +1,7 @@
 import path from "node:path";
 
+export const PRIVATE_PATH_OMITTED = "private path omitted";
+
 export function isDemoActivityMatchingInput(segmentArtifactPath: string, segmentDecisionsPath: string, activitiesPath: string, repositoryRoot = process.cwd()) {
   const resolvedSegments = resolveFromRoot(segmentArtifactPath, repositoryRoot);
   const resolvedDecisions = resolveFromRoot(segmentDecisionsPath, repositoryRoot);
@@ -16,7 +18,11 @@ export function getActivityMatchingOutputPath(segmentArtifactPath: string, segme
 }
 
 export function formatActivityMatchingInputPathForArtifact(inputPath: string, repositoryRoot = process.cwd(), demoSafe = false) {
-  return demoSafe ? path.relative(repositoryRoot, resolveFromRoot(inputPath, repositoryRoot)) : "local/private path omitted";
+  return demoSafe ? path.relative(repositoryRoot, resolveFromRoot(inputPath, repositoryRoot)) : PRIVATE_PATH_OMITTED;
+}
+
+export function isSafePrivateMetadataPath(value: string | undefined) {
+  return value === undefined || value === PRIVATE_PATH_OMITTED;
 }
 
 export function isInsidePath(candidatePath: string, parentPath: string) {

@@ -15,13 +15,16 @@
     "endpointToleranceMeters": 35,
     "minimumCoverageRatio": 0.55,
     "strongCoverageRatio": 0.9,
+    "strongMaximumMedianDistanceMeters": 8,
+    "strongMaximumP95DistanceMeters": 18,
     "maximumMedianDistanceMeters": 18,
     "maximumP95DistanceMeters": 35,
-    "maximumGapRatio": 0.2
+    "maximumGapRatio": 0.2,
+    "maximumInterpolatedActivityEdgeMeters": 120
   },
   "activities": [
     {
-      "activityKey": "activity_500dc0843769dc17",
+      "activityKey": "activity_cfd040525a2b4b7f",
       "source": "demo",
       "sourceActivityId": "demo-full",
       "title": "Demo full segment traversal",
@@ -573,7 +576,7 @@
       }
     },
     {
-      "activityKey": "activity_716756d32646a936",
+      "activityKey": "activity_e5cb4fd29c32a789",
       "source": "demo",
       "sourceActivityId": "demo-reverse",
       "title": "Demo reverse traversal",
@@ -1125,7 +1128,7 @@
       }
     },
     {
-      "activityKey": "activity_dc98514739bcf530",
+      "activityKey": "activity_5e7f6be60cb9e253",
       "source": "demo",
       "sourceActivityId": "demo-partial",
       "title": "Demo partial segment traversal",
@@ -1545,7 +1548,7 @@
       }
     },
     {
-      "activityKey": "activity_297c2f4e1a2e85a3",
+      "activityKey": "activity_cd4a653f68c6328a",
       "source": "demo",
       "sourceActivityId": "demo-crossing",
       "title": "Demo perpendicular crossing",
@@ -1581,7 +1584,7 @@
       }
     },
     {
-      "activityKey": "activity_7f63424d54823133",
+      "activityKey": "activity_a83a0cd5e4475e73",
       "source": "demo",
       "sourceActivityId": "demo-parallel",
       "title": "Demo nearby parallel route",
@@ -2133,7 +2136,7 @@
       }
     },
     {
-      "activityKey": "activity_ac32aff1ec364698",
+      "activityKey": "activity_14c645ad82c91167",
       "source": "demo",
       "sourceActivityId": "demo-jitter",
       "title": "Demo jittered traversal",
@@ -2685,7 +2688,7 @@
       }
     },
     {
-      "activityKey": "activity_ccc27814fb5f122d",
+      "activityKey": "activity_76485c060c57ee82",
       "source": "demo",
       "sourceActivityId": "demo-adjacent",
       "title": "Demo adjacent segment traversal",
@@ -3441,7 +3444,7 @@
       }
     },
     {
-      "activityKey": "activity_63b4f1b13cb58d3f",
+      "activityKey": "activity_387ac76950e265a6",
       "source": "demo",
       "sourceActivityId": "demo-out-back",
       "title": "Demo out and back traversal",
@@ -4256,7 +4259,7 @@
       }
     },
     {
-      "activityKey": "activity_d75e10739566d6f9",
+      "activityKey": "activity_c9dcc32794f42cf4",
       "source": "demo",
       "sourceActivityId": "demo-missing-endpoint",
       "title": "Demo missing endpoint",
@@ -4784,7 +4787,7 @@
       }
     },
     {
-      "activityKey": "activity_cb91107313e1f30c",
+      "activityKey": "activity_9851df8fb2ee145b",
       "source": "demo",
       "sourceActivityId": "demo-track-gaps",
       "title": "Demo separated track components",
@@ -5287,7 +5290,7 @@
       }
     },
     {
-      "activityKey": "activity_edd79781e1de14cc",
+      "activityKey": "activity_05fea23806f5bb0e",
       "source": "demo",
       "sourceActivityId": "demo-sparse",
       "title": "Demo sparse trace",
@@ -5327,7 +5330,7 @@
       }
     },
     {
-      "activityKey": "activity_a1f33780fe99b250",
+      "activityKey": "activity_3bdc3e6452aaa10e",
       "source": "demo",
       "sourceActivityId": "demo-far",
       "title": "Demo far away trace",
@@ -11628,6 +11631,35 @@
         },
         "reviewStatus": "proposed",
         "warningFlags": []
+      },
+      "approvalEvidence": {
+        "segmentDecision": {
+          "targetType": "segment",
+          "targetKey": "segment_202ad19dd3bcc9f5",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "startJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_67928ba5d8397c4b",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "endJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_249aa44c27b6919d",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "decisionArtifactAlgorithmVersion": "segment-construction-v1",
+        "sourceSegmentArtifact": {
+          "generatedAt": "2026-08-17T00:59:29.631Z",
+          "demoOnly": true,
+          "algorithmVersion": "segment-construction-v1"
+        }
       }
     },
     {
@@ -14171,6 +14203,35 @@
         },
         "reviewStatus": "proposed",
         "warningFlags": []
+      },
+      "approvalEvidence": {
+        "segmentDecision": {
+          "targetType": "segment",
+          "targetKey": "segment_7fa885048f35931b",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "startJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_65fd149ff694e051",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "endJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_3978e5892a96cd15",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "decisionArtifactAlgorithmVersion": "segment-construction-v1",
+        "sourceSegmentArtifact": {
+          "generatedAt": "2026-08-17T00:59:29.631Z",
+          "demoOnly": true,
+          "algorithmVersion": "segment-construction-v1"
+        }
       }
     },
     {
@@ -16621,6 +16682,35 @@
         },
         "reviewStatus": "proposed",
         "warningFlags": []
+      },
+      "approvalEvidence": {
+        "segmentDecision": {
+          "targetType": "segment",
+          "targetKey": "segment_bbbb1da407bd1281",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "startJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_a9798db3f8c4963e",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "endJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_3978e5892a96cd15",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "decisionArtifactAlgorithmVersion": "segment-construction-v1",
+        "sourceSegmentArtifact": {
+          "generatedAt": "2026-08-17T00:59:29.631Z",
+          "demoOnly": true,
+          "algorithmVersion": "segment-construction-v1"
+        }
       }
     },
     {
@@ -18343,13 +18433,42 @@
         },
         "reviewStatus": "proposed",
         "warningFlags": []
+      },
+      "approvalEvidence": {
+        "segmentDecision": {
+          "targetType": "segment",
+          "targetKey": "segment_dd8204c0e42510eb",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "startJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_3978e5892a96cd15",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "endJunctionDecision": {
+          "targetType": "junction",
+          "targetKey": "junction_67928ba5d8397c4b",
+          "decision": "accepted",
+          "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+          "notes": "DEMO-ONLY acceptance for Milestone 4 activity matching fixture input."
+        },
+        "decisionArtifactAlgorithmVersion": "segment-construction-v1",
+        "sourceSegmentArtifact": {
+          "generatedAt": "2026-08-17T00:59:29.631Z",
+          "demoOnly": true,
+          "algorithmVersion": "segment-construction-v1"
+        }
       }
     }
   ],
   "matchCandidates": [
     {
-      "key": "activity_match_c52e9ff677988919",
-      "activityKey": "activity_500dc0843769dc17",
+      "key": "activity_match_ee167915946beb40",
+      "activityKey": "activity_cfd040525a2b4b7f",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "strong_candidate",
@@ -18366,7 +18485,17 @@
         "maxSampleDistanceMeters": 18.785,
         "longestUncoveredRunSamples": 0,
         "longestUncoveredGapRatio": 0,
-        "sourceActivityKey": "activity_500dc0843769dc17",
+        "maximumActivityPointGapMeters": 80.855,
+        "p95ActivityPointGapMeters": 72.442,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          1
+        ],
+        "bestSingleComponentCoverageRatio": 1,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_cfd040525a2b4b7f",
         "sourceActivityId": "demo-full",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18395,8 +18524,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_758739525d700ffd",
-      "activityKey": "activity_500dc0843769dc17",
+      "key": "activity_match_2928345b2f5cab1f",
+      "activityKey": "activity_cfd040525a2b4b7f",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18413,7 +18542,17 @@
         "maxSampleDistanceMeters": 2267.382,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_500dc0843769dc17",
+        "maximumActivityPointGapMeters": 80.855,
+        "p95ActivityPointGapMeters": 72.442,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0161
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_cfd040525a2b4b7f",
         "sourceActivityId": "demo-full",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18442,8 +18581,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_fdff929bf90ababc",
-      "activityKey": "activity_716756d32646a936",
+      "key": "activity_match_6722da8412ecdcfe",
+      "activityKey": "activity_e5cb4fd29c32a789",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "strong_candidate",
@@ -18460,7 +18599,17 @@
         "maxSampleDistanceMeters": 18.445,
         "longestUncoveredRunSamples": 0,
         "longestUncoveredGapRatio": 0,
-        "sourceActivityKey": "activity_716756d32646a936",
+        "maximumActivityPointGapMeters": 79.496,
+        "p95ActivityPointGapMeters": 72.42,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          1
+        ],
+        "bestSingleComponentCoverageRatio": 1,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_e5cb4fd29c32a789",
         "sourceActivityId": "demo-reverse",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18489,8 +18638,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_c49731dbce57fbf2",
-      "activityKey": "activity_716756d32646a936",
+      "key": "activity_match_42aa64d3e592e5eb",
+      "activityKey": "activity_e5cb4fd29c32a789",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18507,7 +18656,17 @@
         "maxSampleDistanceMeters": 2267.382,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_716756d32646a936",
+        "maximumActivityPointGapMeters": 79.496,
+        "p95ActivityPointGapMeters": 72.42,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0161
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_e5cb4fd29c32a789",
         "sourceActivityId": "demo-reverse",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18536,8 +18695,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_a4304547289deb6b",
-      "activityKey": "activity_dc98514739bcf530",
+      "key": "activity_match_0a30a9de0b222219",
+      "activityKey": "activity_5e7f6be60cb9e253",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "needs_review",
@@ -18554,7 +18713,17 @@
         "maxSampleDistanceMeters": 3673.347,
         "longestUncoveredRunSamples": 230,
         "longestUncoveredGapRatio": 0.4978,
-        "sourceActivityKey": "activity_dc98514739bcf530",
+        "maximumActivityPointGapMeters": 56.6,
+        "p95ActivityPointGapMeters": 48.778,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.5022
+        ],
+        "bestSingleComponentCoverageRatio": 0.5022,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_5e7f6be60cb9e253",
         "sourceActivityId": "demo-partial",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18583,8 +18752,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_100a28b2fa0a5d12",
-      "activityKey": "activity_dc98514739bcf530",
+      "key": "activity_match_2fa3bbf613a9b319",
+      "activityKey": "activity_5e7f6be60cb9e253",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18601,7 +18770,17 @@
         "maxSampleDistanceMeters": 2267.382,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_dc98514739bcf530",
+        "maximumActivityPointGapMeters": 56.6,
+        "p95ActivityPointGapMeters": 48.778,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0161
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_5e7f6be60cb9e253",
         "sourceActivityId": "demo-partial",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18630,8 +18809,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_ce51bb90de1e88ee",
-      "activityKey": "activity_297c2f4e1a2e85a3",
+      "key": "activity_match_03df7e87e1760992",
+      "activityKey": "activity_cd4a653f68c6328a",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18639,28 +18818,29 @@
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 1655.54,
         "segmentSampleCount": 462,
-        "coveredSampleCount": 9,
-        "segmentCoverageRatio": 0.0195,
+        "coveredSampleCount": 0,
+        "segmentCoverageRatio": 0,
         "startJunctionDistanceMeters": 3572.334,
         "endJunctionDistanceMeters": 2879.569,
         "medianSampleDistanceMeters": 1481.33,
         "p95SampleDistanceMeters": 3178.427,
         "maxSampleDistanceMeters": 3572.334,
-        "longestUncoveredRunSamples": 228,
-        "longestUncoveredGapRatio": 0.4935,
-        "sourceActivityKey": "activity_297c2f4e1a2e85a3",
+        "longestUncoveredRunSamples": 462,
+        "longestUncoveredGapRatio": 1,
+        "maximumActivityPointGapMeters": 1655.54,
+        "p95ActivityPointGapMeters": 1655.54,
+        "ignoredLongActivityEdgeCount": 1,
+        "componentCoverageRatios": [
+          0
+        ],
+        "bestSingleComponentCoverageRatio": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_cd4a653f68c6328a",
         "sourceActivityId": "demo-crossing",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
         "activityMatchingAlgorithmVersion": "activity-matching-v1",
-        "firstMatchedActivityPosition": [
-          -71.61512577140694,
-          44.18774609832823
-        ],
-        "lastMatchedActivityPosition": [
-          -71.61334581647303,
-          44.18739010734145
-        ],
         "activityBbox": [
           -71.62448310746058,
           44.185617565538955,
@@ -18677,11 +18857,11 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_72972e3ffa5e5bed",
-      "activityKey": "activity_7f63424d54823133",
+      "key": "activity_match_f4d55938ab789236",
+      "activityKey": "activity_a83a0cd5e4475e73",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
-      "classification": "strong_candidate",
+      "classification": "needs_review",
       "evidence": {
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 8689.955,
@@ -18695,7 +18875,17 @@
         "maxSampleDistanceMeters": 36.368,
         "longestUncoveredRunSamples": 3,
         "longestUncoveredGapRatio": 0.0065,
-        "sourceActivityKey": "activity_7f63424d54823133",
+        "maximumActivityPointGapMeters": 80.855,
+        "p95ActivityPointGapMeters": 72.442,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.9394
+        ],
+        "bestSingleComponentCoverageRatio": 0.9394,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_a83a0cd5e4475e73",
         "sourceActivityId": "demo-parallel",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18724,8 +18914,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_27a3fc07e41dc173",
-      "activityKey": "activity_7f63424d54823133",
+      "key": "activity_match_b820cbd575bc97b3",
+      "activityKey": "activity_a83a0cd5e4475e73",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18742,7 +18932,17 @@
         "maxSampleDistanceMeters": 2268.665,
         "longestUncoveredRunSamples": 123,
         "longestUncoveredGapRatio": 0.9919,
-        "sourceActivityKey": "activity_7f63424d54823133",
+        "maximumActivityPointGapMeters": 80.855,
+        "p95ActivityPointGapMeters": 72.442,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0081
+        ],
+        "bestSingleComponentCoverageRatio": 0.0081,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_a83a0cd5e4475e73",
         "sourceActivityId": "demo-parallel",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18771,8 +18971,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_1a5c7e76d03b5023",
-      "activityKey": "activity_ac32aff1ec364698",
+      "key": "activity_match_8302540bf33ad3a2",
+      "activityKey": "activity_14c645ad82c91167",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "strong_candidate",
@@ -18789,7 +18989,17 @@
         "maxSampleDistanceMeters": 19.948,
         "longestUncoveredRunSamples": 0,
         "longestUncoveredGapRatio": 0,
-        "sourceActivityKey": "activity_ac32aff1ec364698",
+        "maximumActivityPointGapMeters": 80.855,
+        "p95ActivityPointGapMeters": 72.442,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          1
+        ],
+        "bestSingleComponentCoverageRatio": 1,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_14c645ad82c91167",
         "sourceActivityId": "demo-jitter",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18818,8 +19028,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_690620d5a87478f0",
-      "activityKey": "activity_ac32aff1ec364698",
+      "key": "activity_match_232deb9b8f05ecc0",
+      "activityKey": "activity_14c645ad82c91167",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18836,7 +19046,17 @@
         "maxSampleDistanceMeters": 2267.278,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_ac32aff1ec364698",
+        "maximumActivityPointGapMeters": 80.855,
+        "p95ActivityPointGapMeters": 72.442,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0161
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_14c645ad82c91167",
         "sourceActivityId": "demo-jitter",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18865,8 +19085,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_6690dfc617d72f9c",
-      "activityKey": "activity_ccc27814fb5f122d",
+      "key": "activity_match_0fa0bb342b138334",
+      "activityKey": "activity_76485c060c57ee82",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "strong_candidate",
@@ -18883,7 +19103,17 @@
         "maxSampleDistanceMeters": 18.785,
         "longestUncoveredRunSamples": 0,
         "longestUncoveredGapRatio": 0,
-        "sourceActivityKey": "activity_ccc27814fb5f122d",
+        "maximumActivityPointGapMeters": 10236.916,
+        "p95ActivityPointGapMeters": 73.736,
+        "ignoredLongActivityEdgeCount": 1,
+        "componentCoverageRatios": [
+          1
+        ],
+        "bestSingleComponentCoverageRatio": 1,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_76485c060c57ee82",
         "sourceActivityId": "demo-adjacent",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -18912,32 +19142,42 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_b5d38ae0ac95129c",
-      "activityKey": "activity_ccc27814fb5f122d",
+      "key": "activity_match_38e5ca1e9065bfed",
+      "activityKey": "activity_76485c060c57ee82",
       "segmentKey": "segment_7fa885048f35931b",
       "trailDisplayName": "Falling Waters Trail",
-      "classification": "candidate",
+      "classification": "needs_review",
       "evidence": {
         "canonicalSegmentLengthMeters": 3708.385,
         "activityTraceLengthMeters": 22271.897,
         "segmentSampleCount": 187,
         "coveredSampleCount": 184,
         "segmentCoverageRatio": 0.984,
-        "startJunctionDistanceMeters": 44.89,
+        "startJunctionDistanceMeters": 54.44,
         "endJunctionDistanceMeters": 0,
         "medianSampleDistanceMeters": 2.517,
-        "p95SampleDistanceMeters": 15.088,
-        "maxSampleDistanceMeters": 44.89,
+        "p95SampleDistanceMeters": 15.196,
+        "maxSampleDistanceMeters": 54.44,
         "longestUncoveredRunSamples": 2,
         "longestUncoveredGapRatio": 0.0107,
-        "sourceActivityKey": "activity_ccc27814fb5f122d",
+        "maximumActivityPointGapMeters": 10236.916,
+        "p95ActivityPointGapMeters": 73.736,
+        "ignoredLongActivityEdgeCount": 1,
+        "componentCoverageRatios": [
+          0.984
+        ],
+        "bestSingleComponentCoverageRatio": 0.984,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_76485c060c57ee82",
         "sourceActivityId": "demo-adjacent",
         "segmentCandidateKey": "segment_7fa885048f35931b",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
         "activityMatchingAlgorithmVersion": "activity-matching-v1",
         "firstMatchedActivityPosition": [
-          -71.675586260188,
-          44.13750726050963
+          -71.67564358554519,
+          44.13747998840674
         ],
         "lastMatchedActivityPosition": [
           -71.64592737484303,
@@ -18959,8 +19199,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_8e47e172321aaa67",
-      "activityKey": "activity_ccc27814fb5f122d",
+      "key": "activity_match_1237939f4fbc2fe7",
+      "activityKey": "activity_76485c060c57ee82",
       "segmentKey": "segment_bbbb1da407bd1281",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -18977,7 +19217,17 @@
         "maxSampleDistanceMeters": 3913.656,
         "longestUncoveredRunSamples": 238,
         "longestUncoveredGapRatio": 0.9917,
-        "sourceActivityKey": "activity_ccc27814fb5f122d",
+        "maximumActivityPointGapMeters": 10236.916,
+        "p95ActivityPointGapMeters": 73.736,
+        "ignoredLongActivityEdgeCount": 1,
+        "componentCoverageRatios": [
+          0.0083
+        ],
+        "bestSingleComponentCoverageRatio": 0.0083,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_76485c060c57ee82",
         "sourceActivityId": "demo-adjacent",
         "segmentCandidateKey": "segment_bbbb1da407bd1281",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19006,8 +19256,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_a32f3a0c78d1d831",
-      "activityKey": "activity_ccc27814fb5f122d",
+      "key": "activity_match_31f2471b462a357d",
+      "activityKey": "activity_76485c060c57ee82",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -19015,16 +19265,26 @@
         "canonicalSegmentLengthMeters": 2459.51,
         "activityTraceLengthMeters": 22271.897,
         "segmentSampleCount": 124,
-        "coveredSampleCount": 7,
-        "segmentCoverageRatio": 0.0565,
+        "coveredSampleCount": 4,
+        "segmentCoverageRatio": 0.0323,
         "startJunctionDistanceMeters": 0.004,
         "endJunctionDistanceMeters": 0,
-        "medianSampleDistanceMeters": 254.3,
-        "p95SampleDistanceMeters": 560.839,
-        "maxSampleDistanceMeters": 614.009,
-        "longestUncoveredRunSamples": 69,
-        "longestUncoveredGapRatio": 0.5565,
-        "sourceActivityKey": "activity_ccc27814fb5f122d",
+        "medianSampleDistanceMeters": 564.969,
+        "p95SampleDistanceMeters": 1071.053,
+        "maxSampleDistanceMeters": 1129.638,
+        "longestUncoveredRunSamples": 120,
+        "longestUncoveredGapRatio": 0.9677,
+        "maximumActivityPointGapMeters": 10236.916,
+        "p95ActivityPointGapMeters": 73.736,
+        "ignoredLongActivityEdgeCount": 1,
+        "componentCoverageRatios": [
+          0.0323
+        ],
+        "bestSingleComponentCoverageRatio": 0.0323,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_76485c060c57ee82",
         "sourceActivityId": "demo-adjacent",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19053,8 +19313,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_eba8a0182169a913",
-      "activityKey": "activity_63b4f1b13cb58d3f",
+      "key": "activity_match_e31918a2a11166ee",
+      "activityKey": "activity_387ac76950e265a6",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "strong_candidate",
@@ -19071,7 +19331,18 @@
         "maxSampleDistanceMeters": 22.572,
         "longestUncoveredRunSamples": 0,
         "longestUncoveredGapRatio": 0,
-        "sourceActivityKey": "activity_63b4f1b13cb58d3f",
+        "maximumActivityPointGapMeters": 101.928,
+        "p95ActivityPointGapMeters": 96.254,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          1,
+          1
+        ],
+        "bestSingleComponentCoverageRatio": 1,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_387ac76950e265a6",
         "sourceActivityId": "demo-out-back",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19100,8 +19371,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_5ddcca76494ec322",
-      "activityKey": "activity_63b4f1b13cb58d3f",
+      "key": "activity_match_a8873df7b3e93e7d",
+      "activityKey": "activity_387ac76950e265a6",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -19118,7 +19389,18 @@
         "maxSampleDistanceMeters": 2267.382,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_63b4f1b13cb58d3f",
+        "maximumActivityPointGapMeters": 101.928,
+        "p95ActivityPointGapMeters": 96.254,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0161,
+          0.0161
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_387ac76950e265a6",
         "sourceActivityId": "demo-out-back",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19147,8 +19429,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_02cf8b3197482a00",
-      "activityKey": "activity_d75e10739566d6f9",
+      "key": "activity_match_4e620df3ae4bb916",
+      "activityKey": "activity_c9dcc32794f42cf4",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "needs_review",
@@ -19165,7 +19447,17 @@
         "maxSampleDistanceMeters": 1223.041,
         "longestUncoveredRunSamples": 68,
         "longestUncoveredGapRatio": 0.1472,
-        "sourceActivityKey": "activity_d75e10739566d6f9",
+        "maximumActivityPointGapMeters": 64.813,
+        "p95ActivityPointGapMeters": 60.814,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.803
+        ],
+        "bestSingleComponentCoverageRatio": 0.803,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_c9dcc32794f42cf4",
         "sourceActivityId": "demo-missing-endpoint",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19194,8 +19486,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_8905a320e4e6e2cb",
-      "activityKey": "activity_cb91107313e1f30c",
+      "key": "activity_match_8c9cd3b8f498698a",
+      "activityKey": "activity_9851df8fb2ee145b",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "needs_review",
@@ -19212,7 +19504,18 @@
         "maxSampleDistanceMeters": 1612.261,
         "longestUncoveredRunSamples": 184,
         "longestUncoveredGapRatio": 0.3983,
-        "sourceActivityKey": "activity_cb91107313e1f30c",
+        "maximumActivityPointGapMeters": 56.6,
+        "p95ActivityPointGapMeters": 48.69,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.3009,
+          0.3009
+        ],
+        "bestSingleComponentCoverageRatio": 0.3009,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_9851df8fb2ee145b",
         "sourceActivityId": "demo-track-gaps",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19241,8 +19544,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_77a7bc1f0165bda0",
-      "activityKey": "activity_cb91107313e1f30c",
+      "key": "activity_match_3707779e26a561ec",
+      "activityKey": "activity_9851df8fb2ee145b",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -19259,7 +19562,18 @@
         "maxSampleDistanceMeters": 2267.382,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_cb91107313e1f30c",
+        "maximumActivityPointGapMeters": 56.6,
+        "p95ActivityPointGapMeters": 48.69,
+        "ignoredLongActivityEdgeCount": 0,
+        "componentCoverageRatios": [
+          0.0161,
+          0
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_9851df8fb2ee145b",
         "sourceActivityId": "demo-track-gaps",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19288,8 +19602,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_2f8c063f6780b952",
-      "activityKey": "activity_edd79781e1de14cc",
+      "key": "activity_match_b6b2cb81516d02d8",
+      "activityKey": "activity_05fea23806f5bb0e",
       "segmentKey": "segment_202ad19dd3bcc9f5",
       "trailDisplayName": "Garfield Ridge Trail",
       "classification": "insufficient_coverage",
@@ -19297,16 +19611,26 @@
         "canonicalSegmentLengthMeters": 9207.495,
         "activityTraceLengthMeters": 7478.167,
         "segmentSampleCount": 462,
-        "coveredSampleCount": 22,
-        "segmentCoverageRatio": 0.0476,
+        "coveredSampleCount": 7,
+        "segmentCoverageRatio": 0.0152,
         "startJunctionDistanceMeters": 0,
         "endJunctionDistanceMeters": 0,
-        "medianSampleDistanceMeters": 375.959,
-        "p95SampleDistanceMeters": 667.272,
-        "maxSampleDistanceMeters": 709.051,
+        "medianSampleDistanceMeters": 1007.66,
+        "p95SampleDistanceMeters": 1872.339,
+        "maxSampleDistanceMeters": 2018.42,
         "longestUncoveredRunSamples": 228,
         "longestUncoveredGapRatio": 0.4935,
-        "sourceActivityKey": "activity_edd79781e1de14cc",
+        "maximumActivityPointGapMeters": 3816.087,
+        "p95ActivityPointGapMeters": 3816.087,
+        "ignoredLongActivityEdgeCount": 2,
+        "componentCoverageRatios": [
+          0.0152
+        ],
+        "bestSingleComponentCoverageRatio": 0.0152,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": true,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_05fea23806f5bb0e",
         "sourceActivityId": "demo-sparse",
         "segmentCandidateKey": "segment_202ad19dd3bcc9f5",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19335,8 +19659,8 @@
       "reviewStatus": "unreviewed"
     },
     {
-      "key": "activity_match_91d967367af7244b",
-      "activityKey": "activity_edd79781e1de14cc",
+      "key": "activity_match_fd30eba8dedc88e6",
+      "activityKey": "activity_05fea23806f5bb0e",
       "segmentKey": "segment_dd8204c0e42510eb",
       "trailDisplayName": "Franconia Ridge Trail",
       "classification": "insufficient_coverage",
@@ -19353,7 +19677,17 @@
         "maxSampleDistanceMeters": 2267.382,
         "longestUncoveredRunSamples": 122,
         "longestUncoveredGapRatio": 0.9839,
-        "sourceActivityKey": "activity_edd79781e1de14cc",
+        "maximumActivityPointGapMeters": 3816.087,
+        "p95ActivityPointGapMeters": 3816.087,
+        "ignoredLongActivityEdgeCount": 2,
+        "componentCoverageRatios": [
+          0.0161
+        ],
+        "bestSingleComponentCoverageRatio": 0.0161,
+        "bestSingleComponentIndex": 0,
+        "singleComponentReachesBothEndpoints": false,
+        "blockedStrongByComponentDiscontinuity": false,
+        "sourceActivityKey": "activity_05fea23806f5bb0e",
         "sourceActivityId": "demo-sparse",
         "segmentCandidateKey": "segment_dd8204c0e42510eb",
         "segmentConstructionAlgorithmVersion": "segment-construction-v1",
@@ -19388,13 +19722,15 @@
     "pairsConsidered": 48,
     "bboxRejectedPairs": 26,
     "fullyScoredPairs": 22,
-    "strongCandidateCount": 6,
-    "candidateCount": 1,
-    "needsReviewCount": 3,
+    "strongCandidateCount": 5,
+    "candidateCount": 0,
+    "needsReviewCount": 5,
     "insufficientCoverageCount": 12,
     "unmatchedActivityCount": 3,
     "activitiesWithCandidateCount": 9,
     "segmentsWithCandidateCount": 2,
+    "ignoredLongActivityEdgeCount": 9,
+    "componentDiscontinuityBlockedStrongCount": 0,
     "integrityWarnings": [],
     "integrityErrors": []
   }

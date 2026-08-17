@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { ActivityRecord, EligibleMatchingSegment, SegmentConstructionDecisionExport } from "@/types/activity-matching";
 import type { SegmentConstructionArtifact, SegmentCandidate } from "@/types/segment-construction";
@@ -6,17 +8,29 @@ import { ACTIVITY_MATCHING_ALGORITHM_VERSION } from "@/types/activity-matching";
 import { SEGMENT_CONSTRUCTION_ALGORITHM_VERSION } from "@/types/segment-construction";
 import { parseGpxActivity, parseNormalizedActivities } from "@/lib/activity-matching/activities";
 import { DEFAULT_ACTIVITY_MATCHING_CONFIG } from "@/lib/activity-matching/config";
-import { sampleLine } from "@/lib/activity-matching/geometry";
+import { expandedBboxIntersects, sampleLine } from "@/lib/activity-matching/geometry";
 import { buildActivityMatchArtifact, stableMatchKey } from "@/lib/activity-matching/matcher";
 import { isDemoActivityMatchingInput } from "@/lib/activity-matching/paths";
 import { PRIVATE_ACTIVITY_MATCHING_ARTIFACT_PRODUCTION_ERROR, loadActivityMatchArtifact } from "@/lib/activity-matching/server-artifact";
 import { buildActivityMatchDecision, buildActivityMatchDecisionExport, parseStoredActivityMatchDecisions } from "@/lib/activity-matching/review-state";
 import { resolveEligibleMatchingSegments } from "@/lib/activity-matching/segments";
+import { runActivityMatching } from "@/lib/activity-matching/run-activity-matching";
 
 const config = { ...DEFAULT_ACTIVITY_MATCHING_CONFIG, coverageSampleIntervalMeters: 25 };
 const lineA = [[-71, 44], [-70.995, 44], [-70.99, 44]];
 const lineB = [[-70.99, 44], [-70.985, 44], [-70.98, 44]];
 const curvedLine = [[-71, 44], [-70.996, 44.004], [-70.992, 44], [-70.988, 44.004], [-70.984, 44]];
+
+function denseLine(coordinates: number[][], stepsPerEdge = 8) {
+  const points: number[][] = [];
+  for (let index = 1; index < coordinates.length; index += 1) {
+    const start = coordinates[index - 1];
+    const end = coordinates[index];
+    if (!points.length) points.push(start);
+    for (let step = 1; step <= stepsPerEdge; step += 1) points.push([start[0] + (end[0] - start[0]) * (step / stepsPerEdge), start[1] + (end[1] - start[1]) * (step / stepsPerEdge)]);
+  }
+  return points;
+}
 
 function activity(id: string, coordinates: number[][] | number[][][], type: "LineString" | "MultiLineString" = "LineString"): ActivityRecord {
   const geometry = type === "LineString" ? { type, coordinates } : { type, coordinates };
@@ -38,6 +52,13 @@ function eligible(segmentKey: string, coordinates: number[][]): EligibleMatching
     sourceProvider: segment.sourceProvider,
     segmentConstructionAlgorithmVersion: SEGMENT_CONSTRUCTION_ALGORITHM_VERSION,
     sourceSegmentCandidate: segment,
+    approvalEvidence: {
+      segmentDecision: { targetType: "segment", targetKey: segment.key, decision: "accepted", reviewTimestamp: "2026-01-01T00:00:00.000Z" },
+      startJunctionDecision: { targetType: "junction", targetKey: segment.startJunctionKey, decision: "accepted", reviewTimestamp: "2026-01-01T00:00:00.000Z" },
+      endJunctionDecision: { targetType: "junction", targetKey: segment.endJunctionKey, decision: "accepted", reviewTimestamp: "2026-01-01T00:00:00.000Z" },
+      decisionArtifactAlgorithmVersion: SEGMENT_CONSTRUCTION_ALGORITHM_VERSION,
+      sourceSegmentArtifact: { generatedAt: "2026-01-01T00:00:00.000Z", demoOnly: true, algorithmVersion: SEGMENT_CONSTRUCTION_ALGORITHM_VERSION },
+    },
   };
 }
 
@@ -98,16 +119,29 @@ describe("activity import and normalization", () => {
     expect(parsed.trace.pointTimes?.[0][0]).toBe("2026-01-01T00:00:00Z");
   });
 
-  it("counts malformed GPX coordinates deterministically", () => {
-    const parsed = parseGpxActivity(`<gpx><trk><trkseg><trkpt lon="bad" lat="44"/><trkpt lon="-71" lat="44"/><trkpt lon="-70.99" lat="44"/></trkseg></trk></gpx>`);
-    expect(parsed.originalPointCount).toBe(3);
-    expect(parsed.malformedPointCount).toBe(1);
+  it("counts malformed GPX coordinates and unusable one-point segments deterministically", () => {
+    const parsed = parseGpxActivity(`<gpx><trk><trkseg><trkpt lon="bad" lat="44"/><trkpt lon="-71" lat="44"/><trkpt lon="-70.99" lat="44"/></trkseg><trkseg><trkpt lon="-70.98" lat="44"/></trkseg></trk></gpx>`);
+    expect(parsed.originalPointCount).toBe(4);
+    expect(parsed.malformedPointCount).toBe(2);
     expect(parsed.normalizedPointCount).toBe(2);
   });
 
-  it("parses normalized JSON and creates stable activity keys", () => {
-    const raw = JSON.stringify({ source: "demo", sourceActivityId: "abc", geometry: { type: "LineString", coordinates: lineA } });
-    expect(parseNormalizedActivities(raw)[0].activityKey).toBe(parseNormalizedActivities(raw)[0].activityKey);
+  it("parses normalized JSON and validates coordinate ranges", () => {
+    const parsed = parseNormalizedActivities(JSON.stringify({ source: "demo", sourceActivityId: "abc", geometry: { type: "LineString", coordinates: [[-71, 44], [200, 44], [-70.99, 44]] } }))[0];
+    expect(parsed.malformedPointCount).toBe(1);
+    expect(parsed.normalizedPointCount).toBe(2);
+    expect(() => parseNormalizedActivities(JSON.stringify({ geometry: { type: "LineString", coordinates: [[200, 44], [201, 44]] } }))).toThrow("Activity contains no usable track component with at least two valid points.");
+  });
+
+  it("stabilizes activity identity around source IDs and orientation-stable geometry", () => {
+    const withIdA = parseNormalizedActivities(JSON.stringify({ source: "demo", sourceActivityId: "same", title: "first", geometry: { type: "LineString", coordinates: lineA } }))[0];
+    const withIdB = parseNormalizedActivities(JSON.stringify({ source: "demo", sourceActivityId: "same", title: "second", geometry: { type: "MultiLineString", coordinates: [lineA] } }))[0];
+    expect(withIdA.activityKey).toBe(withIdB.activityKey);
+    const withoutIdA = parseNormalizedActivities(JSON.stringify({ source: "demo", startTime: "2026-01-01T00:00:00Z", title: "first", geometry: { type: "LineString", coordinates: lineA } }))[0];
+    const withoutIdB = parseNormalizedActivities(JSON.stringify({ source: "demo", startTime: "2026-01-01T00:00:00Z", title: "second", geometry: { type: "LineString", coordinates: [...lineA].reverse() } }))[0];
+    expect(withoutIdA.activityKey).toBe(withoutIdB.activityKey);
+    const differentId = parseNormalizedActivities(JSON.stringify({ source: "demo", sourceActivityId: "different", geometry: { type: "LineString", coordinates: lineA } }))[0];
+    expect(differentId.activityKey).not.toBe(withIdA.activityKey);
   });
 });
 
@@ -137,12 +171,13 @@ describe("activity matching classifier", () => {
   it("classifies exact, reverse, jitter, adjacent, and out-and-back traversals as strong", () => {
     const first = eligible("s1", lineA);
     const second = eligible("s2", lineB);
-    expect(matchClass(activity("exact", lineA), first)).toBe("strong_candidate");
-    expect(matchClass(activity("reverse", [...lineA].reverse()), first)).toBe("strong_candidate");
-    expect(matchClass(activity("jitter", lineA.map(([x, y], index) => [x, y + (index % 2 ? 0.00004 : -0.00004)])), first)).toBe("strong_candidate");
-    const adjacent = buildActivityMatchArtifact({ activities: [activity("adjacent", [...lineA, ...lineB.slice(1)])], eligibleSegments: [first, second], demoOnly: true, config });
+    const denseA = denseLine(lineA);
+    expect(matchClass(activity("exact", denseA), first)).toBe("strong_candidate");
+    expect(matchClass(activity("reverse", [...denseA].reverse()), first)).toBe("strong_candidate");
+    expect(matchClass(activity("jitter", denseA.map(([x, y], index) => [x, y + (index % 2 ? 0.00004 : -0.00004)])), first)).toBe("strong_candidate");
+    const adjacent = buildActivityMatchArtifact({ activities: [activity("adjacent", denseLine([...lineA, ...lineB.slice(1)]))], eligibleSegments: [first, second], demoOnly: true, config });
     expect(adjacent.matchCandidates.filter((match) => match.classification === "strong_candidate")).toHaveLength(2);
-    expect(matchClass(activity("out-back", [lineA, [...lineA].reverse()], "MultiLineString"), first)).toBe("strong_candidate");
+    expect(matchClass(activity("out-back", [denseA, [...denseA].reverse()], "MultiLineString"), first)).toBe("strong_candidate");
   });
 
   it("keeps partial, crossing, endpoint-missing, track-gap, and sparse cases conservative", () => {
@@ -154,12 +189,46 @@ describe("activity matching classifier", () => {
     expect(matchClass(activity("sparse", [[-71, 44], [-70.984, 44]]), eligible("curved", curvedLine))).not.toBe("strong_candidate");
   });
 
+  it("keeps latitude-aware bbox expansion conservative", () => {
+    const segmentBbox: [number, number, number, number] = [-71, 44, -71, 44.001];
+    const thirtyMetersEastAt44 = 30 / (111_320 * Math.cos(44 * Math.PI / 180));
+    expect(expandedBboxIntersects(segmentBbox, [-71 + thirtyMetersEastAt44, 44, -71 + thirtyMetersEastAt44, 44.001], 35)).toBe(true);
+    expect(expandedBboxIntersects(segmentBbox, [-71 + thirtyMetersEastAt44 * 4, 44, -71 + thirtyMetersEastAt44 * 4, 44.001], 35)).toBe(false);
+    const thirtyMetersNorth = 30 / 111_320;
+    expect(expandedBboxIntersects(segmentBbox, [-71, 44.001 + thirtyMetersNorth, -71, 44.001 + thirtyMetersNorth], 35)).toBe(true);
+    expect(expandedBboxIntersects(segmentBbox, [-71, 44.001 + thirtyMetersNorth * 4, -71, 44.001 + thirtyMetersNorth * 4], 35)).toBe(false);
+  });
+
   it("treats nearby parallel routes as reviewable and rejects far pairs by bbox", () => {
     const segment = eligible("s1", lineA);
-    expect(matchClass(activity("parallel", lineA.map(([x, y]) => [x, y + 0.00022])), segment)).toBe("needs_review");
+    expect(matchClass(activity("parallel", denseLine(lineA).map(([x, y]) => [x, y + 0.00022])), segment)).toBe("needs_review");
     const far = buildActivityMatchArtifact({ activities: [activity("far", [[-72, 45], [-72.01, 45]])], eligibleSegments: [segment], demoOnly: true, config });
     expect(far.diagnostics.bboxRejectedPairs).toBe(1);
     expect(far.matchCandidates).toHaveLength(0);
+  });
+
+  it("does not invent strong coverage across sparse GPS edges", () => {
+    const segment = eligible("sparse-straight", [[-71, 44], [-70.9875, 44]]);
+    const sparseForward = matchClass(activity("sparse-forward", [[-71, 44], [-70.9875, 44]]), segment);
+    const sparseReverse = matchClass(activity("sparse-reverse", [[-70.9875, 44], [-71, 44]]), segment);
+    expect(sparseForward).not.toBe("strong_candidate");
+    expect(sparseReverse).toBe(sparseForward);
+    expect(matchClass(activity("dense-forward", denseLine([[-71, 44], [-70.9875, 44]], 16)), segment)).toBe("strong_candidate");
+  });
+
+  it("requires one component to carry strong traversal continuity", () => {
+    const segment = eligible("component", [[-71, 44], [-70.9875, 44]]);
+    const discontinuous = buildActivityMatchArtifact({ activities: [activity("component-gap", [[[-71, 44], [-70.994, 44]], [[-70.9935, 44], [-70.9875, 44]]], "MultiLineString")], eligibleSegments: [segment], demoOnly: true, config: { ...config, maximumInterpolatedActivityEdgeMeters: 1000 } });
+    expect(discontinuous.matchCandidates[0].classification).not.toBe("strong_candidate");
+    expect(discontinuous.matchCandidates[0].evidence.blockedStrongByComponentDiscontinuity).toBe(true);
+  });
+
+  it("does not classify a nearby parallel canonical segment as strong", () => {
+    const followed = eligible("followed", denseLine(lineA));
+    const nearbyParallel = eligible("parallel-segment", denseLine(lineA).map(([x, y]) => [x, y + 0.00022]));
+    const artifact = buildActivityMatchArtifact({ activities: [activity("parallel-canonical", denseLine(lineA))], eligibleSegments: [followed, nearbyParallel], demoOnly: true, config });
+    expect(artifact.matchCandidates.find((match) => match.segmentKey === "followed")?.classification).toBe("strong_candidate");
+    expect(artifact.matchCandidates.find((match) => match.segmentKey === "parallel-segment")?.classification).not.toBe("strong_candidate");
   });
 
   it("creates stable match keys and deterministic classifications", () => {
@@ -168,6 +237,8 @@ describe("activity matching classifier", () => {
     const match = buildActivityMatchArtifact({ activities: [sourceActivity], eligibleSegments: [segment], demoOnly: true, config }).matchCandidates[0];
     expect(match.key).toBe(stableMatchKey(sourceActivity.activityKey, segment.segmentKey));
     expect(match.evidence.activityMatchingAlgorithmVersion).toBe(ACTIVITY_MATCHING_ALGORITHM_VERSION);
+    expect(() => buildActivityMatchArtifact({ activities: [sourceActivity, sourceActivity], eligibleSegments: [segment], demoOnly: true, config })).toThrow("Duplicate activity key");
+    expect(() => buildActivityMatchArtifact({ activities: [sourceActivity], eligibleSegments: [segment, segment], demoOnly: true, config })).toThrow("Duplicate eligible segment key");
   });
 });
 
@@ -188,5 +259,26 @@ describe("activity matching privacy and review state", () => {
     const decision = buildActivityMatchDecision(artifact, artifact.matchCandidates[0].key, "accepted", " evidence ", "2026-01-01T00:00:00.000Z");
     expect(decision.notes).toBe("evidence");
     expect(buildActivityMatchDecisionExport(artifact, [decision]).decisions).toHaveLength(1);
+  });
+});
+
+describe("activity matching runner", () => {
+  it("writes private outputs only inside a temp root with omitted metadata", () => {
+    const repositoryRoot = process.cwd();
+    const trackedArtifactPath = path.join(repositoryRoot, "data", "generated", "activity-matching", "demo-activity-matching.json");
+    const before = fs.readFileSync(trackedArtifactPath, "utf8");
+    const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "activity-matching-runner-"));
+    fs.mkdirSync(path.join(tempRoot, "private", "activities"), { recursive: true });
+    fs.mkdirSync(path.join(tempRoot, "data", "generated", "activity-matching"), { recursive: true });
+    fs.copyFileSync(path.join(repositoryRoot, "data", "generated", "segments", "demo-segment-construction.json"), path.join(tempRoot, "private", "segments.json"));
+    fs.copyFileSync(path.join(repositoryRoot, "data", "demo", "segment-construction-decisions.demo.json"), path.join(tempRoot, "private", "decisions.json"));
+    fs.copyFileSync(path.join(repositoryRoot, "data", "demo", "activities", "synthetic-activity-fixtures.demo.json"), path.join(tempRoot, "private", "activities", "fixture.json"));
+    const result = runActivityMatching({ segmentArtifactPath: "private/segments.json", segmentDecisionsPath: "private/decisions.json", activitiesPath: "private/activities", repositoryRoot: tempRoot, generatedAt: "2026-01-01T00:00:00.000Z" });
+    expect(result.outputPath.startsWith(path.join(tempRoot, "data", "generated", "activity-matching"))).toBe(true);
+    expect(result.artifact.metadata.segmentArtifactPath).toBe("private path omitted");
+    expect(result.artifact.metadata.segmentDecisionsPath).toBe("private path omitted");
+    expect(result.artifact.metadata.activitiesPath).toBe("private path omitted");
+    expect(fs.readFileSync(trackedArtifactPath, "utf8")).toBe(before);
+    fs.rmSync(tempRoot, { recursive: true, force: true });
   });
 });

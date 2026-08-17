@@ -2,6 +2,7 @@ import type { LineString, MultiLineString, Position } from "geojson";
 import type { SegmentCandidate, SegmentReviewDecision } from "@/types/segment-construction";
 
 export const ACTIVITY_MATCHING_ALGORITHM_VERSION = "activity-matching-v1";
+export const ACTIVITY_KEY_VERSION = "activity-key-v2";
 
 export type ActivitySource = "gpx" | "normalized_json" | "strava_export" | "coros_export" | "manual" | "demo";
 export type SegmentMatchClassification = "strong_candidate" | "candidate" | "needs_review" | "insufficient_coverage";
@@ -50,9 +51,20 @@ export type ActivityMatchingConfig = {
   endpointToleranceMeters: number;
   minimumCoverageRatio: number;
   strongCoverageRatio: number;
+  strongMaximumMedianDistanceMeters: number;
+  strongMaximumP95DistanceMeters: number;
   maximumMedianDistanceMeters: number;
   maximumP95DistanceMeters: number;
   maximumGapRatio: number;
+  maximumInterpolatedActivityEdgeMeters: number;
+};
+
+export type EligibleMatchingSegmentApprovalEvidence = {
+  segmentDecision: SegmentReviewDecision;
+  startJunctionDecision: SegmentReviewDecision;
+  endJunctionDecision: SegmentReviewDecision;
+  decisionArtifactAlgorithmVersion: string;
+  sourceSegmentArtifact: { generatedAt?: string; demoOnly?: boolean; algorithmVersion?: string };
 };
 
 export type EligibleMatchingSegment = {
@@ -68,6 +80,7 @@ export type EligibleMatchingSegment = {
   sourceProvider: string;
   segmentConstructionAlgorithmVersion: string;
   sourceSegmentCandidate: SegmentCandidate;
+  approvalEvidence: EligibleMatchingSegmentApprovalEvidence;
 };
 
 export type SegmentConstructionDecisionExport = {
@@ -90,6 +103,14 @@ export type SegmentMatchEvidence = {
   maxSampleDistanceMeters: number;
   longestUncoveredRunSamples: number;
   longestUncoveredGapRatio: number;
+  maximumActivityPointGapMeters: number;
+  p95ActivityPointGapMeters: number;
+  ignoredLongActivityEdgeCount: number;
+  componentCoverageRatios: number[];
+  bestSingleComponentCoverageRatio: number;
+  bestSingleComponentIndex?: number;
+  singleComponentReachesBothEndpoints: boolean;
+  blockedStrongByComponentDiscontinuity: boolean;
   sourceActivityKey: string;
   sourceActivityId?: string;
   segmentCandidateKey: string;
@@ -124,6 +145,8 @@ export type ActivityMatchDiagnostics = {
   unmatchedActivityCount: number;
   activitiesWithCandidateCount: number;
   segmentsWithCandidateCount: number;
+  ignoredLongActivityEdgeCount: number;
+  componentDiscontinuityBlockedStrongCount: number;
   integrityWarnings: string[];
   integrityErrors: string[];
 };
