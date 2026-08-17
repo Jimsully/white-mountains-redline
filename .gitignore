@@ -8,3 +8,7 @@ out/
 .DS_Store
 coverage/
 tsconfig.tsbuildinfo
+
+data/local/challenge-inventory/*
+!data/local/challenge-inventory/.gitkeep
+data/generated/reconciliation/*.local.*

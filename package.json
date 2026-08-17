@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "data:import:usfs": "node scripts/import-usfs.mjs"
+    "data:import:usfs": "node scripts/import-usfs.mjs",
+    "data:inventory:validate": "node scripts/run-tsx.cjs scripts/validate-inventory.ts",
+    "data:reconcile": "node scripts/run-tsx.cjs scripts/reconcile.ts"
   },
   "dependencies": {
     "maplibre-gl": "^6.4.0",
@@ -24,6 +26,7 @@
     "@types/react-dom": "latest",
     "eslint": "latest",
     "eslint-config-next": "16.3.1",
+    "tsx": "^4.23.12",
     "typescript": "latest",
     "vitest": "^4.1.10"
   }

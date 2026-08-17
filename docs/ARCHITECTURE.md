@@ -84,3 +84,22 @@ GitHub Actions validates pull requests and pushes to `main` with `npm ci`, `npm 
 Migration 004 restricts `public.load_source_trail_feature_batch(jsonb, jsonb)` execution to `service_role` and keeps it as an invoker-rights function, not `SECURITY DEFINER`. The service-role key is only for controlled server-side/admin import tooling and must never be exposed to browser code or committed.
 
 Migration 004 also makes the intended `public.trail_segment_api` permission explicit: `SELECT` for `anon` and `authenticated`, with mutation privileges revoked.
+
+## Reconciliation workspace
+Milestone 2 adds a development/admin route at `/admin/reconciliation`. It is not part of the public redlining experience and is marked not for navigation and not challenge verified. The route consumes committed demo reconciliation JSON so CI and local development do not require a private inventory.
+
+Reconciliation flow:
+
+```text
+raw USFS source feature
+  -> source trail group
+  -> challenge inventory item
+  -> reconciliation candidate
+  -> human accepted trail-level match
+  -> production Trail
+  -> junction-to-junction TrailSegments
+  -> human segment verification
+  -> redline completion network
+```
+
+Accepted reconciliation is not a verified trail segment. Prototype decisions stay in browser localStorage and can be exported as JSON for later review.

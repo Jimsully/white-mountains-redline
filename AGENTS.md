@@ -12,23 +12,21 @@ Build an independent, excellent White Mountains trail-completion tracker for jam
 6. Keep public pages indexable and fast; do not make login necessary to browse the trail database.
 7. Completed trail color is the product's red accent; unfinished geometry stays visually subordinate.
 8. Mobile usability is a first-class requirement.
+9. Do not commit guide-derived challenge inventories. Use `data/local/challenge-inventory/` for private local inventory inputs.
+10. Accepted reconciliation is not a verified trail segment.
 
 ## Current stack
 - Next.js App Router / TypeScript
 - MapLibre GL JS
 - Supabase/Postgres/PostGIS (schema in `supabase/migrations`)
+- Local CSV/JSON reconciliation tooling for challenge-inventory review
 
 ## Working style
-- Before large changes, read `docs/PRODUCT_SPEC.md`, `docs/ARCHITECTURE.md`, and `docs/DATA_MODEL.md`.
+- Before large changes, read `docs/PRODUCT_SPEC.md`, `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, and `docs/RECONCILIATION.md` when present.
 - Prefer small, reviewable commits.
-- Add tests for geometry/progress logic when a test framework is introduced.
+- Add tests for geometry/progress/reconciliation logic when a test framework is introduced.
 - Do not invent source trail facts. Add placeholders marked `demo`/`unverified` instead.
 - Keep accessibility: keyboard reachable controls, adequate target sizes, labels, reduced-motion friendly transitions.
 
-## Next Codex task
-Implement Milestone 1 data plumbing without claiming the pilot dataset is verified:
-1. Add a server-side trail repository abstraction with demo and Supabase adapters.
-2. Add region/search filtering to the map.
-3. Add a staging schema or script for imported GeoJSON with provenance.
-4. Add unit tests for progress calculation and segment filtering.
-5. Keep the existing prototype operational while data work progresses.
+## Current Codex task focus
+Milestone 2 builds the challenge-inventory reconciliation workspace without committing a real guide-derived inventory and without creating verified completion segments.

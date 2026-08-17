@@ -55,3 +55,28 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .segmented button.active { background: var(--ink); color: white; }
 .filterCount { margin: 0; font-size: 12px; color: var(--muted); }
 .filteredProgress { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+
+.reconShell { min-height: 100vh; background: var(--paper); color: var(--ink); }
+.reconHeader { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 24px 28px; border-bottom: 1px solid var(--line); }
+.reconHeader h1 { margin: 4px 0 0; font-size: 28px; letter-spacing: 0; }
+.reconHeader button, .reconDetail button, .candidateCard button { border: 0; background: var(--ink); color: white; padding: 10px 12px; cursor: pointer; }
+.reconStats { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 28px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+.reconGrid { display: grid; grid-template-columns: 320px minmax(360px, 1fr) 420px; min-height: calc(100vh - 116px); }
+.reconList, .reconDetail, .reconMap { padding: 20px; border-right: 1px solid var(--line); overflow: auto; }
+.reconList input, .reconDetail textarea { width: 100%; border: 1px solid var(--line); background: rgba(255,255,255,.45); padding: 10px; font: inherit; }
+.reconDetail textarea { min-height: 72px; margin: 12px 0; }
+.reconFilters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; }
+.reconFilters button, .reconItem { border: 1px solid var(--line); background: rgba(255,255,255,.35); padding: 9px; text-align: left; cursor: pointer; }
+.reconFilters button.active, .reconItem.active { background: var(--ink); color: white; }
+.reconItem { display: grid; width: 100%; gap: 4px; margin-bottom: 8px; }
+.reconItem span, .candidateCard p, .reconFacts, .muted { color: var(--muted); }
+.reconFacts div, .candidateCard dl div { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding: 8px 0; }
+.candidateStack { display: grid; gap: 12px; margin-top: 18px; }
+.candidateCard { border: 1px solid var(--line); background: rgba(255,255,255,.38); padding: 14px; }
+.candidateCard > div { display: flex; justify-content: space-between; gap: 16px; }
+.reconMap svg { width: 100%; height: auto; border: 1px solid var(--line); }
+@media (max-width: 980px) { .reconGrid { grid-template-columns: 1fr; } .reconList, .reconDetail, .reconMap { border-right: 0; border-bottom: 1px solid var(--line); } .reconHeader { align-items: flex-start; flex-direction: column; } }
+.candidateCard.active { border-color: var(--red); background: rgba(217,74,58,.09); box-shadow: inset 3px 0 0 var(--red); }
+.candidateSelect { width: 100%; display: flex; justify-content: space-between; gap: 16px; align-items: center; border: 0; background: transparent; color: inherit; padding: 0; text-align: left; cursor: pointer; }
+.candidateSelect span { color: var(--muted); font-weight: 700; }
+.candidateCard.active .candidateSelect span { color: #8d261c; }

@@ -48,3 +48,14 @@ Every imported trail/segment must retain enough source metadata to answer:
 - Which challenge inventory record does it correspond to?
 
 Do not use `verified` as a synonym for "came from an authoritative source." Verification means the **specific challenge segment identity, endpoints, and geometry** have been reviewed for this product.
+
+## Reconciliation model
+Milestone 2 introduces challenge inventory and trail-level reconciliation concepts that are separate from raw source features and production trail segments.
+
+- `ChallengeEdition`: version/edition container for a private inventory.
+- `ChallengeInventoryItem`: one private inventory row with stable key, display name, normalized name, optional region hint, notes, and review status.
+- `SourceTrailGroup`: non-destructive grouping of raw source features by normalized source name.
+- `ReconciliationCandidate`: scored possible source group match for an inventory item.
+- `ReconciliationDecision`: human review decision such as accepted, rejected, or needs review.
+
+Migration 005 creates future persistence tables for these concepts. An accepted reconciliation decision does not create a production Trail and is not a verified junction-to-junction TrailSegment.
