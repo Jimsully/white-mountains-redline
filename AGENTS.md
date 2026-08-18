@@ -30,4 +30,4 @@ Build an independent, excellent White Mountains trail-completion tracker for jam
 - Keep accessibility: keyboard reachable controls, adequate target sizes, labels, reduced-motion friendly transitions.
 
 ## Current Codex task focus
-Milestone 5 builds the verified publication gate between accepted segment-construction candidates and production trails/trail_segments without creating completion records.
+Milestone 6 adds Supabase authentication and durable profile persistence while preserving the boundary that activity evidence and authenticated identity are not segment completion.

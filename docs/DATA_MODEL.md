@@ -78,8 +78,20 @@ Milestone 4 adds a local, review-first activity matching layer after segment con
 
 Activity matching hardening: GPS edges beyond maximumInterpolatedActivityEdgeMeters are evidence gaps, separate activity components cannot combine into strong evidence, bbox matching is meter-aware, and source activity IDs dominate stable activity identity. See docs/ACTIVITY_MATCHING.md.
 
-Milestone 4 final hardening stores explicit per-component componentEvidence, requires estStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
+Milestone 4 final hardening stores explicit per-component componentEvidence, requires bestStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
 
 ## Publication State
-Production trail data requires both data_status = 'verified' and erification_status = 'human_verified' on the parent 	rails row and child 	rail_segments row. Publication decisions are separate from reconciliation, topology decisions, activity evidence, and segment_completions.
+Production trail data requires both data_status = 'verified' and verification_status = 'human_verified' on the parent trails row and child trail_segments row. Publication decisions are separate from reconciliation, topology decisions, activity evidence, and segment_completions.
 
+
+## Accounts And Profiles
+`profiles` is the durable public-safe user profile table. It is owned by `auth.users(id)` and stores only `username`, `display_name`, `is_public`, and timestamps. It does not store email, tokens, raw JWTs, provider secrets, or arbitrary auth metadata.
+
+Migration 009 changes the default profile privacy to `is_public = false`, adds `updated_at`, and enforces optional lowercase username plus 120-character display-name limits at the database boundary. Profile creation is idempotent through a narrowly scoped auth trigger.
+
+Profile rows are separate from activities, activity evidence, and completions. A signed-in user is not the same as a completed segment.
+
+## Account RLS Boundary
+Profiles are public only when `is_public = true`; authenticated users can read and update only their own private profile. Activities are private user rows with authenticated owner-only select/insert/update/delete policies. Activity updates use both `USING` and `WITH CHECK` to prevent ownership changes.
+
+M6 revokes authenticated mutation privileges on `segment_completions` and leaves `completion_evidence` service/admin controlled. Historical own completion reads can remain for compatibility, but M6 application code must not write completions or promote GPS evidence.

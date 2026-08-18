@@ -1,14 +1,14 @@
 import { DemoTrailRepository } from "@/lib/repositories/demo-trail-repository";
 import { SupabaseTrailRepository } from "@/lib/repositories/supabase-trail-repository";
 import type { TrailRepository } from "@/lib/repositories/trail-repository";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
 export function createTrailRepository(): TrailRepository {
   const adapter = process.env.TRAIL_REPOSITORY?.toLocaleLowerCase();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const config = getSupabasePublicConfig();
 
-  if (adapter === "supabase" && supabaseUrl && supabaseAnonKey) {
-    return new SupabaseTrailRepository(supabaseUrl, supabaseAnonKey);
+  if (adapter === "supabase" && config) {
+    return new SupabaseTrailRepository(config.url, config.publishableKey);
   }
 
   return new DemoTrailRepository();

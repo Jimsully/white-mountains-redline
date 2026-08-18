@@ -15,11 +15,11 @@ Added topology-aware segment candidate construction, junction/segment review dec
 ## M4 Historical activity matching — COMPLETE
 Added conservative GPS activity normalization and matching against accepted topology candidates, evidence review tooling, private metadata redaction, and demo activity matching fixtures without creating completions.
 
-## M5 Verified segment publication — IN PROGRESS
-Adds the verified publication gate between topology-approved segment construction and production `trails` / `trail_segments`, including canonical region review, deterministic production keys, verified-only public data access, service-role-only publication loading, and activity matching from the verified network. This remains in progress until merged.
+## M5 Verified segment publication — COMPLETE
+Added the verified publication gate between topology-approved segment construction and production `trails` / `trail_segments`, including canonical region review, deterministic production keys, verified-only public data access, service-role-only publication loading, and activity matching from the verified network.
 
-## M6 Accounts + user persistence
-Add authenticated user accounts, durable user state, and private completion/evidence storage boundaries.
+## M6 Accounts + user persistence — IN PROGRESS
+Add authenticated user accounts, durable user profile state, and private ownership boundaries for account and activity persistence. This remains in progress until merged.
 
 ## M7 User completion workflow + activity evidence promotion
 Promote accepted activity evidence into user-confirmed completion workflows while keeping GPS evidence reviewable and reversible.

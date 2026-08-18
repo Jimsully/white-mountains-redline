@@ -12,7 +12,7 @@
 `createTrailRepository()` selects a `TrailRepository` adapter:
 
 - `DemoTrailRepository` is the default and keeps the prototype operational without credentials.
-- `SupabaseTrailRepository` is selected only when `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present.
+- `SupabaseTrailRepository` is selected only when `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the documented `NEXT_PUBLIC_SUPABASE_ANON_KEY` fallback are present.
 
 This keeps the app buildable and browsable before a Supabase project exists, while preserving a stable contract for production trail reads.
 
@@ -133,8 +133,17 @@ Milestone 4 adds a local, review-first activity matching layer after segment con
 
 Activity matching hardening: GPS edges beyond maximumInterpolatedActivityEdgeMeters are evidence gaps, separate activity components cannot combine into strong evidence, bbox matching is meter-aware, and source activity IDs dominate stable activity identity. See docs/ACTIVITY_MATCHING.md.
 
-Milestone 4 final hardening stores explicit per-component componentEvidence, requires estStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
+Milestone 4 final hardening stores explicit per-component componentEvidence, requires bestStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
 
 ## Publication Boundary
-The public trail repository consumes TrailSegment-shaped records. Demo mode now adapts the committed verified network artifact into that shape, while Supabase reads from 	rail_segment_api, which is hardened to verified human-reviewed records only.
+The public trail repository consumes TrailSegment-shaped records. Demo mode now adapts the committed verified network artifact into that shape, while Supabase reads from trail_segment_api, which is hardened to verified human-reviewed records only.
 
+
+## Accounts And User Persistence
+Milestone 6 adds Supabase SSR authentication without making trail browsing require login. Public routes keep using the trail repository abstraction; `/account` is the protected boundary for private profile state.
+
+Auth/session code is centralized in `lib/supabase/*` and account/profile persistence is centralized in `lib/accounts/*`. Browser code receives only `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the documented `NEXT_PUBLIC_SUPABASE_ANON_KEY` fallback. The service-role key remains reserved for controlled server-side/admin import and publication tooling and must never appear in client components.
+
+`proxy.ts` uses the current cookie-backed Supabase SSR pattern to refresh sessions, copies Supabase cache-protection headers, and no-ops when Supabase public config is absent, so CI and demo builds do not require credentials. Server routes verify users with `auth.getUser()` instead of trusting raw cookies; the proxy uses `auth.getClaims()` for request-time session refresh/validation. Production auth redirects require a configured HTTPS `NEXT_PUBLIC_SITE_URL`, while public Supabase trail reads remain available with only public API config.
+
+M6 does not create `segment_completions`, mark segments completed from auth state, or promote activity evidence. M7 owns the completion mutation contract.
