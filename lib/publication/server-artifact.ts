@@ -10,7 +10,7 @@ export function loadPublicationArtifact(demoArtifact: VerifiedNetworkArtifact, e
   if (artifactPath && env.NODE_ENV === "production") throw new Error(PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR);
   const artifact = artifactPath ? JSON.parse(fs.readFileSync(path.resolve(artifactPath), "utf8")) as unknown : demoArtifact;
   if (!isVerifiedNetworkArtifactShape(artifact)) throw new Error("PUBLICATION_ARTIFACT_PATH does not contain a verified network artifact.");
-  if (artifactPath) assertValidVerifiedNetworkArtifact(artifact);
+  assertValidVerifiedNetworkArtifact(artifact);
   return artifact;
 }
 
@@ -29,3 +29,4 @@ export function isVerifiedNetworkArtifactShape(value: unknown): value is Verifie
     && Boolean(candidate.diagnostics)
     && typeof candidate.diagnostics?.verifiedSegmentCount === "number";
 }
+

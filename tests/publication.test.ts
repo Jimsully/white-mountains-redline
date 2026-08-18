@@ -13,6 +13,7 @@ import { parseNormalizedActivities } from "@/lib/activity-matching/activities";
 import type { SegmentConstructionArtifact } from "@/types/segment-construction";
 import type { SegmentConstructionDecisionExport } from "@/types/activity-matching";
 import { runActivityMatchingFromVerifiedNetwork } from "@/lib/activity-matching/run-activity-matching";
+import { buildPublicationDecisionExport, mergePublicationDecisionOverrides } from "@/lib/publication/review-state";
 
 const root = process.cwd();
 const segmentArtifact = JSON.parse(fs.readFileSync(path.join(root, "data/generated/segments/demo-segment-construction.json"), "utf8")) as SegmentConstructionArtifact;
@@ -24,7 +25,17 @@ function demoArtifact(overrides: Partial<Parameters<typeof buildVerifiedNetworkA
 }
 
 function productionArtifact() {
-  return { ...demoArtifact({ demoOnly: false }), metadata: { ...demoArtifact({ demoOnly: false }).metadata, demoOnly: false } };
+  const artifact = cloneArtifact(demoArtifact());
+  artifact.metadata.demoOnly = false;
+  if (artifact.metadata.publicationDecisionExport?.sourceArtifact) artifact.metadata.publicationDecisionExport.sourceArtifact.demoOnly = false;
+  if (artifact.metadata.publicationDecisionExport?.sourceSegmentDecisions?.sourceArtifact) artifact.metadata.publicationDecisionExport.sourceSegmentDecisions.sourceArtifact.demoOnly = false;
+  for (const segment of artifact.candidateSegments) segment.sourceSegmentArtifact.demoOnly = false;
+  for (const segment of artifact.trailSegments) segment.provenance.sourceSegmentArtifact.demoOnly = false;
+  return artifact;
+}
+
+function cloneArtifact(artifact: VerifiedNetworkArtifact): VerifiedNetworkArtifact {
+  return JSON.parse(JSON.stringify(artifact)) as VerifiedNetworkArtifact;
 }
 
 function withTempArtifact(artifact: VerifiedNetworkArtifact, callback: (artifactPath: string, tempRoot: string) => void) {
@@ -74,7 +85,7 @@ describe("verified publication gate", () => {
   it("rejects published records with non-verified publication decisions", () => {
     const artifact = demoArtifact();
     const tampered: VerifiedNetworkArtifact = { ...artifact, trailSegments: [{ ...artifact.trailSegments[0], provenance: { ...artifact.trailSegments[0].provenance, publicationDecision: { ...artifact.trailSegments[0].provenance.publicationDecision, decision: "needs_review" } } }, ...artifact.trailSegments.slice(1)] };
-    expect(validateVerifiedNetworkArtifact(tampered).some((error) => error.includes("non-verified segment publication decision"))).toBe(true);
+    expect(validateVerifiedNetworkArtifact(tampered).some((error) => error.includes("embedded segment publication decision does not match canonical publication decision"))).toBe(true);
   });
 
   it("rejects tampered upstream topology decisions", () => {
@@ -95,6 +106,109 @@ describe("verified publication gate", () => {
     expect(validateVerifiedNetworkArtifact(nonFinite).some((error) => error.includes("non-finite coordinate"))).toBe(true);
   });
 
+  it("rejects changing only the top-level demo flag before publication loading", () => {
+    const artifact = demoArtifact();
+    expect(artifact.diagnostics.integrityErrors).toEqual([]);
+    const tampered = cloneArtifact(artifact);
+    tampered.metadata.demoOnly = false;
+    tampered.diagnostics.integrityErrors = [];
+    expect(() => buildPublicationLoadPayload(tampered)).toThrow("Verified publication artifact failed integrity validation");
+  });
+
+  it("validates the default demo artifact before public adapter mapping", () => {
+    const artifact = demoArtifact();
+    const tampered = cloneArtifact(artifact);
+    tampered.trailSegments[0].verificationStatus = "needs_reconciliation" as never;
+    tampered.diagnostics.integrityErrors = [];
+    expect(() => verifiedNetworkToTrailSegments(tampered)).toThrow("Verified publication artifact failed integrity validation");
+    expect(() => loadPublicationArtifact(tampered, { NODE_ENV: "test" } as NodeJS.ProcessEnv)).toThrow("Verified publication artifact failed integrity validation");
+  });
+
+  it("rejects published segment geometry, mileage, and source-feature tampering", () => {
+    const artifact = productionArtifact();
+    const geometryTampered = cloneArtifact(artifact);
+    geometryTampered.trailSegments[0].coordinates[0][0] += 0.000001;
+    expect(validateVerifiedNetworkArtifact(geometryTampered).some((error) => error.includes("geometry does not match candidate geometry"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(geometryTampered)).toThrow("Verified publication artifact failed integrity validation");
+
+    const mileageTampered = cloneArtifact(artifact);
+    mileageTampered.trailSegments[0].miles += 0.01;
+    expect(validateVerifiedNetworkArtifact(mileageTampered).some((error) => error.includes("mileage does not match candidate mileage"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(mileageTampered)).toThrow("Verified publication artifact failed integrity validation");
+
+    const sourceTampered = cloneArtifact(artifact);
+    sourceTampered.trailSegments[0].sourceFeatureIds = ["changed-source-feature"];
+    expect(validateVerifiedNetworkArtifact(sourceTampered).some((error) => error.includes("source feature IDs do not match candidate"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(sourceTampered)).toThrow("Verified publication artifact failed integrity validation");
+  });
+
+  it("rejects published trail metadata tampering", () => {
+    const artifact = productionArtifact();
+    const regionTampered = cloneArtifact(artifact);
+    regionTampered.trails[0].region = "Presidential Range";
+    expect(validateVerifiedNetworkArtifact(regionTampered).some((error) => error.includes("region does not match canonical trail metadata"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(regionTampered)).toThrow("Verified publication artifact failed integrity validation");
+
+    const nameTampered = cloneArtifact(artifact);
+    nameTampered.trails[0].name = "Changed Trail Name";
+    nameTampered.trailSegments = nameTampered.trailSegments.map((segment) => segment.trailId === nameTampered.trails[0].id ? { ...segment, trailName: "Changed Trail Name" } : segment);
+    expect(validateVerifiedNetworkArtifact(nameTampered).some((error) => error.includes("name does not match canonical trail metadata"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(nameTampered)).toThrow("Verified publication artifact failed integrity validation");
+  });
+
+  it("rejects candidate and source-segment candidate binding tampering", () => {
+    const artifact = productionArtifact();
+    const candidateGeometryTampered = cloneArtifact(artifact);
+    candidateGeometryTampered.candidateSegments[0].sourceSegmentCandidate.geometry.coordinates[0][0] += 0.000001;
+    expect(validateVerifiedNetworkArtifact(candidateGeometryTampered).some((error) => error.includes("source segment candidate geometry does not match"))).toBe(true);
+
+    const candidateFeatureTampered = cloneArtifact(artifact);
+    candidateFeatureTampered.trailSegments[0].provenance.sourceSegmentCandidate.sourceFeatureIds = ["changed-source-feature"];
+    expect(validateVerifiedNetworkArtifact(candidateFeatureTampered).some((error) => error.includes("source segment candidate source feature IDs do not match"))).toBe(true);
+  });
+
+  it("requires embedded publication decisions to match canonical decisions exactly", () => {
+    const artifact = productionArtifact();
+    const trailDecisionTampered = cloneArtifact(artifact);
+    trailDecisionTampered.trails[0].provenance.publicationDecision.reviewTimestamp = "2026-08-17T00:00:01.000Z";
+    expect(validateVerifiedNetworkArtifact(trailDecisionTampered).some((error) => error.includes("embedded publication decision does not match canonical publication decision"))).toBe(true);
+
+    const segmentDecisionTampered = cloneArtifact(artifact);
+    segmentDecisionTampered.trailSegments[0].provenance.trailPublicationDecision.notes = "changed";
+    expect(validateVerifiedNetworkArtifact(segmentDecisionTampered).some((error) => error.includes("embedded trail publication decision does not match canonical publication decision"))).toBe(true);
+  });
+
+  it("rejects duplicate candidate and trail metadata identities", () => {
+    const artifact = demoArtifact();
+    const duplicateCandidateTrail = cloneArtifact(artifact);
+    duplicateCandidateTrail.candidateTrails.push(cloneArtifact(artifact).candidateTrails[0]);
+    expect(validateVerifiedNetworkArtifact(duplicateCandidateTrail).some((error) => error.includes("Duplicate candidate trail key"))).toBe(true);
+
+    const duplicateCandidateSegment = cloneArtifact(artifact);
+    duplicateCandidateSegment.candidateSegments.push(cloneArtifact(artifact).candidateSegments[0]);
+    expect(validateVerifiedNetworkArtifact(duplicateCandidateSegment).some((error) => error.includes("Duplicate candidate segment key"))).toBe(true);
+
+    const duplicateMetadata = cloneArtifact(artifact);
+    duplicateMetadata.trailMetadata.push(cloneArtifact(artifact).trailMetadata[0]);
+    expect(validateVerifiedNetworkArtifact(duplicateMetadata).some((error) => error.includes("Duplicate trail metadata candidate key"))).toBe(true);
+
+    const unknownMetadata = cloneArtifact(artifact);
+    unknownMetadata.trailMetadata = [{ ...unknownMetadata.trailMetadata[0], candidateTrailKey: "unknown-candidate-trail" }, ...unknownMetadata.trailMetadata.slice(1)];
+    expect(validateVerifiedNetworkArtifact(unknownMetadata).some((error) => error.includes("Trail metadata references unknown candidate trail"))).toBe(true);
+  });
+
+  it("exports committed publication decisions plus local overrides", () => {
+    const artifact = demoArtifact();
+    const override = { ...artifact.publicationDecisions[0], decision: "needs_review" as const, notes: "local override" };
+    const merged = mergePublicationDecisionOverrides(artifact.publicationDecisions, [override]);
+    expect(merged).toHaveLength(7);
+    expect(merged.find((decision) => decision.targetType === override.targetType && decision.targetKey === override.targetKey)).toEqual(override);
+    expect(merged.filter((decision) => decision.decision === "verified_for_publication")).toHaveLength(6);
+    expect(merged.map((decision) => `${decision.targetType}:${decision.targetKey}`)).toEqual([...merged.map((decision) => `${decision.targetType}:${decision.targetKey}`)].sort());
+
+    const exported = buildPublicationDecisionExport(artifact, [override]);
+    expect(exported.decisions).toEqual(merged);
+  });
   it("blocks private publication artifacts in production", () => {
     expect(() => loadPublicationArtifact({} as never, { NODE_ENV: "production", PUBLICATION_ARTIFACT_PATH: "local.json" } as NodeJS.ProcessEnv)).toThrow(PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR);
   });
@@ -185,3 +299,8 @@ describe("verified publication gate", () => {
     expect(sql).not.toMatch(/security\s+definer/i);
   });
 });
+
+
+
+
+

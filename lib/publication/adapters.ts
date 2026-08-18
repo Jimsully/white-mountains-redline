@@ -4,6 +4,7 @@ import type { VerifiedNetworkArtifact, VerifiedPublishedSegment } from "@/types/
 import { assertValidVerifiedNetworkArtifact } from "@/lib/publication/validator";
 
 export function verifiedNetworkToTrailSegments(artifact: VerifiedNetworkArtifact): TrailSegment[] {
+  assertValidVerifiedNetworkArtifact(artifact);
   return artifact.trailSegments.map(verifiedSegmentToTrailSegment);
 }
 
@@ -63,3 +64,4 @@ function toSourceProvider(value: string): SourceProvider {
 function toCoordinateTuples(coordinates: VerifiedPublishedSegment["coordinates"]): [number, number][] {
   return coordinates.map((coordinate) => [coordinate[0], coordinate[1]]);
 }
+

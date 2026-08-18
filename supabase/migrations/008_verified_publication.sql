@@ -25,7 +25,7 @@ alter table public.trail_segments add column if not exists publication_artifact_
 
 alter table public.publication_runs enable row level security;
 revoke all on table public.publication_runs from public, anon, authenticated;
-grant select, insert on table public.publication_runs to service_role;
+grant select, insert, update on table public.publication_runs to service_role;
 
 drop policy if exists "publication runs are service-role managed" on public.publication_runs;
 create policy "publication runs are service-role managed"
@@ -246,5 +246,6 @@ revoke execute on function public.load_verified_publication_batch(jsonb, jsonb, 
 revoke execute on function public.load_verified_publication_batch(jsonb, jsonb, jsonb) from anon;
 revoke execute on function public.load_verified_publication_batch(jsonb, jsonb, jsonb) from authenticated;
 grant execute on function public.load_verified_publication_batch(jsonb, jsonb, jsonb) to service_role;
+
 
 

@@ -23,7 +23,14 @@ export function buildPublicationDecision(targetType: PublicationTargetType, targ
   return output;
 }
 
-export function buildPublicationDecisionExport(artifact: VerifiedNetworkArtifact, decisions: PublicationDecision[]): PublicationDecisionExport {
+export function mergePublicationDecisionOverrides(committedDecisions: PublicationDecision[], localOverrides: PublicationDecision[]): PublicationDecision[] {
+  const byKey = new Map<string, PublicationDecision>();
+  for (const decision of committedDecisions) byKey.set(decisionKey(decision), decision);
+  for (const decision of localOverrides) byKey.set(decisionKey(decision), decision);
+  return [...byKey.values()].sort((a, b) => decisionKey(a).localeCompare(decisionKey(b)));
+}
+
+export function buildPublicationDecisionExport(artifact: VerifiedNetworkArtifact, localOverrides: PublicationDecision[]): PublicationDecisionExport {
   return {
     exportedAt: new Date().toISOString(),
     warning: "Publication decisions can create production trail/trail_segments only after controlled service-role loading. They never create SegmentCompletion records.",
@@ -31,7 +38,7 @@ export function buildPublicationDecisionExport(artifact: VerifiedNetworkArtifact
     sourceArtifact: artifact.metadata.publicationDecisionExport?.sourceArtifact,
     sourceSegmentDecisions: artifact.metadata.publicationDecisionExport?.sourceSegmentDecisions,
     trailMetadata: [...artifact.trailMetadata].sort((a, b) => a.candidateTrailKey.localeCompare(b.candidateTrailKey)),
-    decisions: [...decisions].sort((a, b) => `${a.targetType}:${a.targetKey}`.localeCompare(`${b.targetType}:${b.targetKey}`)),
+    decisions: mergePublicationDecisionOverrides(artifact.publicationDecisions, localOverrides),
   };
 }
 
@@ -42,4 +49,8 @@ function isPublicationDecision(value: unknown): value is PublicationDecision {
     && typeof candidate.targetKey === "string"
     && (candidate.decision === "verified_for_publication" || candidate.decision === "rejected" || candidate.decision === "needs_review")
     && typeof candidate.reviewTimestamp === "string";
+}
+
+function decisionKey(decision: Pick<PublicationDecision, "targetType" | "targetKey">) {
+  return `${decision.targetType}:${decision.targetKey}`;
 }
