@@ -19,3 +19,4 @@ data/generated/activity-matching/*.local.*
 data/local/publication/*
 !data/local/publication/.gitkeep
 data/generated/publication/*.local.*
+public/vendor/maplibre/

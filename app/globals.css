@@ -10,8 +10,8 @@
 html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); }
 body { font-family: Arial, Helvetica, sans-serif; }
 button { font: inherit; }
-.appShell { min-height: 100vh; display: grid; grid-template-columns: 390px 1fr; }
-.panel { padding: 42px 34px; background: var(--paper); border-right: 1px solid var(--line); z-index: 2; overflow-y: auto; }
+.appShell { min-height: 100vh; display: grid; grid-template-columns: 390px minmax(0, 1fr); align-items: stretch; }
+.panel { max-height: 100vh; padding: 42px 34px; background: var(--paper); border-right: 1px solid var(--line); z-index: 2; overflow-y: auto; }
 .eyebrow { font-size: 11px; letter-spacing: .22em; font-weight: 700; color: var(--muted); }
 h1 { margin: 8px 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: 54px; line-height: .95; letter-spacing: -.04em; }
 .lede { max-width: 300px; margin: 0 0 34px; color: var(--muted); line-height: 1.5; }
@@ -35,13 +35,14 @@ dl { margin: 0 0 18px; }
 dl div { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
 dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .trailCard button { width: 100%; border: 0; background: var(--ink); color: white; padding: 12px 14px; cursor: pointer; }
-.mapShell { position: relative; min-width: 0; min-height: 100vh; background: #c8c7bf; }
-.map { position: absolute; inset: 0; }
+.mapShell { position: relative; min-width: 0; height: 100vh; min-height: 100vh; background: #c8c7bf; }
+.map { width: 100%; height: 100%; }
+.map.maplibregl-map { width: 100%; height: 100%; }
 .mapBadge { position: absolute; top: 18px; left: 18px; z-index: 4; padding: 8px 10px; background: rgba(22,26,24,.88); color: #fff; font-size: 10px; letter-spacing: .12em; }
 @media (max-width: 800px) {
-  .appShell { grid-template-columns: 1fr; grid-template-rows: auto 58vh; }
-  .panel { border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 22px; }
-  .mapShell { min-height: 58vh; }
+  .appShell { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  .panel { max-height: none; border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 22px; }
+  .mapShell { height: 58vh; min-height: 58vh; }
   h1 { font-size: 46px; }
 }
 .filters { display: grid; gap: 12px; margin-bottom: 8px; }
@@ -114,3 +115,5 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .checkRow { display: flex !important; grid-template-columns: auto 1fr; align-items: center; gap: 10px !important; color: var(--ink) !important; }
 .checkRow input { width: 18px; min-height: 18px; }
 @media (max-width: 640px) { .accountShell { padding: 24px 14px; } .accountPanel { padding: 22px; } .accountHeaderRow { display: grid; } }
+
+.mapError { position: absolute; right: 18px; bottom: 18px; z-index: 5; max-width: min(420px, calc(100% - 36px)); padding: 10px 12px; border: 1px solid #b85b50; background: #f6d8d4; color: #6f2119; font-size: 12px; line-height: 1.4; }

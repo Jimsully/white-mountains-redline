@@ -17,7 +17,10 @@
     "data:activity:normalize": "node scripts/run-tsx.cjs scripts/normalize-activity.ts",
     "data:activity:match": "node scripts/run-tsx.cjs scripts/match-activities.ts",
     "data:publication:build": "node scripts/run-tsx.cjs scripts/build-publication.ts",
-    "data:publication:load": "node scripts/run-tsx.cjs scripts/load-publication.ts"
+    "data:publication:load": "node scripts/run-tsx.cjs scripts/load-publication.ts",
+    "prepare:maplibre-worker": "node scripts/prepare-maplibre-worker.mjs",
+    "predev": "npm run prepare:maplibre-worker",
+    "prebuild": "npm run prepare:maplibre-worker"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

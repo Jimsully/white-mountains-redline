@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { FeatureCollection, LineString } from "geojson";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { configureMapLibreWorker } from "@/lib/map/maplibre-worker";
 import type { TrailSegment } from "@/types/trails";
 
 type Props = {
@@ -36,9 +37,12 @@ export function RedlineMap({ segments, selectedId, onSelect }: Props) {
   const mapRef = useRef<MapLibreMap | null>(null);
   const data = useMemo(() => toGeoJSON(segments), [segments]);
   const dataRef = useRef(data);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+
+    configureMapLibreWorker(maplibregl);
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -61,6 +65,11 @@ export function RedlineMap({ segments, selectedId, onSelect }: Props) {
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
+
+    map.on("error", (event) => {
+      if (process.env.NODE_ENV !== "development") return;
+      setMapError(event.error?.message ?? "Map failed to load.");
+    });
 
     map.on("load", () => {
       map.addSource("trail-segments", { type: "geojson", data: dataRef.current });
@@ -96,8 +105,11 @@ export function RedlineMap({ segments, selectedId, onSelect }: Props) {
       map.on("mouseleave", "trail-lines", () => { map.getCanvas().style.cursor = ""; });
     });
 
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => map.resize());
+    resizeObserver?.observe(containerRef.current);
+
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { resizeObserver?.disconnect(); map.remove(); mapRef.current = null; };
   }, [onSelect]);
 
   useEffect(() => {
@@ -119,6 +131,7 @@ export function RedlineMap({ segments, selectedId, onSelect }: Props) {
   return (
     <div className="mapShell">
       <div className="mapBadge">PROTOTYPE · NOT FOR NAVIGATION</div>
+      {mapError ? <div className="mapError" role="status">Map failed to load: {mapError}</div> : null}
       <div ref={containerRef} className="map" />
     </div>
   );
