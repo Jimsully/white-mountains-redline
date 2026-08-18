@@ -87,7 +87,7 @@ Production trail data requires both data_status = 'verified' and verification_st
 ## Accounts And Profiles
 `profiles` is the durable public-safe user profile table. It is owned by `auth.users(id)` and stores only `username`, `display_name`, `is_public`, and timestamps. It does not store email, tokens, raw JWTs, provider secrets, or arbitrary auth metadata.
 
-Migration 009 changes the default profile privacy to `is_public = false`, adds `updated_at`, and enforces optional lowercase username format at the database boundary. Profile creation is idempotent through a narrowly scoped auth trigger.
+Migration 009 changes the default profile privacy to `is_public = false`, adds `updated_at`, and enforces optional lowercase username plus 120-character display-name limits at the database boundary. Profile creation is idempotent through a narrowly scoped auth trigger.
 
 Profile rows are separate from activities, activity evidence, and completions. A signed-in user is not the same as a completed segment.
 
@@ -95,4 +95,3 @@ Profile rows are separate from activities, activity evidence, and completions. A
 Profiles are public only when `is_public = true`; authenticated users can read and update only their own private profile. Activities are private user rows with authenticated owner-only select/insert/update/delete policies. Activity updates use both `USING` and `WITH CHECK` to prevent ownership changes.
 
 M6 revokes authenticated mutation privileges on `segment_completions` and leaves `completion_evidence` service/admin controlled. Historical own completion reads can remain for compatibility, but M6 application code must not write completions or promote GPS evidence.
-

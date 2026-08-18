@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
-import type { SupabaseCookieToSet } from "@/lib/supabase/cookies";
 
 export async function createServerSupabaseClient() {
   const config = getSupabasePublicConfig();
@@ -13,9 +12,9 @@ export async function createServerSupabaseClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet: SupabaseCookieToSet[]) {
+      setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2]));
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         } catch {
           // Server Components cannot always write response cookies; proxy refresh handles that path.
         }
@@ -31,5 +30,3 @@ export async function getAuthenticatedUser() {
   if (error || !data.user) return { supabase, user: null, unavailable: false as const };
   return { supabase, user: data.user, unavailable: false as const };
 }
-
-

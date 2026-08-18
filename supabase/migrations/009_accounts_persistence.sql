@@ -5,6 +5,12 @@
 alter table public.profiles alter column is_public set default false;
 alter table public.profiles add column if not exists updated_at timestamptz not null default now();
 
+alter table public.profiles drop constraint if exists profiles_display_name_length_chk;
+alter table public.profiles add constraint profiles_display_name_length_chk
+  check (
+    display_name is null
+    or char_length(display_name) <= 120
+  );
 alter table public.profiles drop constraint if exists profiles_username_format_chk;
 alter table public.profiles add constraint profiles_username_format_chk
   check (

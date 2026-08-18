@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AUTH_ERROR_STATUS, AUTH_UNAVAILABLE_STATUS, MAGIC_LINK_SENT_STATUS } from "@/lib/accounts/auth-errors";
 import { safeRelativeRedirect } from "@/lib/accounts/redirects";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { signInWithMagicLinkAction, signInWithOAuthAction } from "@/app/login/actions";
@@ -10,7 +11,6 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const returnTo = safeRelativeRedirect(first(params?.returnTo), "/account");
-  const error = first(params?.error);
   const status = first(params?.status);
   const configured = isSupabaseAuthConfigured();
 
@@ -20,12 +20,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="eyebrow">Account</p>
         <h1>Sign in</h1>
         <p className="lede">Save private profile settings without changing the public trail map. Browsing remains available without an account.</p>
-        {!configured ? (
-          <div className="notice" role="status">Supabase Auth is not configured for this environment. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to enable login.</div>
+        {!configured || status === AUTH_UNAVAILABLE_STATUS ? (
+          <div className="notice" role="status">Supabase Auth is not configured for this environment. Add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, and a production HTTPS NEXT_PUBLIC_SITE_URL to enable login.</div>
         ) : null}
-        {status === "magic-link-sent" ? <div className="notice" role="status">Check your email for a magic link.</div> : null}
-        {status === "unavailable" ? <div className="notice" role="status">Authentication is unavailable in this environment.</div> : null}
-        {error ? <div className="notice errorNotice" role="alert">{error}</div> : null}
+        {status === MAGIC_LINK_SENT_STATUS ? <div className="notice" role="status">Check your email for a magic link.</div> : null}
+        {status === "email-required" ? <div className="notice errorNotice" role="alert">Enter an email address.</div> : null}
+        {status === "unsupported-provider" ? <div className="notice errorNotice" role="alert">Unsupported sign-in provider.</div> : null}
+        {status === AUTH_ERROR_STATUS ? <div className="notice errorNotice" role="alert">Sign-in failed. Please try again.</div> : null}
 
         <form action={signInWithMagicLinkAction} className="accountForm">
           <input type="hidden" name="returnTo" value={returnTo} />

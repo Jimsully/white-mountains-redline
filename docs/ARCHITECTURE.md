@@ -144,7 +144,6 @@ Milestone 6 adds Supabase SSR authentication without making trail browsing requi
 
 Auth/session code is centralized in `lib/supabase/*` and account/profile persistence is centralized in `lib/accounts/*`. Browser code receives only `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the documented `NEXT_PUBLIC_SUPABASE_ANON_KEY` fallback. The service-role key remains reserved for controlled server-side/admin import and publication tooling and must never appear in client components.
 
-`proxy.ts` uses the current cookie-backed Supabase SSR pattern to refresh sessions and no-ops when Supabase public config is absent, so CI and demo builds do not require credentials. Server routes verify users with `auth.getUser()` instead of trusting raw cookies.
+`proxy.ts` uses the current cookie-backed Supabase SSR pattern to refresh sessions, copies Supabase cache-protection headers, and no-ops when Supabase public config is absent, so CI and demo builds do not require credentials. Server routes verify users with `auth.getUser()` instead of trusting raw cookies; the proxy uses `auth.getClaims()` for request-time session refresh/validation. Production auth redirects require a configured HTTPS `NEXT_PUBLIC_SITE_URL`, while public Supabase trail reads remain available with only public API config.
 
 M6 does not create `segment_completions`, mark segments completed from auth state, or promote activity evidence. M7 owns the completion mutation contract.
-

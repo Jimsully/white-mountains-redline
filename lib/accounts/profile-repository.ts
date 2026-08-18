@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProfileRow, ProfileUpdateInput, UserProfile } from "@/types/account";
+import { sanitizeProfilePersistenceError } from "@/lib/accounts/errors";
 import { mapProfileRow, profileUpdatePayload } from "@/types/account";
 
 export class ProfileRepository {
@@ -12,7 +13,7 @@ export class ProfileRepository {
       .eq("id", this.userId)
       .maybeSingle();
 
-    if (error) throw new Error(`Profile lookup failed: ${error.message}`);
+    if (error) throw new Error("Profile lookup failed. Please try again.");
     return data ? mapProfileRow(data as ProfileRow) : null;
   }
 
@@ -26,7 +27,7 @@ export class ProfileRepository {
       .select("id, username, display_name, is_public, created_at, updated_at")
       .single();
 
-    if (error) throw new Error(`Profile creation failed: ${error.message}`);
+    if (error) throw new Error("Profile creation failed. Please try again.");
     return mapProfileRow(data as ProfileRow);
   }
 
@@ -37,14 +38,7 @@ export class ProfileRepository {
       .select("id, username, display_name, is_public, created_at, updated_at")
       .single();
 
-    if (error) throw new Error(readableProfileError(error.message));
+    if (error) throw new Error(sanitizeProfilePersistenceError(error["message"]));
     return mapProfileRow(data as ProfileRow);
   }
-}
-
-function readableProfileError(message: string) {
-  const lower = message.toLowerCase();
-  if (lower.includes("profiles_username_format_chk")) return "Username does not match the required public format.";
-  if (lower.includes("profiles_username_key") || lower.includes("duplicate key")) return "That username is already taken.";
-  return message;
 }

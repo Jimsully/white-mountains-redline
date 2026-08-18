@@ -13,7 +13,7 @@ Browser and SSR auth use only public Supabase configuration:
 
 `SUPABASE_SERVICE_ROLE_KEY` is only for controlled server-side/admin import and publication tooling. It is never browser auth, never exposed to client components, and is not needed for ordinary profile writes.
 
-When public Supabase auth config is absent, the public map and demo trail repository continue to work. `/login` renders a configuration-unavailable state, the auth proxy no-ops, and `/account` cannot accidentally become a fake signed-in page.
+When public Supabase auth config is absent, the public map and demo trail repository continue to work. `/login` renders a configuration-unavailable state, the auth proxy no-ops, and `/account` cannot accidentally become a fake signed-in page. Authentication runtime configuration is stricter than public trail-read configuration: production sign-in requires a valid HTTPS `NEXT_PUBLIC_SITE_URL` for OAuth and magic-link callback URLs, while development/test may use the fixed trusted `http://localhost:3000` fallback.
 
 ## Session Architecture
 

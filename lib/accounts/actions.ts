@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { profileErrorMessageForDisplay } from "@/lib/accounts/errors";
 import { ProfileRepository } from "@/lib/accounts/profile-repository";
 import { safeRelativeRedirect } from "@/lib/accounts/redirects";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
@@ -19,7 +20,7 @@ export async function updateProfileAction(formData: FormData) {
     const repository = new ProfileRepository(auth.supabase, auth.user.id);
     await repository.updateProfile(validation.value);
   } catch (error) {
-    redirect(`${returnTo}?error=${encodeURIComponent(error instanceof Error ? error.message : "Profile update failed.")}`);
+    redirect(`${returnTo}?error=${encodeURIComponent(profileErrorMessageForDisplay(error))}`);
   }
 
   redirect(`${returnTo}?status=saved`);

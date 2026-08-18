@@ -1,12 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { getAppBaseUrl, getSupabasePublicConfig, isSupabaseAuthConfigured } from "@/lib/supabase/config";
+import { PROFILE_UPDATE_FAILED, profileErrorMessageForDisplay, sanitizeProfilePersistenceError } from "@/lib/accounts/errors";
 import { loginPathForReturn, safeRelativeRedirect } from "@/lib/accounts/redirects";
+import { resolveAppBaseUrl, resolveSupabaseAuthRuntimeConfig, resolveSupabasePublicConfig } from "@/lib/supabase/config";
 import { mapProfileRow, profileUpdatePayload, validateProfileUpdate, validateUsername } from "@/types/account";
 
 const root = process.cwd();
 const migration009 = fs.readFileSync(path.join(root, "supabase/migrations/009_accounts_persistence.sql"), "utf8");
+const proxySource = fs.readFileSync(path.join(root, "proxy.ts"), "utf8");
+const browserConfigSource = fs.readFileSync(path.join(root, "lib/supabase/config.ts"), "utf8");
+const loginActionsSource = fs.readFileSync(path.join(root, "app/login/actions.ts"), "utf8");
+const callbackSource = fs.readFileSync(path.join(root, "app/auth/callback/route.ts"), "utf8");
 
 function appSourceFiles() {
   const roots = ["app", "lib", "types", "components"];
@@ -25,10 +30,12 @@ function collect(folder: string, files: string[]) {
 }
 
 describe("accounts persistence hardening", () => {
-  it("defaults profiles to private and enforces public-safe usernames without email storage", () => {
+  it("defaults profiles to private and enforces public-safe profile fields without email storage", () => {
     expect(migration009).toContain("alter table public.profiles alter column is_public set default false");
     expect(migration009).toContain("profiles_username_format_chk");
     expect(migration009).toContain("username ~ '^[a-z0-9][a-z0-9_-]{2,31}$'");
+    expect(migration009).toContain("profiles_display_name_length_chk");
+    expect(migration009).toContain("char_length(display_name) <= 120");
     expect(migration009).not.toMatch(/alter table public\.profiles add column[^;]*email/i);
   });
 
@@ -98,19 +105,31 @@ describe("auth and profile domain helpers", () => {
     expect(loginPathForReturn("/account")).toBe("/login?returnTo=%2Faccount");
   });
 
-  it("reports Supabase auth config availability without throwing", () => {
-    expect(isSupabaseAuthConfigured({})).toBe(false);
-    expect(getSupabasePublicConfig({ NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable" })).toEqual({
-      url: "https://project.supabase.co",
-      publishableKey: "publishable",
-      keySource: "publishable",
-    });
-    expect(getSupabasePublicConfig({ NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon" })?.keySource).toBe("anon-fallback");
-    expect(getAppBaseUrl({ NEXT_PUBLIC_SITE_URL: "https://trails.example.com/path" })).toBe("https://trails.example.com");
-    expect(getAppBaseUrl({ NEXT_PUBLIC_SITE_URL: "not a url" })).toBeNull();
+  it("keeps public Supabase API config independent from auth runtime config", () => {
+    const publicEnv = { NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon", NODE_ENV: "production" };
+    expect(resolveSupabasePublicConfig(publicEnv)?.keySource).toBe("anon-fallback");
+    expect(resolveSupabaseAuthRuntimeConfig(publicEnv)).toBeNull();
   });
 
-  it("validates canonical usernames consistently with migration 009", () => {
+  it("requires a trusted auth base URL in production and allows localhost only outside production", () => {
+    const base = { NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable" };
+    expect(resolveSupabaseAuthRuntimeConfig({ ...base, NEXT_PUBLIC_SITE_URL: "https://trails.example.com/path", NODE_ENV: "production" })?.siteUrl).toBe("https://trails.example.com");
+    expect(resolveSupabaseAuthRuntimeConfig({ ...base, NODE_ENV: "production" })).toBeNull();
+    expect(resolveSupabaseAuthRuntimeConfig({ ...base, NEXT_PUBLIC_SITE_URL: "http://trails.example.com", NODE_ENV: "production" })).toBeNull();
+    expect(resolveSupabaseAuthRuntimeConfig({ ...base, NEXT_PUBLIC_SITE_URL: "javascript:alert(1)", NODE_ENV: "production" })).toBeNull();
+    expect(resolveSupabaseAuthRuntimeConfig({ ...base, NEXT_PUBLIC_SITE_URL: "file:///tmp/site", NODE_ENV: "production" })).toBeNull();
+    expect(resolveSupabaseAuthRuntimeConfig({ ...base, NODE_ENV: "development" })?.siteUrl).toBe("http://localhost:3000");
+    expect(resolveAppBaseUrl("not a url")).toBeNull();
+  });
+
+  it("uses direct NEXT_PUBLIC references for browser-bundled config", () => {
+    expect(browserConfigSource).toContain("NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL");
+    expect(browserConfigSource).toContain("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+    expect(browserConfigSource).toContain("NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    expect(browserConfigSource).not.toMatch(/const\s+\w+\s*=\s*process\.env[\s\S]*\w+\.NEXT_PUBLIC_/);
+  });
+
+  it("validates canonical profile fields consistently with migration 009", () => {
     expect(migration009).toContain("username ~ '^[a-z0-9][a-z0-9_-]{2,31}$'");
     expect(validateUsername("redliner_1")).toEqual({ ok: true, value: "redliner_1" });
     expect(validateUsername("")).toEqual({ ok: true, value: null });
@@ -118,6 +137,11 @@ describe("auth and profile domain helpers", () => {
     expect(validateUsername("ab").ok).toBe(false);
     expect(validateUsername("a".repeat(33)).ok).toBe(false);
     expect(validateUsername("bad.name").ok).toBe(false);
+
+    const longDisplayName = new FormData();
+    longDisplayName.set("displayName", "x".repeat(121));
+    longDisplayName.set("username", "redliner");
+    expect(validateProfileUpdate(longDisplayName)).toEqual({ ok: false, field: "displayName", message: "Display name must be 120 characters or fewer." });
   });
 
   it("maps profile rows and never lets mutation payloads change ownership away from the user id", () => {
@@ -137,11 +161,32 @@ describe("auth and profile domain helpers", () => {
     });
   });
 
-  it("validates profile form updates", () => {
-    const form = new FormData();
-    form.set("displayName", "Hiker");
-    form.set("username", "hiker_1");
-    form.set("isPublic", "on");
-    expect(validateProfileUpdate(form)).toEqual({ ok: true, value: { displayName: "Hiker", username: "hiker_1", isPublic: true } });
+  it("sanitizes unknown profile persistence errors", () => {
+    expect(sanitizeProfilePersistenceError("violates profiles_username_format_chk")).toBe("Username does not match the required public format.");
+    expect(sanitizeProfilePersistenceError("duplicate key value violates unique constraint profiles_username_key")).toBe("That username is already taken.");
+    expect(sanitizeProfilePersistenceError("new row violates row-level security policy for table profiles")).toBe(PROFILE_UPDATE_FAILED);
+    expect(profileErrorMessageForDisplay(new Error("new row violates row-level security policy for table profiles"))).toBe(PROFILE_UPDATE_FAILED);
+    expect(profileErrorMessageForDisplay(new Error("That username is already taken."))).toBe("That username is already taken.");
+  });
+});
+
+describe("Supabase SSR source contracts", () => {
+  it("proxy preserves Supabase cookies and cache-protection headers", () => {
+    expect(proxySource).toContain("export async function proxy(request: NextRequest)");
+    expect(proxySource).toContain("setAll(cookiesToSet, headers)");
+    expect(proxySource).toContain("request.cookies.set(name, value)");
+    expect(proxySource).toContain("response = NextResponse.next({ request })");
+    expect(proxySource).toContain("pendingCookies = mergeCookies(pendingCookies, cookiesToSet)");
+    expect(proxySource).toContain("pendingCookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options))");
+    expect(proxySource).toContain("Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value))");
+    expect(proxySource).toContain("supabase.auth.getClaims()");
+    expect(proxySource).not.toContain("getSession(");
+  });
+
+  it("auth routes do not expose raw Supabase errors to query parameters", () => {
+    expect(loginActionsSource).not.toContain("error.message");
+    expect(callbackSource).not.toContain("error.message");
+    expect(callbackSource).toContain("Cache-Control");
+    expect(callbackSource).toContain("private, no-store");
   });
 });
