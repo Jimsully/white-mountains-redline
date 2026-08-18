@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import demoArtifact from "@/data/generated/publication/demo-verified-network.json";
-import type { VerifiedNetworkArtifact } from "@/types/publication";
-import { loadPublicationArtifact } from "@/lib/publication/server-artifact";
+import { loadDefaultPublicationArtifact, loadPublicationArtifact } from "@/lib/publication/server-artifact";
 import { PublicationWorkspace } from "@/app/admin/publication/PublicationWorkspace";
 
 export const metadata: Metadata = {
@@ -10,6 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default function PublicationPage() {
-  const artifact = loadPublicationArtifact(demoArtifact as unknown as VerifiedNetworkArtifact);
+  const artifact = process.env.PUBLICATION_ARTIFACT_PATH ? loadPublicationArtifact(loadDefaultPublicationArtifact()) : loadDefaultPublicationArtifact();
   return <PublicationWorkspace artifact={artifact} />;
 }

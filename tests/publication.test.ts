@@ -6,7 +6,7 @@ import type { VerifiedNetworkArtifact } from "@/types/publication";
 import { PUBLICATION_ALGORITHM_VERSION } from "@/types/publication";
 import { buildVerifiedNetworkArtifact, runPublicationBuild, validateVerifiedNetworkArtifact } from "@/lib/publication/builder";
 import { buildPublicationLoadPayload } from "@/lib/publication/loader";
-import { loadPublicationArtifact, PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR } from "@/lib/publication/server-artifact";
+import { loadDefaultPublicationArtifact, loadPublicationArtifact, PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR } from "@/lib/publication/server-artifact";
 import { verifiedNetworkToEligibleMatchingSegments, verifiedNetworkToTrailSegments } from "@/lib/publication/adapters";
 import { buildActivityMatchArtifact } from "@/lib/activity-matching/matcher";
 import { parseNormalizedActivities } from "@/lib/activity-matching/activities";
@@ -14,6 +14,7 @@ import type { SegmentConstructionArtifact } from "@/types/segment-construction";
 import type { SegmentConstructionDecisionExport } from "@/types/activity-matching";
 import { runActivityMatchingFromVerifiedNetwork } from "@/lib/activity-matching/run-activity-matching";
 import { buildPublicationDecisionExport, mergePublicationDecisionOverrides } from "@/lib/publication/review-state";
+import { stableHash } from "@/lib/publication/identity";
 
 const root = process.cwd();
 const segmentArtifact = JSON.parse(fs.readFileSync(path.join(root, "data/generated/segments/demo-segment-construction.json"), "utf8")) as SegmentConstructionArtifact;
@@ -115,6 +116,37 @@ describe("verified publication gate", () => {
     expect(() => buildPublicationLoadPayload(tampered)).toThrow("Verified publication artifact failed integrity validation");
   });
 
+  it("rejects a tampered deterministic production segment key", () => {
+    const artifact = productionArtifact();
+    const tampered = cloneArtifact(artifact);
+    tampered.trailSegments[0].productionSegmentKey = "segment_changed_key";
+    tampered.diagnostics.integrityErrors = [];
+    expect(validateVerifiedNetworkArtifact(tampered).some((error) => error.includes("non-deterministic production segment key"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(tampered)).toThrow("Verified publication artifact failed integrity validation");
+  });
+
+  it("rejects candidate source artifact identity drift from the canonical reviewed M3 artifact", () => {
+    const artifact = productionArtifact();
+    const tampered = cloneArtifact(artifact);
+    tampered.candidateSegments[0].sourceSegmentArtifact.generatedAt = "2026-08-17T00:00:01.000Z";
+    const candidateSegmentKey = tampered.candidateSegments[0].candidateSegmentKey;
+    const published = tampered.trailSegments.find((segment) => segment.provenance.candidateSegmentKey === candidateSegmentKey);
+    if (!published) throw new Error("Expected published segment fixture.");
+    published.provenance.sourceSegmentArtifact.generatedAt = "2026-08-17T00:00:01.000Z";
+    tampered.diagnostics.integrityErrors = [];
+    expect(validateVerifiedNetworkArtifact(tampered).some((error) => error.includes("does not match canonical reviewed source artifact"))).toBe(true);
+    expect(() => buildPublicationLoadPayload(tampered)).toThrow("Verified publication artifact failed integrity validation");
+  });
+
+  it("rejects mismatched canonical publication and segment-decision source identities", () => {
+    const artifact = demoArtifact();
+    const tampered = cloneArtifact(artifact);
+    const sourceArtifact = tampered.metadata.publicationDecisionExport?.sourceSegmentDecisions?.sourceArtifact;
+    if (!sourceArtifact) throw new Error("Expected source segment decision artifact identity.");
+    sourceArtifact.generatedAt = "2026-08-17T00:00:01.000Z";
+    tampered.diagnostics.integrityErrors = [];
+    expect(validateVerifiedNetworkArtifact(tampered).some((error) => error.includes("does not match segment-decision source artifact identity"))).toBe(true);
+  });
   it("validates the default demo artifact before public adapter mapping", () => {
     const artifact = demoArtifact();
     const tampered = cloneArtifact(artifact);
@@ -208,6 +240,14 @@ describe("verified publication gate", () => {
 
     const exported = buildPublicationDecisionExport(artifact, [override]);
     expect(exported.decisions).toEqual(merged);
+  });
+  it("hashes fixed publication identity inputs deterministically in Vitest", () => {
+    expect(stableHash(["fixed", "literal", 123, [1, 2, 3]])).toBe("27e7afc8b6bedef1");
+  });
+
+  it("loads the default demo publication artifact from repository bytes", () => {
+    const artifact = loadDefaultPublicationArtifact(root);
+    expect(artifact.trailSegments.map((segment) => segment.productionSegmentKey)).toEqual(demoArtifact().trailSegments.map((segment) => segment.productionSegmentKey));
   });
   it("blocks private publication artifacts in production", () => {
     expect(() => loadPublicationArtifact({} as never, { NODE_ENV: "production", PUBLICATION_ARTIFACT_PATH: "local.json" } as NodeJS.ProcessEnv)).toThrow(PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR);

@@ -1,7 +1,7 @@
 import { PRODUCTION_SEGMENT_KEY_VERSION, PRODUCTION_TRAIL_KEY_VERSION, PUBLICATION_ALGORITHM_VERSION, type PublicationCandidateSegment, type PublicationCandidateTrail, type PublicationDecision, type PublicationTrailMetadata, type VerifiedNetworkArtifact, type VerifiedPublishedSegment, type VerifiedPublishedTrail } from "@/types/publication";
 import type { SegmentCandidate } from "@/types/segment-construction";
 import { lineLengthMeters } from "@/lib/segment-construction/geometry";
-import { productionTrailKeyFor } from "@/lib/publication/identity";
+import { productionSegmentKeyFor, productionTrailKeyFor } from "@/lib/publication/identity";
 import { trailRegions } from "@/types/trails";
 
 export function assertValidVerifiedNetworkArtifact(artifact: VerifiedNetworkArtifact) {
@@ -17,6 +17,7 @@ export function validateVerifiedNetworkArtifact(artifact: VerifiedNetworkArtifac
   if (artifact.metadata.productionSegmentKeyVersion !== PRODUCTION_SEGMENT_KEY_VERSION) errors.push("Production segment key version is missing or stale.");
 
   validateDemoIdentity(artifact, errors);
+  const canonicalSourceArtifact = validateCanonicalSourceArtifactIdentity(artifact, errors);
   validateUnique(artifact.candidateTrails.map((trail) => trail.candidateTrailKey), "candidate trail key", errors);
   validateUnique(artifact.candidateSegments.map((segment) => segment.candidateSegmentKey), "candidate segment key", errors);
   validateUnique(artifact.trailMetadata.map((metadata) => metadata.candidateTrailKey), "trail metadata candidate key", errors);
@@ -40,7 +41,7 @@ export function validateVerifiedNetworkArtifact(artifact: VerifiedNetworkArtifac
   }
 
   for (const trail of artifact.candidateTrails) validateCandidateTrail(trail, metadataByTrailKey.get(trail.candidateTrailKey), errors);
-  for (const segment of artifact.candidateSegments) validateCandidateSegment(segment, candidateTrailByKey.get(segment.candidateTrailKey), errors);
+  for (const segment of artifact.candidateSegments) validateCandidateSegment(segment, candidateTrailByKey.get(segment.candidateTrailKey), canonicalSourceArtifact, errors);
 
   for (const decision of artifact.publicationDecisions) {
     const key = decisionKey(decision);
@@ -74,6 +75,36 @@ export function validateVerifiedNetworkArtifact(artifact: VerifiedNetworkArtifac
   return errors;
 }
 
+
+type SourceArtifactIdentity = { generatedAt: string; demoOnly: boolean; algorithmVersion: string };
+
+function validateCanonicalSourceArtifactIdentity(artifact: VerifiedNetworkArtifact, errors: string[]): SourceArtifactIdentity | undefined {
+  const sourceArtifact = artifact.metadata.publicationDecisionExport?.sourceArtifact;
+  const segmentDecisionSourceArtifact = artifact.metadata.publicationDecisionExport?.sourceSegmentDecisions?.sourceArtifact;
+  const canonical = readSourceArtifactIdentity(sourceArtifact, "metadata.publicationDecisionExport.sourceArtifact", errors);
+  const decisionSource = readSourceArtifactIdentity(segmentDecisionSourceArtifact, "metadata.publicationDecisionExport.sourceSegmentDecisions.sourceArtifact", errors);
+  if (canonical && decisionSource && !sourceArtifactIdentityMatches(decisionSource, canonical)) errors.push("Publication decision source artifact identity does not match segment-decision source artifact identity.");
+  return canonical;
+}
+
+function readSourceArtifactIdentity(value: unknown, label: string, errors: string[]): SourceArtifactIdentity | undefined {
+  if (!value || typeof value !== "object") {
+    errors.push(`${label} is missing canonical SegmentConstruction artifact identity.`);
+    return undefined;
+  }
+  const identity = value as Partial<SourceArtifactIdentity>;
+  if (typeof identity.generatedAt !== "string" || identity.generatedAt.trim().length === 0) errors.push(`${label}.generatedAt is missing.`);
+  if (typeof identity.demoOnly !== "boolean") errors.push(`${label}.demoOnly must be an explicit boolean.`);
+  if (typeof identity.algorithmVersion !== "string" || identity.algorithmVersion.trim().length === 0) errors.push(`${label}.algorithmVersion is missing.`);
+  if (typeof identity.generatedAt !== "string" || identity.generatedAt.trim().length === 0 || typeof identity.demoOnly !== "boolean" || typeof identity.algorithmVersion !== "string" || identity.algorithmVersion.trim().length === 0) return undefined;
+  return { generatedAt: identity.generatedAt, demoOnly: identity.demoOnly, algorithmVersion: identity.algorithmVersion };
+}
+
+function sourceArtifactIdentityMatches(value: unknown, canonical: SourceArtifactIdentity) {
+  if (!value || typeof value !== "object") return false;
+  const identity = value as Partial<SourceArtifactIdentity>;
+  return identity.generatedAt === canonical.generatedAt && identity.demoOnly === canonical.demoOnly && identity.algorithmVersion === canonical.algorithmVersion;
+}
 function validateDemoIdentity(artifact: VerifiedNetworkArtifact, errors: string[]) {
   const identities: Array<{ label: string; value: unknown }> = [
     { label: "artifact.metadata.demoOnly", value: artifact.metadata.demoOnly },
@@ -108,7 +139,7 @@ function validateCandidateTrail(trail: PublicationCandidateTrail, metadata: Publ
   if (!Number.isFinite(trail.calculatedMiles) || trail.calculatedMiles <= 0) errors.push(`${prefix} has invalid mileage.`);
 }
 
-function validateCandidateSegment(segment: PublicationCandidateSegment, trail: PublicationCandidateTrail | undefined, errors: string[]) {
+function validateCandidateSegment(segment: PublicationCandidateSegment, trail: PublicationCandidateTrail | undefined, canonicalSourceArtifact: SourceArtifactIdentity | undefined, errors: string[]) {
   const prefix = `Candidate segment ${segment.candidateSegmentKey}`;
   if (!trail) errors.push(`${prefix} references unknown candidate trail ${segment.candidateTrailKey}.`);
   if (trail) {
@@ -116,6 +147,7 @@ function validateCandidateSegment(segment: PublicationCandidateSegment, trail: P
     if (segment.trailNormalizedName !== trail.trailNormalizedName) errors.push(`${prefix} normalized trail name does not match candidate trail.`);
     if (segment.sourceProvider !== trail.sourceProvider) errors.push(`${prefix} source provider does not match candidate trail.`);
   }
+  if (canonicalSourceArtifact && !sourceArtifactIdentityMatches(segment.sourceSegmentArtifact, canonicalSourceArtifact)) errors.push(`${prefix} source SegmentConstruction artifact identity does not match canonical reviewed source artifact.`);
   validateSegmentCandidateBinding(prefix, segment, segment.sourceSegmentCandidate, errors);
 }
 
@@ -168,7 +200,7 @@ function validatePublishedSegment(segment: VerifiedPublishedSegment, candidate: 
   } else {
     validatePublishedSegmentAgainstCandidate(prefix, segment, candidate, errors);
     if (trail && candidate.candidateTrailKey !== trail.provenance.candidateTrailKey) errors.push(`${prefix} candidate trail key does not match parent published trail.`);
-
+    if (trail && productionSegmentKeyFor(segment.trailProductionKey, candidate) !== segment.productionSegmentKey) errors.push(`${prefix} has a non-deterministic production segment key.`);
   }
   if (!Array.isArray(segment.coordinates) || segment.coordinates.length < 2) errors.push(`${prefix} has malformed geometry.`);
   validateCoordinates(prefix, segment.coordinates, errors);
@@ -286,6 +318,7 @@ function stableStringify(value: unknown): string {
   }
   return JSON.stringify(value);
 }
+
 
 
 
