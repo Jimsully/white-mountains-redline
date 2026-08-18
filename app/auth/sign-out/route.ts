@@ -8,9 +8,14 @@ export async function POST(request: NextRequest) {
   const returnTo = safeRelativeRedirect(typeof returnToValue === "string" ? returnToValue : "/", "/");
   const supabase = await createServerSupabaseClient();
   if (supabase) await supabase.auth.signOut();
-  const response = NextResponse.redirect(new URL(returnTo, request.url), { status: 303 });
-  response.headers.set("Cache-Control", "private, no-store");
-  response.headers.set("Expires", "0");
-  response.headers.set("Pragma", "no-cache");
-  return response;
+
+  return new NextResponse(null, {
+    status: 303,
+    headers: {
+      Location: returnTo,
+      "Cache-Control": "private, no-store",
+      Expires: "0",
+      Pragma: "no-cache",
+    },
+  });
 }

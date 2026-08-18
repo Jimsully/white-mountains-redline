@@ -12,6 +12,7 @@ const proxySource = fs.readFileSync(path.join(root, "proxy.ts"), "utf8");
 const browserConfigSource = fs.readFileSync(path.join(root, "lib/supabase/config.ts"), "utf8");
 const loginActionsSource = fs.readFileSync(path.join(root, "app/login/actions.ts"), "utf8");
 const callbackSource = fs.readFileSync(path.join(root, "app/auth/callback/route.ts"), "utf8");
+const signOutSource = fs.readFileSync(path.join(root, "app/auth/sign-out/route.ts"), "utf8");
 
 function appSourceFiles() {
   const roots = ["app", "lib", "types", "components"];
@@ -183,10 +184,29 @@ describe("Supabase SSR source contracts", () => {
     expect(proxySource).not.toContain("getSession(");
   });
 
-  it("auth routes do not expose raw Supabase errors to query parameters", () => {
-    expect(loginActionsSource).not.toContain("error.message");
-    expect(callbackSource).not.toContain("error.message");
+  it("callback redirects use the trusted auth runtime site URL", () => {
+    expect(callbackSource).toContain("const runtime = getSupabaseAuthRuntimeConfig()");
+    expect(callbackSource).toContain("const redirectBase = runtime.siteUrl");
+    expect(callbackSource).toContain("loginUrl(redirectBase");
+    expect(callbackSource).toContain("new URL(returnTo, redirectBase)");
+    expect(callbackSource).not.toContain("requestUrl.origin");
+    expect(callbackSource).not.toMatch(/new URL\(returnTo,\s*request/i);
+  });
+
+  it("sign-out returns a sanitized relative Location without request-origin resolution", () => {
+    expect(signOutSource).toContain("const returnTo = safeRelativeRedirect");
+    expect(signOutSource).toContain("Location: returnTo");
+    expect(signOutSource).not.toContain("new URL(returnTo, request.url)");
+    expect(signOutSource).not.toMatch(/new URL\(returnTo,\s*request/i);
+    expect(safeRelativeRedirect("https://evil.example", "/")).toBe("/");
+  });
+
+  it("auth routes do not use host-derived origins, expose raw Supabase errors, or cache auth responses", () => {
+    const authRouteSource = `${loginActionsSource}\n${callbackSource}\n${signOutSource}`;
+    expect(authRouteSource).not.toContain("error.message");
+    expect(authRouteSource).not.toMatch(/x-forwarded|next\/headers|\.headers\.get\(["']host/i);
     expect(callbackSource).toContain("Cache-Control");
     expect(callbackSource).toContain("private, no-store");
+    expect(signOutSource).toContain("private, no-store");
   });
 });

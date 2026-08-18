@@ -5,20 +5,23 @@ import { getSupabaseAuthRuntimeConfig } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
+  const runtime = getSupabaseAuthRuntimeConfig();
+  if (!runtime) return authUnavailableResponse();
+
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const returnTo = safeRelativeRedirect(requestUrl.searchParams.get("returnTo"), "/account");
+  const redirectBase = runtime.siteUrl;
 
-  if (!code) return noStoreRedirect(loginUrl(requestUrl.origin, "missing-code", returnTo));
-  if (!getSupabaseAuthRuntimeConfig()) return noStoreRedirect(loginUrl(requestUrl.origin, AUTH_UNAVAILABLE_STATUS, returnTo));
+  if (!code) return noStoreRedirect(loginUrl(redirectBase, "missing-code", returnTo));
 
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return noStoreRedirect(loginUrl(requestUrl.origin, AUTH_UNAVAILABLE_STATUS, returnTo));
+  if (!supabase) return noStoreRedirect(loginUrl(redirectBase, AUTH_UNAVAILABLE_STATUS, returnTo));
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return noStoreRedirect(loginUrl(requestUrl.origin, AUTH_ERROR_STATUS, returnTo));
+  if (error) return noStoreRedirect(loginUrl(redirectBase, AUTH_ERROR_STATUS, returnTo));
 
-  return noStoreRedirect(new URL(returnTo, requestUrl.origin));
+  return noStoreRedirect(new URL(returnTo, redirectBase));
 }
 
 function loginUrl(origin: string, status: string, returnTo: string) {
@@ -28,10 +31,21 @@ function loginUrl(origin: string, status: string, returnTo: string) {
   return url;
 }
 
+function authUnavailableResponse() {
+  return new NextResponse("Authentication is unavailable in this environment.", {
+    status: 503,
+    headers: noStoreHeaders(),
+  });
+}
+
 function noStoreRedirect(url: URL) {
-  const response = NextResponse.redirect(url);
-  response.headers.set("Cache-Control", "private, no-store");
-  response.headers.set("Expires", "0");
-  response.headers.set("Pragma", "no-cache");
-  return response;
+  return NextResponse.redirect(url, { headers: noStoreHeaders() });
+}
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "private, no-store",
+    Expires: "0",
+    Pragma: "no-cache",
+  };
 }
