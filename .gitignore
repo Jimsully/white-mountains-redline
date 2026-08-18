@@ -16,3 +16,6 @@ data/generated/segments/*.local.*
 data/local/activities/*
 !data/local/activities/.gitkeep
 data/generated/activity-matching/*.local.*
+data/local/publication/*
+!data/local/publication/.gitkeep
+data/generated/publication/*.local.*

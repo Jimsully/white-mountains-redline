@@ -2,11 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import type { SegmentConstructionArtifact } from "@/types/segment-construction";
 import type { ActivityMatchArtifact, SegmentConstructionDecisionExport } from "@/types/activity-matching";
+import type { VerifiedNetworkArtifact } from "@/types/publication";
 import { loadActivitiesFromPath, summarizeActivities } from "@/lib/activity-matching/activities";
 import { buildActivityMatchArtifact } from "@/lib/activity-matching/matcher";
 import { getActivityMatchingOutputPath, formatActivityMatchingInputPathForArtifact, isDemoActivityMatchingInput, isSafePrivateMetadataPath } from "@/lib/activity-matching/paths";
 import { resolveEligibleMatchingSegments } from "@/lib/activity-matching/segments";
 import { sanitizePrivateActivityMetadata } from "@/lib/activity-matching/private-metadata";
+import { verifiedNetworkToEligibleMatchingSegments } from "@/lib/publication/adapters";
 
 export type ActivityMatchingRunResult = {
   artifact: ActivityMatchArtifact;
@@ -45,6 +47,32 @@ export function runActivityMatching(args: { segmentArtifactPath: string; segment
   return { artifact, outputPath, activitySummary: summarizeActivities(activities) };
 }
 
+export function runActivityMatchingFromVerifiedNetwork(args: { verifiedNetworkPath: string; activitiesPath: string; repositoryRoot?: string; generatedAt?: string; timestamp?: number }): ActivityMatchingRunResult {
+  const repositoryRoot = args.repositoryRoot ?? process.cwd();
+  const verifiedNetworkPath = resolveFromRoot(args.verifiedNetworkPath, repositoryRoot);
+  const activitiesPath = resolveFromRoot(args.activitiesPath, repositoryRoot);
+  const verifiedNetwork = JSON.parse(fs.readFileSync(verifiedNetworkPath, "utf8")) as VerifiedNetworkArtifact;
+  const demoOnly = isDemoVerifiedNetworkInput(args.verifiedNetworkPath, args.activitiesPath, repositoryRoot);
+  const loadedActivities = loadActivitiesFromPath(activitiesPath);
+  const activities = demoOnly ? loadedActivities : loadedActivities.map(sanitizePrivateActivityMetadata);
+  const artifact = buildActivityMatchArtifact({
+    activities,
+    eligibleSegments: verifiedNetworkToEligibleMatchingSegments(verifiedNetwork),
+    generatedAt: args.generatedAt ?? (demoOnly ? "2026-08-17T00:00:00.000Z" : undefined),
+    demoOnly,
+    segmentArtifactPath: demoOnly ? toPosix(path.relative(repositoryRoot, verifiedNetworkPath)) : "private path omitted",
+    segmentDecisionsPath: "verified publication gate",
+    activitiesPath: demoOnly ? toPosix(path.relative(repositoryRoot, activitiesPath)) : "private path omitted",
+    integrityWarnings: verifiedNetwork.diagnostics.warnings,
+  });
+  const outputPath = demoOnly
+    ? path.resolve(repositoryRoot, "data", "generated", "activity-matching", "demo-activity-matching.json")
+    : path.resolve(repositoryRoot, "data", "generated", "activity-matching", `activity-matching.local.${args.timestamp ?? Date.now()}.json`);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(artifact, null, 2)}\n`);
+  return { artifact, outputPath, activitySummary: summarizeActivities(activities) };
+}
+
 export function printActivityMatchingSummary(result: ActivityMatchingRunResult) {
   const { artifact, outputPath } = result;
   console.log(`activities loaded: ${artifact.diagnostics.activitiesLoaded}`);
@@ -66,6 +94,15 @@ export function printActivityMatchingSummary(result: ActivityMatchingRunResult) 
   console.log(`output: ${path.relative(process.cwd(), outputPath)}`);
 }
 
+function isDemoVerifiedNetworkInput(verifiedNetworkPath: string, activitiesPath: string, repositoryRoot: string) {
+  return path.resolve(repositoryRoot, verifiedNetworkPath) === path.resolve(repositoryRoot, "data/generated/publication/demo-verified-network.json")
+    && path.resolve(repositoryRoot, activitiesPath) === path.resolve(repositoryRoot, "data/demo/activities");
+}
+
 function resolveFromRoot(inputPath: string, repositoryRoot: string) {
   return path.isAbsolute(inputPath) ? path.resolve(inputPath) : path.resolve(repositoryRoot, inputPath);
+}
+
+function toPosix(value: string) {
+  return value.split(path.sep).join("/");
 }

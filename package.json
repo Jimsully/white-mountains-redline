@@ -15,7 +15,9 @@
     "data:segments:build": "node scripts/run-tsx.cjs scripts/build-segments.ts",
     "data:activity:validate": "node scripts/run-tsx.cjs scripts/validate-activity.ts",
     "data:activity:normalize": "node scripts/run-tsx.cjs scripts/normalize-activity.ts",
-    "data:activity:match": "node scripts/run-tsx.cjs scripts/match-activities.ts"
+    "data:activity:match": "node scripts/run-tsx.cjs scripts/match-activities.ts",
+    "data:publication:build": "node scripts/run-tsx.cjs scripts/build-publication.ts",
+    "data:publication:load": "node scripts/run-tsx.cjs scripts/load-publication.ts"
   },
   "dependencies": {
     "fast-xml-parser": "^5.11.0",

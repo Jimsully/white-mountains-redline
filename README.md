@@ -135,3 +135,8 @@ GPS traces are evidence, not canonical trail geometry. Strong candidates are not
 Activity matching hardening: GPS edges beyond maximumInterpolatedActivityEdgeMeters are evidence gaps, separate activity components cannot combine into strong evidence, bbox matching is meter-aware, and source activity IDs dominate stable activity identity. See docs/ACTIVITY_MATCHING.md.
 
 Milestone 4 final hardening stores explicit per-component componentEvidence, requires estStrongComponentIndex for strong matches, renders trusted activity lines without ignored GPS gaps, redacts private filesystem metadata, and reports unique ignored activity edges. See docs/ACTIVITY_MATCHING.md.
+
+## Verified Publication Gate
+Milestone 5 adds 
+pm run data:publication:build and the /admin/publication workspace. Demo publication output lives at data/generated/publication/demo-verified-network.json, is clearly NOT FOR NAVIGATION, and does not create SegmentCompletion records. Supabase publication loading requires server-side service-role credentials only.
+

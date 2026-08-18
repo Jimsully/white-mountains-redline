@@ -51,3 +51,7 @@ Prioritize unfinished segments and group nearby orphan segments into efficient o
 - 100% of published segments have provenance and verification status.
 - GPX candidate matching dramatically reduces manual marking while requiring human confirmation.
 - Public trail pages generate organic entries into jamesscottsullivan.com.
+
+## Publication Gate Product Rule
+Overall redline progress is based on the published challenge dataset and user completion state. Reconciliation, topology approval, publication verification, activity evidence, and completion confirmation are separate states.
+
