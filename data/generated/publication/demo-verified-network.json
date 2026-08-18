@@ -5,17 +5,112 @@
     "algorithmVersion": "publication-v1",
     "productionTrailKeyVersion": "production-trail-key-v1",
     "productionSegmentKeyVersion": "production-segment-key-v1",
+    "publicationDecisionExport": {
+      "exportedAt": "2026-08-17T00:00:00.000Z",
+      "algorithmVersion": "publication-v1",
+      "sourceArtifact": {
+        "generatedAt": "2026-08-17T00:59:29.631Z",
+        "demoOnly": true,
+        "algorithmVersion": "segment-construction-v1"
+      },
+      "sourceSegmentDecisions": {
+        "exportedAt": "2026-08-17T00:00:00.000Z",
+        "algorithmVersion": "segment-construction-v1",
+        "sourceArtifact": {
+          "generatedAt": "2026-08-17T00:59:29.631Z",
+          "demoOnly": true,
+          "algorithmVersion": "segment-construction-v1"
+        }
+      }
+    },
     "warning": "DEMO DATA ONLY where demoOnly=true. VERIFIED PUBLICATION GATE OUTPUT IS NOT AMC DATA AND NOT FOR NAVIGATION. USER COMPLETION RECORDS ARE NOT CREATED HERE.",
     "segmentArtifactPath": "data/generated/segments/demo-segment-construction.json",
     "segmentDecisionsPath": "data/demo/segment-construction-decisions.demo.json",
     "publicationDecisionsPath": "data/demo/publication-decisions.demo.json"
   },
+  "publicationDecisions": [
+    {
+      "targetType": "segment",
+      "targetKey": "segment_202ad19dd3bcc9f5",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_7fa885048f35931b",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_bbbb1da407bd1281",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "segment",
+      "targetKey": "segment_dd8204c0e42510eb",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "trail",
+      "targetKey": "candidate_trail_470a11f134de9ca8",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "trail",
+      "targetKey": "candidate_trail_5bf8c8147315c59e",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    },
+    {
+      "targetType": "trail",
+      "targetKey": "candidate_trail_da91901d4d7afe9b",
+      "decision": "verified_for_publication",
+      "reviewTimestamp": "2026-08-17T00:00:00.000Z",
+      "reviewer": "demo-fixture",
+      "notes": "DEMO-ONLY publication verification for Milestone 5 fixture output. NOT FOR NAVIGATION."
+    }
+  ],
+  "trailMetadata": [
+    {
+      "candidateTrailKey": "candidate_trail_470a11f134de9ca8",
+      "displayName": "Garfield Ridge Trail",
+      "region": "Franconia-Pemigewasset"
+    },
+    {
+      "candidateTrailKey": "candidate_trail_5bf8c8147315c59e",
+      "displayName": "Franconia Ridge Trail",
+      "region": "Franconia-Pemigewasset"
+    },
+    {
+      "candidateTrailKey": "candidate_trail_da91901d4d7afe9b",
+      "displayName": "Falling Waters Trail",
+      "region": "Franconia-Pemigewasset"
+    }
+  ],
   "candidateTrails": [
     {
       "candidateTrailKey": "candidate_trail_470a11f134de9ca8",
       "parentInventoryItemKey": "demo-garfield-ridge",
       "trailDisplayName": "Garfield Ridge Trail",
       "trailNormalizedName": "GARFIELD RIDGE",
+      "canonicalDisplayName": "Garfield Ridge Trail",
+      "region": "Franconia-Pemigewasset",
       "sourceProvider": "USFS",
       "sourceFeatureIds": [
         "6624048",
@@ -31,6 +126,8 @@
       "parentInventoryItemKey": "demo-franconia-ridge",
       "trailDisplayName": "Franconia Ridge Trail",
       "trailNormalizedName": "FRANCONIA RIDGE",
+      "canonicalDisplayName": "Franconia Ridge Trail",
+      "region": "Franconia-Pemigewasset",
       "sourceProvider": "USFS",
       "sourceFeatureIds": [
         "6646428",
@@ -47,6 +144,8 @@
       "parentInventoryItemKey": "demo-falling-waters",
       "trailDisplayName": "Falling Waters Trail",
       "trailNormalizedName": "FALLING WATERS",
+      "canonicalDisplayName": "Falling Waters Trail",
+      "region": "Franconia-Pemigewasset",
       "sourceProvider": "USFS",
       "sourceFeatureIds": [
         "6597421"
@@ -13168,7 +13267,7 @@
       "slug": "falling-waters-trail-eb4828",
       "name": "Falling Waters Trail",
       "normalizedName": "FALLING WATERS",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "dataStatus": "verified",
       "verificationStatus": "human_verified",
       "totalMiles": 2.304284,
@@ -13208,7 +13307,7 @@
       "slug": "garfield-ridge-trail-019969",
       "name": "Garfield Ridge Trail",
       "normalizedName": "GARFIELD RIDGE",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "dataStatus": "verified",
       "verificationStatus": "human_verified",
       "totalMiles": 5.721272,
@@ -13250,7 +13349,7 @@
       "slug": "franconia-ridge-trail-7cea67",
       "name": "Franconia Ridge Trail",
       "normalizedName": "FRANCONIA RIDGE",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "dataStatus": "verified",
       "verificationStatus": "human_verified",
       "totalMiles": 4.49123,
@@ -13301,9 +13400,10 @@
       "productionSegmentKeyVersion": "production-segment-key-v1",
       "slug": "franconia-ridge-trail-junction-a9798db3f8c4963e-junction-3978e5892a96cd15-36c642",
       "trailId": "bf46cf90-575d-4154-a64c-13dc3150b86d",
+      "trailProductionKey": "trail_6a12f4b91a7cea67",
       "trailName": "Franconia Ridge Trail",
       "segmentName": "Franconia Ridge Trail: junction_a9798db3f8c4963e to junction_3978e5892a96cd15",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "miles": 2.962961,
       "completed": false,
       "coordinates": [
@@ -15812,9 +15912,10 @@
       "productionSegmentKeyVersion": "production-segment-key-v1",
       "slug": "falling-waters-trail-junction-65fd149ff694e051-junction-3978e5892a96cd15-502973",
       "trailId": "88d1008a-c247-45c0-ad89-93f8a500144e",
+      "trailProductionKey": "trail_36ea7a034ceb4828",
       "trailName": "Falling Waters Trail",
       "segmentName": "Falling Waters Trail: junction_65fd149ff694e051 to junction_3978e5892a96cd15",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "miles": 2.304284,
       "completed": false,
       "coordinates": [
@@ -18415,9 +18516,10 @@
       "productionSegmentKeyVersion": "production-segment-key-v1",
       "slug": "franconia-ridge-trail-junction-3978e5892a96cd15-junction-67928ba5d8397c4b-8c40d0",
       "trailId": "bf46cf90-575d-4154-a64c-13dc3150b86d",
+      "trailProductionKey": "trail_6a12f4b91a7cea67",
       "trailName": "Franconia Ridge Trail",
       "segmentName": "Franconia Ridge Trail: junction_3978e5892a96cd15 to junction_67928ba5d8397c4b",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "miles": 1.528269,
       "completed": false,
       "coordinates": [
@@ -20198,9 +20300,10 @@
       "productionSegmentKeyVersion": "production-segment-key-v1",
       "slug": "garfield-ridge-trail-junction-67928ba5d8397c4b-junction-249aa44c27b6919d-99902f",
       "trailId": "eeaf0bb8-3932-4a91-aab5-18e8b5fb8fce",
+      "trailProductionKey": "trail_659e9c4653019969",
       "trailName": "Garfield Ridge Trail",
       "segmentName": "Garfield Ridge Trail: junction_67928ba5d8397c4b to junction_249aa44c27b6919d",
-      "region": "White Mountains",
+      "region": "Franconia-Pemigewasset",
       "miles": 5.721272,
       "completed": false,
       "coordinates": [

@@ -10,14 +10,17 @@ import {
   type PublicationCandidateTrail,
   type PublicationDecision,
   type PublicationDecisionExport,
+  type PublicationTrailMetadata,
   type VerifiedNetworkArtifact,
   type VerifiedPublishedSegment,
   type VerifiedPublishedTrail,
 } from "@/types/publication";
 import { resolveEligibleMatchingSegments } from "@/lib/activity-matching/segments";
 import { lineLengthMeters, metersToMiles, round } from "@/lib/segment-construction/geometry";
-import { stableHash, stableUuid, slugify } from "@/lib/publication/identity";
+import { productionSegmentKeyFor, productionTrailKeyFor, stableHash, stableUuid, slugify } from "@/lib/publication/identity";
 import { formatPublicationInputPathForArtifact, getPublicationOutputPath, isDemoPublicationInput } from "@/lib/publication/paths";
+import { validateVerifiedNetworkArtifact } from "@/lib/publication/validator";
+import { trailRegions } from "@/types/trails";
 
 export type PublicationBuildResult = { artifact: VerifiedNetworkArtifact; outputPath: string };
 
@@ -55,12 +58,13 @@ export function buildVerifiedNetworkArtifact(args: { segmentArtifact: SegmentCon
   warnings.push(...segmentResolution.warnings);
   validatePublicationDecisionExport(args, integrityErrors);
 
-  const { candidateTrails, candidateSegments } = buildCandidates(segmentResolution.eligibleSegments);
-  const trailDecisionByKey = decisionMap(args.publicationDecisions.decisions, "trail", integrityErrors);
-  const segmentDecisionByKey = decisionMap(args.publicationDecisions.decisions, "segment", integrityErrors);
+  const { candidateTrails, candidateSegments } = buildCandidates(segmentResolution.eligibleSegments, args.publicationDecisions.trailMetadata ?? [], integrityErrors);
+  const publicationDecisions = sortDecisions(args.publicationDecisions.decisions ?? []);
+  const trailDecisionByKey = decisionMap(publicationDecisions, "trail", integrityErrors);
+  const segmentDecisionByKey = decisionMap(publicationDecisions, "segment", integrityErrors);
   const knownTrailKeys = new Set(candidateTrails.map((trail) => trail.candidateTrailKey));
   const knownSegmentKeys = new Set(candidateSegments.map((segment) => segment.candidateSegmentKey));
-  for (const decision of args.publicationDecisions.decisions) {
+  for (const decision of publicationDecisions) {
     if (decision.targetType === "trail" && !knownTrailKeys.has(decision.targetKey)) integrityErrors.push(`Publication decision references unknown trail ${decision.targetKey}.`);
     if (decision.targetType === "segment" && !knownSegmentKeys.has(decision.targetKey)) integrityErrors.push(`Publication decision references unknown segment ${decision.targetKey}.`);
   }
@@ -69,7 +73,6 @@ export function buildVerifiedNetworkArtifact(args: { segmentArtifact: SegmentCon
   const needsReviewTrailCount = candidateTrails.filter((trail) => trailDecisionByKey.get(trail.candidateTrailKey)?.decision === "needs_review" || !trailDecisionByKey.has(trail.candidateTrailKey)).length;
   const rejectedSegmentCount = candidateSegments.filter((segment) => segmentDecisionByKey.get(segment.candidateSegmentKey)?.decision === "rejected").length;
   const needsReviewSegmentCount = candidateSegments.filter((segment) => segmentDecisionByKey.get(segment.candidateSegmentKey)?.decision === "needs_review" || !segmentDecisionByKey.has(segment.candidateSegmentKey)).length;
-  const unresolvedUpstreamDependencyCount = segmentResolution.warnings.length;
 
   const trails: VerifiedPublishedTrail[] = [];
   const trailByCandidate = new Map<string, VerifiedPublishedTrail>();
@@ -101,11 +104,19 @@ export function buildVerifiedNetworkArtifact(args: { segmentArtifact: SegmentCon
       algorithmVersion: PUBLICATION_ALGORITHM_VERSION,
       productionTrailKeyVersion: PRODUCTION_TRAIL_KEY_VERSION,
       productionSegmentKeyVersion: PRODUCTION_SEGMENT_KEY_VERSION,
+      publicationDecisionExport: {
+        exportedAt: args.publicationDecisions.exportedAt,
+        algorithmVersion: args.publicationDecisions.algorithmVersion,
+        sourceArtifact: args.publicationDecisions.sourceArtifact,
+        sourceSegmentDecisions: args.publicationDecisions.sourceSegmentDecisions,
+      },
       warning: "DEMO DATA ONLY where demoOnly=true. VERIFIED PUBLICATION GATE OUTPUT IS NOT AMC DATA AND NOT FOR NAVIGATION. USER COMPLETION RECORDS ARE NOT CREATED HERE.",
       segmentArtifactPath: args.segmentArtifactPath,
       segmentDecisionsPath: args.segmentDecisionsPath,
       publicationDecisionsPath: args.publicationDecisionsPath,
     },
+    publicationDecisions,
+    trailMetadata: sortBy(args.publicationDecisions.trailMetadata ?? [], (metadata) => metadata.candidateTrailKey),
     candidateTrails: sortBy(candidateTrails, (trail) => trail.candidateTrailKey),
     candidateSegments: sortBy(candidateSegments, (segment) => segment.candidateSegmentKey),
     trails: sortBy(trails, (trail) => trail.productionTrailKey),
@@ -119,7 +130,7 @@ export function buildVerifiedNetworkArtifact(args: { segmentArtifact: SegmentCon
       rejectedSegmentCount,
       needsReviewTrailCount,
       needsReviewSegmentCount,
-      unresolvedUpstreamDependencyCount,
+      unresolvedUpstreamDependencyCount: warnings.length,
       totalPublishedMiles: round(trailSegments.reduce((sum, segment) => sum + segment.miles, 0), 6),
       warnings,
       integrityErrors,
@@ -129,26 +140,7 @@ export function buildVerifiedNetworkArtifact(args: { segmentArtifact: SegmentCon
   return artifact;
 }
 
-export function validateVerifiedNetworkArtifact(artifact: VerifiedNetworkArtifact) {
-  const errors: string[] = [];
-  if (artifact.metadata.algorithmVersion !== PUBLICATION_ALGORITHM_VERSION) errors.push("Publication algorithm version is missing or stale.");
-  if (artifact.metadata.productionTrailKeyVersion !== PRODUCTION_TRAIL_KEY_VERSION) errors.push("Production trail key version is missing or stale.");
-  if (artifact.metadata.productionSegmentKeyVersion !== PRODUCTION_SEGMENT_KEY_VERSION) errors.push("Production segment key version is missing or stale.");
-  const trailIds = new Set(artifact.trails.map((trail) => trail.id));
-  const segmentKeys = new Set<string>();
-  for (const trail of artifact.trails) {
-    if (trail.dataStatus !== "verified" || trail.verificationStatus !== "human_verified") errors.push(`Trail ${trail.id} is not human verified.`);
-  }
-  for (const segment of artifact.trailSegments) {
-    if (segment.completed !== false) errors.push(`Segment ${segment.id} must not create completion state.`);
-    if (segment.dataStatus !== "verified" || segment.verificationStatus !== "human_verified") errors.push(`Segment ${segment.id} is not human verified.`);
-    if (!trailIds.has(segment.trailId)) errors.push(`Segment ${segment.id} references unknown trail ${segment.trailId}.`);
-    if (segmentKeys.has(segment.productionSegmentKey)) errors.push(`Duplicate production segment key ${segment.productionSegmentKey}.`);
-    segmentKeys.add(segment.productionSegmentKey);
-    if (!Array.isArray(segment.coordinates) || segment.coordinates.length < 2) errors.push(`Segment ${segment.id} has malformed geometry.`);
-  }
-  return errors;
-}
+export { validateVerifiedNetworkArtifact } from "@/lib/publication/validator";
 
 export function printPublicationSummary(result: PublicationBuildResult) {
   const { diagnostics } = result.artifact;
@@ -167,10 +159,15 @@ export function printPublicationSummary(result: PublicationBuildResult) {
   console.log(`output: ${path.relative(process.cwd(), result.outputPath)}`);
 }
 
-function buildCandidates(eligibleSegments: ReturnType<typeof resolveEligibleMatchingSegments>["eligibleSegments"]) {
+function buildCandidates(eligibleSegments: ReturnType<typeof resolveEligibleMatchingSegments>["eligibleSegments"], trailMetadata: PublicationTrailMetadata[], errors: string[]) {
+  const metadataByTrailKey = new Map(trailMetadata.map((metadata) => [metadata.candidateTrailKey, metadata]));
   const trailMap = new Map<string, PublicationCandidateTrail>();
-  const candidateSegments: PublicationCandidateSegment[] = eligibleSegments.map((eligible) => {
+  const orderedEligibleSegments = sortBy(eligibleSegments, (eligible) => eligible.segmentKey);
+  const candidateSegments: PublicationCandidateSegment[] = orderedEligibleSegments.map((eligible) => {
     const candidateTrailKey = stableCandidateTrailKey(eligible.parentInventoryItemKey, eligible.trailNormalizedName);
+    const metadata = metadataByTrailKey.get(candidateTrailKey);
+    if (!metadata) errors.push(`Publication trail metadata is missing for ${candidateTrailKey}.`);
+    if (metadata && !trailRegions.includes(metadata.region)) errors.push(`Publication trail metadata has invalid region for ${candidateTrailKey}.`);
     const upstreamDecisions = {
       segmentDecision: eligible.approvalEvidence.segmentDecision,
       startJunctionDecision: eligible.approvalEvidence.startJunctionDecision,
@@ -180,7 +177,7 @@ function buildCandidates(eligibleSegments: ReturnType<typeof resolveEligibleMatc
       candidateSegmentKey: eligible.segmentKey,
       candidateTrailKey,
       parentInventoryItemKey: eligible.parentInventoryItemKey,
-      trailDisplayName: eligible.trailDisplayName,
+      trailDisplayName: metadata?.displayName ?? eligible.trailDisplayName,
       trailNormalizedName: eligible.trailNormalizedName,
       startJunctionKey: eligible.startJunctionKey,
       endJunctionKey: eligible.endJunctionKey,
@@ -197,7 +194,7 @@ function buildCandidates(eligibleSegments: ReturnType<typeof resolveEligibleMatc
     const existingTrail = trailMap.get(candidateTrailKey);
     if (existingTrail) {
       existingTrail.sourceFeatureIds = [...new Set([...existingTrail.sourceFeatureIds, ...candidate.sourceFeatureIds])].sort();
-      existingTrail.segmentCandidateKeys.push(candidate.candidateSegmentKey);
+      existingTrail.segmentCandidateKeys = [...new Set([...existingTrail.segmentCandidateKeys, candidate.candidateSegmentKey])].sort();
       existingTrail.calculatedMiles = round(existingTrail.calculatedMiles + candidate.calculatedMiles, 6);
     } else {
       trailMap.set(candidateTrailKey, {
@@ -205,6 +202,8 @@ function buildCandidates(eligibleSegments: ReturnType<typeof resolveEligibleMatc
         parentInventoryItemKey: candidate.parentInventoryItemKey,
         trailDisplayName: candidate.trailDisplayName,
         trailNormalizedName: candidate.trailNormalizedName,
+        canonicalDisplayName: metadata?.displayName ?? candidate.trailDisplayName,
+        region: metadata?.region ?? "Other",
         sourceProvider: candidate.sourceProvider,
         sourceFeatureIds: [...candidate.sourceFeatureIds],
         calculatedMiles: candidate.calculatedMiles,
@@ -213,43 +212,45 @@ function buildCandidates(eligibleSegments: ReturnType<typeof resolveEligibleMatc
     }
     return candidate;
   });
-  return { candidateTrails: [...trailMap.values()].map((trail) => ({ ...trail, segmentCandidateKeys: trail.segmentCandidateKeys.sort() })), candidateSegments };
+  return { candidateTrails: [...trailMap.values()].map((trail) => ({ ...trail, sourceFeatureIds: [...trail.sourceFeatureIds].sort(), segmentCandidateKeys: [...trail.segmentCandidateKeys].sort() })), candidateSegments };
 }
 
 function publishTrail(trail: PublicationCandidateTrail, decision: PublicationDecision, segments: PublicationCandidateSegment[]): VerifiedPublishedTrail {
-  const productionTrailKey = `trail_${stableHash([PRODUCTION_TRAIL_KEY_VERSION, trail.parentInventoryItemKey, trail.trailNormalizedName])}`;
+  const productionTrailKey = productionTrailKeyFor(trail);
+  const sourceSegmentCandidateKeys = [...trail.segmentCandidateKeys].sort();
   return {
     id: stableUuid(["trail", productionTrailKey]),
     productionTrailKey,
     productionTrailKeyVersion: PRODUCTION_TRAIL_KEY_VERSION,
-    slug: slugify(`${trail.trailDisplayName}-${productionTrailKey.slice(-6)}`),
-    name: trail.trailDisplayName,
+    slug: slugify(`${trail.canonicalDisplayName}-${productionTrailKey.slice(-6)}`),
+    name: trail.canonicalDisplayName,
     normalizedName: trail.trailNormalizedName,
-    region: "White Mountains",
+    region: trail.region,
     dataStatus: "verified",
     verificationStatus: "human_verified",
     totalMiles: trail.calculatedMiles,
-    sourceFeatureIds: [...trail.sourceFeatureIds],
+    sourceFeatureIds: [...trail.sourceFeatureIds].sort(),
     provenance: {
       publicationAlgorithmVersion: PUBLICATION_ALGORITHM_VERSION,
       candidateTrailKey: trail.candidateTrailKey,
       parentInventoryItemKey: trail.parentInventoryItemKey,
       sourceProvider: trail.sourceProvider,
-      sourceSegmentCandidateKeys: [...trail.segmentCandidateKeys],
+      sourceSegmentCandidateKeys,
       publicationDecision: decision,
-      acceptedReconciliationLineage: segments.map((segment) => segment.sourceSegmentCandidate.sourceReconciliation),
+      acceptedReconciliationLineage: sortBy(segments.map((segment) => segment.sourceSegmentCandidate.sourceReconciliation), (lineage) => lineage.evidenceFeatureIds.join("|")),
     },
   };
 }
 
 function publishSegment(segment: PublicationCandidateSegment, trail: VerifiedPublishedTrail, decision: PublicationDecision, trailDecision: PublicationDecision): VerifiedPublishedSegment {
-  const productionSegmentKey = `segment_${stableHash([PRODUCTION_SEGMENT_KEY_VERSION, trail.productionTrailKey, segment.candidateSegmentKey, segment.startJunctionKey, segment.endJunctionKey, segment.geometry.coordinates])}`;
+  const productionSegmentKey = productionSegmentKeyFor(trail.productionTrailKey, segment);
   return {
     id: stableUuid(["segment", productionSegmentKey]),
     productionSegmentKey,
     productionSegmentKeyVersion: PRODUCTION_SEGMENT_KEY_VERSION,
     slug: slugify(`${segment.trailDisplayName}-${segment.startJunctionKey}-${segment.endJunctionKey}-${productionSegmentKey.slice(-6)}`),
     trailId: trail.id,
+    trailProductionKey: trail.productionTrailKey,
     trailName: trail.name,
     segmentName: `${segment.trailDisplayName}: ${segment.startJunctionKey} to ${segment.endJunctionKey}`,
     region: trail.region,
@@ -258,7 +259,7 @@ function publishSegment(segment: PublicationCandidateSegment, trail: VerifiedPub
     coordinates: segment.geometry.coordinates,
     dataStatus: "verified",
     verificationStatus: "human_verified",
-    sourceFeatureIds: [...segment.sourceFeatureIds],
+    sourceFeatureIds: [...segment.sourceFeatureIds].sort(),
     sourceProvider: segment.sourceProvider,
     provenance: {
       publicationAlgorithmVersion: PUBLICATION_ALGORITHM_VERSION,
@@ -286,6 +287,7 @@ function validatePublicationDecisionExport(args: { segmentArtifact: SegmentConst
   if (decisions.sourceArtifact?.demoOnly !== args.segmentArtifact.metadata.demoOnly) errors.push("Publication decisions demo/private identity does not match the segment-construction artifact.");
   if (decisions.sourceSegmentDecisions?.algorithmVersion !== args.segmentDecisions.algorithmVersion) errors.push("Publication decisions reference a stale segment decision version.");
   if (decisions.sourceSegmentDecisions?.sourceArtifact?.generatedAt !== args.segmentDecisions.sourceArtifact?.generatedAt) errors.push("Publication decisions reference a different segment decision source artifact.");
+  if (!Array.isArray(decisions.trailMetadata) || decisions.trailMetadata.length === 0) errors.push("Publication decisions must include canonical trail metadata.");
 }
 
 function decisionMap(decisions: PublicationDecision[], type: "trail" | "segment", errors: string[]) {
@@ -297,9 +299,14 @@ function decisionMap(decisions: PublicationDecision[], type: "trail" | "segment"
   return map;
 }
 
+function sortDecisions(decisions: PublicationDecision[]) {
+  return sortBy(decisions, (decision) => `${decision.targetType}:${decision.targetKey}`);
+}
+
 function stableCandidateTrailKey(parentInventoryItemKey: string, trailNormalizedName: string) {
   return `candidate_trail_${stableHash([parentInventoryItemKey, trailNormalizedName])}`;
 }
+
 
 function sortBy<T>(values: T[], key: (value: T) => string) {
   return [...values].sort((a, b) => key(a).localeCompare(key(b)));
@@ -320,7 +327,6 @@ function getDefaultGeneratedAt(outputPath: string, demoOnly: boolean) {
 function resolveFromRoot(inputPath: string, repositoryRoot: string) {
   return path.isAbsolute(inputPath) ? path.resolve(inputPath) : path.resolve(repositoryRoot, inputPath);
 }
-
 
 
 

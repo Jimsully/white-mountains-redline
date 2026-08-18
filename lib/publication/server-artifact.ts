@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { VerifiedNetworkArtifact } from "@/types/publication";
+import { assertValidVerifiedNetworkArtifact } from "@/lib/publication/validator";
 
 export const PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR = "Private publication artifacts are local-development only until authenticated admin access is implemented.";
 
@@ -9,6 +10,7 @@ export function loadPublicationArtifact(demoArtifact: VerifiedNetworkArtifact, e
   if (artifactPath && env.NODE_ENV === "production") throw new Error(PRIVATE_PUBLICATION_ARTIFACT_PRODUCTION_ERROR);
   const artifact = artifactPath ? JSON.parse(fs.readFileSync(path.resolve(artifactPath), "utf8")) as unknown : demoArtifact;
   if (!isVerifiedNetworkArtifactShape(artifact)) throw new Error("PUBLICATION_ARTIFACT_PATH does not contain a verified network artifact.");
+  if (artifactPath) assertValidVerifiedNetworkArtifact(artifact);
   return artifact;
 }
 
@@ -18,6 +20,8 @@ export function isVerifiedNetworkArtifactShape(value: unknown): value is Verifie
   return Boolean(candidate.metadata)
     && candidate.metadata?.algorithmVersion === "publication-v1"
     && typeof candidate.metadata?.demoOnly === "boolean"
+    && Array.isArray(candidate.publicationDecisions)
+    && Array.isArray(candidate.trailMetadata)
     && Array.isArray(candidate.candidateTrails)
     && Array.isArray(candidate.candidateSegments)
     && Array.isArray(candidate.trails)

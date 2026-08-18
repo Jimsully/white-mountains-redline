@@ -24,20 +24,13 @@ export function buildPublicationDecision(targetType: PublicationTargetType, targ
 }
 
 export function buildPublicationDecisionExport(artifact: VerifiedNetworkArtifact, decisions: PublicationDecision[]): PublicationDecisionExport {
-  const firstCandidate = artifact.candidateSegments[0];
   return {
     exportedAt: new Date().toISOString(),
     warning: "Publication decisions can create production trail/trail_segments only after controlled service-role loading. They never create SegmentCompletion records.",
     algorithmVersion: PUBLICATION_ALGORITHM_VERSION,
-    sourceArtifact: {
-      generatedAt: artifact.metadata.generatedAt,
-      demoOnly: artifact.metadata.demoOnly,
-      algorithmVersion: firstCandidate?.sourceSegmentArtifact.algorithmVersion,
-    },
-    sourceSegmentDecisions: {
-      algorithmVersion: firstCandidate?.segmentConstructionAlgorithmVersion,
-      sourceArtifact: firstCandidate?.sourceSegmentArtifact,
-    },
+    sourceArtifact: artifact.metadata.publicationDecisionExport?.sourceArtifact,
+    sourceSegmentDecisions: artifact.metadata.publicationDecisionExport?.sourceSegmentDecisions,
+    trailMetadata: [...artifact.trailMetadata].sort((a, b) => a.candidateTrailKey.localeCompare(b.candidateTrailKey)),
     decisions: [...decisions].sort((a, b) => `${a.targetType}:${a.targetKey}`.localeCompare(`${b.targetType}:${b.targetKey}`)),
   };
 }

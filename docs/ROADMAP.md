@@ -1,48 +1,34 @@
 # Roadmap
 
-## Milestone 0 — Foundation (this scaffold)
-- Product definition.
-- Responsive redline map prototype.
-- Demo completion toggles/progress.
-- Production spatial schema.
-- Codex operating instructions.
+## M0 Foundation — COMPLETE
+Established the Next.js/TypeScript scaffold, demo trail UI, MapLibre integration, repository abstraction, Supabase migration baseline, and non-navigation demo-data guardrails.
 
-## Milestone 1 — Real Franconia/Pemigewasset pilot
-- Download source trail datasets.
-- Create staging/reconciliation pipeline.
-- Build first verified regional segment inventory.
-- Replace demo lines with real verified GeoJSON/PostGIS data.
-- Add search and region filters.
+## M1 Source data plumbing / USFS pilot — COMPLETE
+Added deterministic USFS source download/normalization, broad raw staging artifacts, optional service-role staging load, source provenance, and Supabase API projection hardening.
 
-## Milestone 2 — Accounts + persistence
-- Supabase project.
-- Email/social authentication.
-- User profile and public/private setting.
-- Persist manual completions.
+## M2 Challenge reconciliation — COMPLETE
+Added local challenge-inventory validation, source-to-inventory reconciliation artifacts, admin review tooling, private artifact guards, and committed demo reconciliation output.
 
-## Milestone 3 — GPX import
-- File upload + parser.
-- Activity storage.
-- Spatial candidate matching.
-- Match review UI and confidence scores.
+## M3 Segment construction + topology review — COMPLETE
+Added topology-aware segment candidate construction, junction/segment review decisions, deterministic demo segment-construction artifacts, and admin topology review tooling.
 
-## Milestone 4 — Website/SEO
-- Decide subpath vs subdomain based on current site hosting.
-- Add canonical trail pages, metadata, sitemap, structured internal linking.
-- Link trip reports and photography.
-- Analytics/Search Console instrumentation.
+## M4 Historical activity matching — COMPLETE
+Added conservative GPS activity normalization and matching against accepted topology candidates, evidence review tooling, private metadata redaction, and demo activity matching fixtures without creating completions.
 
-## Milestone 5 — Full challenge inventory
-- Region-by-region verification.
-- Change log for trail reroutes/renames/closures.
-- Challenge edition/versioning so completion rules remain reproducible.
+## M5 Verified segment publication — IN PROGRESS
+Adds the verified publication gate between topology-approved segment construction and production `trails` / `trail_segments`, including canonical region review, deterministic production keys, verified-only public data access, service-role-only publication loading, and activity matching from the verified network. This remains in progress until merged.
 
-## Milestone 6 — Planner
-- Find incomplete/orphan segments.
-- Cluster by access/junction proximity.
-- Estimate efficient candidate outings.
-- Add user filters for mileage/elevation/time.
+## M6 Accounts + user persistence
+Add authenticated user accounts, durable user state, and private completion/evidence storage boundaries.
 
-## Milestone 5
-Adds the verified publication gate, deterministic demo verified-network artifact, read-only public verified Supabase projection, and service-role-only production publication loader. Completion records remain future work.
+## M7 User completion workflow + activity evidence promotion
+Promote accepted activity evidence into user-confirmed completion workflows while keeping GPS evidence reviewable and reversible.
 
+## M8 Public trail pages / website / SEO
+Expand public trail browsing, static trail pages, search/indexing polish, and website integration for jamesscottsullivan.com.
+
+## M9 Full challenge inventory + edition/versioning
+Introduce the complete privately verified challenge inventory, public-safe challenge editions, segment lineage, and historical versioning.
+
+## M10 Planner / orphan segment optimization
+Add planning tools for remaining segments, orphan cleanup, route grouping, and optimization once verified production data exists.

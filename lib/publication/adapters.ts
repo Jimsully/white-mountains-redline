@@ -1,6 +1,7 @@
 import type { EligibleMatchingSegment } from "@/types/activity-matching";
-import type { TrailSegment, SourceProvider, TrailRegion } from "@/types/trails";
+import type { TrailSegment, SourceProvider } from "@/types/trails";
 import type { VerifiedNetworkArtifact, VerifiedPublishedSegment } from "@/types/publication";
+import { assertValidVerifiedNetworkArtifact } from "@/lib/publication/validator";
 
 export function verifiedNetworkToTrailSegments(artifact: VerifiedNetworkArtifact): TrailSegment[] {
   return artifact.trailSegments.map(verifiedSegmentToTrailSegment);
@@ -13,7 +14,7 @@ export function verifiedSegmentToTrailSegment(segment: VerifiedPublishedSegment)
     trailId: segment.trailId,
     trailName: segment.trailName,
     segmentName: segment.segmentName,
-    region: toTrailRegion(segment.region),
+    region: segment.region,
     miles: segment.miles,
     completed: false,
     coordinates: toCoordinateTuples(segment.coordinates),
@@ -23,13 +24,15 @@ export function verifiedSegmentToTrailSegment(segment: VerifiedPublishedSegment)
       provider: toSourceProvider(segment.sourceProvider),
       dataset: "verified publication artifact",
       sourceFeatureIds: segment.sourceFeatureIds,
-      manuallyModified: false,
+      manuallyModified: segment.provenance.sourceSegmentCandidate.geometryModification.snappedToJunction || segment.provenance.sourceSegmentCandidate.geometryModification.splitFromAcceptedSource,
+      reviewedAt: segment.provenance.publicationDecision.reviewTimestamp,
       notes: "Verified publication gate output. NOT FOR NAVIGATION in demo mode; completion state is not created by publication.",
     },
   };
 }
 
 export function verifiedNetworkToEligibleMatchingSegments(artifact: VerifiedNetworkArtifact): EligibleMatchingSegment[] {
+  assertValidVerifiedNetworkArtifact(artifact);
   return artifact.trailSegments.map((segment) => ({
     segmentKey: segment.productionSegmentKey,
     parentInventoryItemKey: segment.provenance.parentInventoryItemKey,
@@ -55,10 +58,6 @@ export function verifiedNetworkToEligibleMatchingSegments(artifact: VerifiedNetw
 
 function toSourceProvider(value: string): SourceProvider {
   return value === "USFS" || value === "OSM" || value === "manual" || value === "demo" ? value : "other";
-}
-
-function toTrailRegion(value: string): TrailRegion {
-  return value === "Franconia-Pemigewasset" || value === "Presidential Range" || value === "Carter-Moriah" || value === "Sandwich Range" || value === "Waterville Valley" ? value : "Other";
 }
 
 function toCoordinateTuples(coordinates: VerifiedPublishedSegment["coordinates"]): [number, number][] {

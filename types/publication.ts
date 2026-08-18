@@ -1,5 +1,6 @@
 import type { LineString } from "geojson";
 import type { SegmentCandidate, SegmentReviewDecision } from "@/types/segment-construction";
+import type { TrailRegion } from "@/types/trails";
 
 export const PUBLICATION_ALGORITHM_VERSION = "publication-v1";
 export const PRODUCTION_SEGMENT_KEY_VERSION = "production-segment-key-v1";
@@ -17,12 +18,19 @@ export type PublicationDecision = {
   notes?: string;
 };
 
+export type PublicationTrailMetadata = {
+  candidateTrailKey: string;
+  displayName: string;
+  region: TrailRegion;
+};
+
 export type PublicationDecisionExport = {
   exportedAt?: string;
   warning?: string;
   algorithmVersion: string;
   sourceArtifact?: { generatedAt?: string; demoOnly?: boolean; algorithmVersion?: string };
   sourceSegmentDecisions?: { exportedAt?: string; algorithmVersion?: string; sourceArtifact?: { generatedAt?: string; demoOnly?: boolean; algorithmVersion?: string } };
+  trailMetadata: PublicationTrailMetadata[];
   decisions: PublicationDecision[];
 };
 
@@ -31,6 +39,8 @@ export type PublicationCandidateTrail = {
   parentInventoryItemKey: string;
   trailDisplayName: string;
   trailNormalizedName: string;
+  canonicalDisplayName: string;
+  region: TrailRegion;
   sourceProvider: string;
   sourceFeatureIds: string[];
   calculatedMiles: number;
@@ -70,7 +80,7 @@ export type VerifiedPublishedTrail = {
   slug: string;
   name: string;
   normalizedName: string;
-  region: string;
+  region: TrailRegion;
   dataStatus: PublishedTrailStatus;
   verificationStatus: PublishedVerificationStatus;
   totalMiles: number;
@@ -92,9 +102,10 @@ export type VerifiedPublishedSegment = {
   productionSegmentKeyVersion: typeof PRODUCTION_SEGMENT_KEY_VERSION;
   slug: string;
   trailId: string;
+  trailProductionKey: string;
   trailName: string;
   segmentName: string;
-  region: string;
+  region: TrailRegion;
   miles: number;
   completed: false;
   coordinates: LineString["coordinates"];
@@ -141,17 +152,17 @@ export type VerifiedNetworkArtifact = {
     algorithmVersion: typeof PUBLICATION_ALGORITHM_VERSION;
     productionTrailKeyVersion: typeof PRODUCTION_TRAIL_KEY_VERSION;
     productionSegmentKeyVersion: typeof PRODUCTION_SEGMENT_KEY_VERSION;
+    publicationDecisionExport?: { exportedAt?: string; algorithmVersion: string; sourceArtifact?: PublicationDecisionExport["sourceArtifact"]; sourceSegmentDecisions?: PublicationDecisionExport["sourceSegmentDecisions"] };
     warning: string;
     segmentArtifactPath?: string;
     segmentDecisionsPath?: string;
     publicationDecisionsPath?: string;
   };
+  publicationDecisions: PublicationDecision[];
+  trailMetadata: PublicationTrailMetadata[];
   candidateTrails: PublicationCandidateTrail[];
   candidateSegments: PublicationCandidateSegment[];
   trails: VerifiedPublishedTrail[];
   trailSegments: VerifiedPublishedSegment[];
   diagnostics: PublicationDiagnostics;
 };
-
-
-

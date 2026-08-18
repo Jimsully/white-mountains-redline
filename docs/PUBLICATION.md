@@ -51,4 +51,5 @@ The app must not silently fall back to demo when an operator explicitly provides
 
 `npm run data:publication:load` is a controlled server-side/admin command only. It requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service-role key must never be exposed to browser code or committed.
 
-The loader upserts verified `trails` and `trail_segments` through the service-role-only `load_verified_publication_batch` RPC. It does not create activities, completion evidence, or `SegmentCompletion` records. It refuses geometry conflicts for an existing production segment key.
+The loader upserts verified `trails` and `trail_segments` through the service-role-only `load_verified_publication_batch` RPC. Database IDs remain bigint surrogate keys; production identity is carried by `trails.production_trail_key` and `trail_segments.segment_key`. The RPC records a publication run/fingerprint and stores `publication_run_id` on each published row. It does not create activities, completion evidence, or `SegmentCompletion` records. It refuses geometry, parent-trail, region, or canonical identity conflicts for existing verified keys.
+
