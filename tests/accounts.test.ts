@@ -79,12 +79,13 @@ describe("accounts persistence hardening", () => {
     expect(migration009).toContain("revoke execute on function public.handle_new_auth_user_profile() from authenticated");
   });
 
-  it("does not add application completion writes or promotion", () => {
+  it("keeps M7B completion writes narrow and does not add GPS/admin promotion", () => {
     const source = appSourceFiles().map((file) => fs.readFileSync(file, "utf8")).join("\n");
-    expect(source).not.toMatch(/\.from\(["']segment_completions["']\)\s*\.insert/);
     expect(source).not.toMatch(/\.from\(["']segment_completions["']\)\s*\.update/);
-    expect(source).not.toMatch(/\.from\(["']segment_completions["']\)\s*\.delete/);
-    expect(source).not.toMatch(/completed\s*:\s*true/);
+    expect(source).not.toMatch(/completion_method\s*:\s*["']manual["']/);
+    expect(source).not.toMatch(/completion_method\s*:\s*["']gpx_match["']/);
+    expect(source).not.toMatch(/completion_method\s*:\s*["']admin["']/);
+    expect(source).not.toMatch(/\.from\(["']completion_evidence["']\)/);
   });
 
   it("keeps service-role secrets out of browser/client code", () => {

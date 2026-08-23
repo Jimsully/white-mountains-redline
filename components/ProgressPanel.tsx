@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { SegmentBrowser } from "@/components/SegmentBrowser";
+import type { CompletionMode, SelectionOrigin } from "@/types/completion";
 import type { TrailFilters } from "@/lib/trail-filters";
 import { hasActiveTrailFilters } from "@/lib/trail-filters";
 import type { TrailRegion, TrailSegment } from "@/types/trails";
@@ -9,24 +12,38 @@ type Props = {
   segments: TrailSegment[];
   visibleSegments: TrailSegment[];
   selected?: TrailSegment;
+  selectedId?: string;
+  selectionOrigin: SelectionOrigin;
+  onSelectSegment: (id: string, origin: SelectionOrigin) => void;
   onToggle: (id: string) => void;
   filters: TrailFilters;
   onFiltersChange: (filters: TrailFilters) => void;
   availableRegions: TrailRegion[];
+  completionMode: CompletionMode;
+  completionError: string | null;
+  completionPending: boolean;
 };
 
 export function ProgressPanel({
   segments,
   visibleSegments,
   selected,
+  selectedId,
+  selectionOrigin,
+  onSelectSegment,
   onToggle,
   filters,
   onFiltersChange,
   availableRegions,
+  completionMode,
+  completionError,
+  completionPending,
 }: Props) {
   const progress = calculateProgress(segments);
   const filteredProgress = calculateProgress(visibleSegments);
   const filtersActive = hasActiveTrailFilters(filters);
+  const isDemo = completionMode === "demo";
+  const mileageUnit = isDemo ? "demo mi" : "mi";
 
   return (
     <aside className="panel">
@@ -37,7 +54,7 @@ export function ProgressPanel({
       <div className="progressBlock">
         <div className="progressNumbers">
           <strong>{progress.completedMiles.toFixed(1)}</strong>
-          <span>/ {progress.totalMiles.toFixed(1)} demo mi</span>
+          <span>/ {progress.totalMiles.toFixed(1)} {mileageUnit}</span>
         </div>
         <div className="progressTrack" aria-label="Overall mileage progress">
           <div className="progressFill" style={{ width: `${progress.mileagePercent}%` }} />
@@ -48,13 +65,14 @@ export function ProgressPanel({
         </div>
         {filtersActive ? (
           <div className="filteredProgress">
-            Filtered: {filteredProgress.completedMiles.toFixed(1)} / {filteredProgress.totalMiles.toFixed(1)} mi · {filteredProgress.mileagePercent.toFixed(1)}%
+            Filtered: {filteredProgress.completedMiles.toFixed(1)} / {filteredProgress.totalMiles.toFixed(1)} {mileageUnit} · {filteredProgress.mileagePercent.toFixed(1)}%
           </div>
         ) : null}
       </div>
 
       <div className="notice">
-        Prototype data only. Trail geometry is deliberately simplified and must not be used for navigation.
+        {isDemo ? "Prototype data only. Trail geometry is deliberately simplified and must not be used for navigation." : "For progress tracking only. Not for navigation."}
+        {isDemo ? <span> Local demo only — progress is not saved.</span> : null}
       </div>
 
       <div className="sectionHeading">Filters</div>
@@ -95,6 +113,9 @@ export function ProgressPanel({
         <p className="filterCount">Showing {visibleSegments.length} of {segments.length} segments.</p>
       </div>
 
+      <div className="sectionHeading">Segments</div>
+      <SegmentBrowser segments={visibleSegments} selectedId={selectedId} selectionOrigin={selectionOrigin} onSelect={onSelectSegment} />
+
       <div className="sectionHeading">Selected segment</div>
       {selected ? (
         <div className="trailCard">
@@ -110,9 +131,16 @@ export function ProgressPanel({
             <div><dt>Region</dt><dd>{selected.region}</dd></div>
             <div><dt>Gain</dt><dd>{selected.elevationGainFt?.toLocaleString() ?? "-"} ft</dd></div>
           </dl>
-          <button onClick={() => onToggle(selected.id)}>
-            {selected.completed ? "Mark unfinished" : "Mark completed"}
-          </button>
+          {completionMode === "anonymous" ? (
+            <Link className="buttonLink" href="/login?returnTo=%2F">Sign in to save progress</Link>
+          ) : (
+            <button onClick={() => onToggle(selected.id)} disabled={completionPending || completionMode === "unavailable"}>
+              {completionPending ? "Saving..." : selected.completed ? "Mark unfinished" : "Mark completed"}
+            </button>
+          )}
+          {completionMode === "demo" ? <p className="muted">Local demo only — progress is not saved.</p> : null}
+          {completionMode === "unavailable" ? <p className="muted">Completion saving is unavailable in this environment.</p> : null}
+          {completionError ? <p className="formError" role="alert">{completionError}</p> : null}
         </div>
       ) : (
         <p className="muted">No visible segment matches the current filters.</p>

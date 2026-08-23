@@ -6,12 +6,15 @@ import type { FeatureCollection, LineString } from "geojson";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { configureMapLibreWorker } from "@/lib/map/maplibre-worker";
+import { cameraDurationForReducedMotion, getSegmentBounds } from "@/lib/map/segment-bounds";
+import type { SelectionOrigin } from "@/types/completion";
 import type { TrailSegment } from "@/types/trails";
 
 type Props = {
   segments: TrailSegment[];
   selectedId?: string;
-  onSelect: (id: string) => void;
+  focusRequest: number;
+  onSelect: (id: string, origin: SelectionOrigin) => void;
 };
 
 function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
@@ -23,7 +26,6 @@ function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
       properties: {
         id: segment.id,
         completed: segment.completed,
-        selected: segment.id === undefined ? false : false,
         trailName: segment.trailName,
         segmentName: segment.segmentName,
       },
@@ -32,12 +34,13 @@ function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
   };
 }
 
-export function RedlineMap({ segments, selectedId, onSelect }: Props) {
+export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const data = useMemo(() => toGeoJSON(segments), [segments]);
   const dataRef = useRef(data);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -98,35 +101,52 @@ export function RedlineMap({ segments, selectedId, onSelect }: Props) {
 
       map.on("click", "trail-lines", (event) => {
         const id = event.features?.[0]?.properties?.id;
-        if (typeof id === "string") onSelect(id);
+        if (typeof id === "string") onSelect(id, "map");
       });
 
       map.on("mouseenter", "trail-lines", () => { map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", "trail-lines", () => { map.getCanvas().style.cursor = ""; });
+      setMapReady(true);
     });
 
     const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => map.resize());
     resizeObserver?.observe(containerRef.current);
 
     mapRef.current = map;
-    return () => { resizeObserver?.disconnect(); map.remove(); mapRef.current = null; };
+    return () => { resizeObserver?.disconnect(); map.remove(); mapRef.current = null; setMapReady(false); };
   }, [onSelect]);
 
   useEffect(() => {
     dataRef.current = data;
     const map = mapRef.current;
-    if (!map?.isStyleLoaded()) return;
+    if (!mapReady || !map?.isStyleLoaded()) return;
     const source = map.getSource("trail-segments") as maplibregl.GeoJSONSource | undefined;
     source?.setData(data);
-  }, [data]);
+  }, [data, mapReady]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map?.isStyleLoaded() || !map.getLayer("trail-lines")) return;
+    if (!mapReady || !map?.isStyleLoaded() || !map.getLayer("trail-lines")) return;
     map.setPaintProperty("trail-lines", "line-width", [
       "case", ["==", ["get", "id"], selectedId ?? ""], 7, 4,
     ]);
-  }, [selectedId]);
+  }, [mapReady, selectedId]);
+
+  useEffect(() => {
+    if (!focusRequest || !selectedId) return;
+    const map = mapRef.current;
+    if (!mapReady || !map?.isStyleLoaded()) return;
+    const segment = segments.find((item) => item.id === selectedId);
+    if (!segment) return;
+    const bounds = getSegmentBounds(segment.coordinates);
+    if (!bounds) return;
+    const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], {
+      padding: window.innerWidth <= 800 ? 32 : 64,
+      maxZoom: 14.5,
+      duration: cameraDurationForReducedMotion(reducedMotion),
+    });
+  }, [focusRequest, mapReady, segments, selectedId]);
 
   return (
     <div className="mapShell">
