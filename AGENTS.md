@@ -30,4 +30,4 @@ Build an independent, excellent White Mountains trail-completion tracker for jam
 - Keep accessibility: keyboard reachable controls, adequate target sizes, labels, reduced-motion friendly transitions.
 
 ## Current Codex task focus
-Milestone 6 adds Supabase authentication and durable profile persistence while preserving the boundary that activity evidence and authenticated identity are not segment completion.
+Milestone 6 and the MapLibre worker/layout hotfix are complete. Milestone 7A (manual completion security), M7B (persisted manual completion), and M7C (segment browser and map selection) are complete; M7C passed manual localhost acceptance. M7D evidence confirmation is next, with M7E scroll-active selection reserved as optional later polish. GPS evidence, strong matches, and accepted evidence remain distinct from completion until explicit user confirmation.

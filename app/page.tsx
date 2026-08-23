@@ -1,9 +1,31 @@
 import { RedlineApp } from "@/app/redline/RedlineApp";
-import { createTrailRepository } from "@/lib/repositories";
+import { CompletionRepository } from "@/lib/completions/completion-repository";
+import { applySegmentCompletions } from "@/lib/completions/composition";
+import { createTrailRepositoryRuntime } from "@/lib/repositories";
+import { getSupabaseAuthRuntimeConfig } from "@/lib/supabase/config";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 export default async function HomePage() {
-  const repository = createTrailRepository();
-  const segments = await repository.listSegments();
+  const runtime = createTrailRepositoryRuntime();
+  const segments = await runtime.repository.listSegments();
 
-  return <RedlineApp initialSegments={segments} />;
+  if (runtime.mode === "demo") {
+    return <RedlineApp initialSegments={segments} completionMode="demo" />;
+  }
+
+  const authConfigured = getSupabaseAuthRuntimeConfig() !== null;
+  if (!authConfigured) {
+    return <RedlineApp initialSegments={segments} completionMode="unavailable" />;
+  }
+
+  const auth = await getAuthenticatedUser();
+  if (!auth.supabase || !auth.user) {
+    return <RedlineApp initialSegments={segments} completionMode="anonymous" />;
+  }
+
+  const completionRepository = new CompletionRepository(auth.supabase, auth.user.id);
+  const completions = await completionRepository.listOwnCompletions();
+  const personalizedSegments = applySegmentCompletions(segments, completions);
+
+  return <RedlineApp initialSegments={personalizedSegments} completionMode="authenticated" />;
 }

@@ -18,11 +18,11 @@ Added conservative GPS activity normalization and matching against accepted topo
 ## M5 Verified segment publication — COMPLETE
 Added the verified publication gate between topology-approved segment construction and production `trails` / `trail_segments`, including canonical region review, deterministic production keys, verified-only public data access, service-role-only publication loading, and activity matching from the verified network.
 
-## M6 Accounts + user persistence — IN PROGRESS
-Add authenticated user accounts, durable user profile state, and private ownership boundaries for account and activity persistence. This remains in progress until merged.
+## M6 Accounts + user persistence — COMPLETE
+Added authenticated user accounts, durable user profile state, and private ownership boundaries for account and activity persistence.
 
-## M7 User completion workflow + activity evidence promotion
-Promote accepted activity evidence into user-confirmed completion workflows while keeping GPS evidence reviewable and reversible.
+## M7 User completion workflow + activity evidence promotion — IN PROGRESS
+M7A manual completion security, M7B persisted manual completion, and M7C segment browsing with synchronized map selection are complete. M7C passed manual localhost acceptance. M7D evidence read/confirmation is next; M7E scroll-active selection remains optional later polish. GPS evidence remains reviewable and does not become completion without explicit user confirmation.
 
 ## M8 Public trail pages / website / SEO
 Expand public trail browsing, static trail pages, search/indexing polish, and website integration for jamesscottsullivan.com.
