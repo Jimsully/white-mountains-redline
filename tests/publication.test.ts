@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -15,6 +16,7 @@ import type { SegmentConstructionDecisionExport } from "@/types/activity-matchin
 import { runActivityMatchingFromVerifiedNetwork } from "@/lib/activity-matching/run-activity-matching";
 import { buildPublicationDecisionExport, mergePublicationDecisionOverrides } from "@/lib/publication/review-state";
 import { stableHash } from "@/lib/publication/identity";
+import { canonicalSerialize } from "@/lib/canonical-json";
 
 const root = process.cwd();
 const segmentArtifact = JSON.parse(fs.readFileSync(path.join(root, "data/generated/segments/demo-segment-construction.json"), "utf8")) as SegmentConstructionArtifact;
@@ -39,6 +41,32 @@ function cloneArtifact(artifact: VerifiedNetworkArtifact): VerifiedNetworkArtifa
   return JSON.parse(JSON.stringify(artifact)) as VerifiedNetworkArtifact;
 }
 
+function legacyPublicationSerialize(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(legacyPublicationSerialize).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+    return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${legacyPublicationSerialize(entry)}`).join(",")}}`;
+  }
+  return JSON.stringify(value) as string;
+}
+
+function publicationFingerprintPayload(artifact: VerifiedNetworkArtifact) {
+  return {
+    metadata: {
+      algorithmVersion: artifact.metadata.algorithmVersion,
+      productionTrailKeyVersion: artifact.metadata.productionTrailKeyVersion,
+      productionSegmentKeyVersion: artifact.metadata.productionSegmentKeyVersion,
+      publicationDecisionExport: artifact.metadata.publicationDecisionExport,
+    },
+    publicationDecisions: artifact.publicationDecisions,
+    trailMetadata: artifact.trailMetadata,
+    candidateTrails: artifact.candidateTrails,
+    candidateSegments: artifact.candidateSegments,
+    trails: artifact.trails,
+    trailSegments: artifact.trailSegments,
+  };
+}
+
 function withTempArtifact(artifact: VerifiedNetworkArtifact, callback: (artifactPath: string, tempRoot: string) => void) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "publication-artifact-"));
   const artifactPath = path.join(tempRoot, "artifact.json");
@@ -47,7 +75,29 @@ function withTempArtifact(artifact: VerifiedNetworkArtifact, callback: (artifact
 }
 
 describe("verified publication gate", () => {
-  it("publishes only explicitly verified trails and segments with production-shaped records", () => {
+  it("preserves the pre-M7D-A publication fingerprint byte-for-byte", () => {
+    const artifact = productionArtifact();
+    const fingerprintInput = publicationFingerprintPayload(artifact);
+    const expected = crypto.createHash("sha256").update(legacyPublicationSerialize(fingerprintInput)).digest("hex");
+    const payload = buildPublicationLoadPayload(artifact);
+    expect(canonicalSerialize(fingerprintInput)).toBe(legacyPublicationSerialize(fingerprintInput));
+    expect(payload.auditRun.artifact_fingerprint).toBe(expected);
+  });
+
+  it("canonicalizes JSON values deliberately and rejects unsupported values", () => {
+    expect(canonicalSerialize({ z: [null, true, "x", -0, 1.5], a: { b: 2, a: 1 } }))
+      .toBe('{"a":{"a":1,"b":2},"z":[null,true,"x",0,1.5]}');
+    for (const value of [undefined, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, new Date(), new Map(), BigInt(1), Symbol("x"), () => undefined]) {
+      expect(() => canonicalSerialize(value)).toThrow(TypeError);
+    }
+    expect(() => canonicalSerialize({ missing: undefined })).toThrow("undefined");
+    expect(() => canonicalSerialize([undefined])).toThrow("undefined");
+    const sparse = new Array(1);
+    expect(() => canonicalSerialize(sparse)).toThrow("dense");
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    expect(() => canonicalSerialize(circular)).toThrow("circular");
+  });  it("publishes only explicitly verified trails and segments with production-shaped records", () => {
     const artifact = demoArtifact();
     expect(artifact.diagnostics.integrityErrors).toEqual([]);
     expect(artifact.diagnostics.candidateTrailCount).toBe(3);

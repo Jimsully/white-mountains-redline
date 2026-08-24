@@ -4,10 +4,11 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 
 ## Migration Chain
 
-- [ ] Apply migrations 001 through 010 in order to a disposable clean Supabase/PostgreSQL instance.
+- [ ] Apply migrations 001 through 011 in order to a disposable clean Supabase/PostgreSQL instance.
 - [ ] Confirm PostGIS extension is available in `extensions`.
 - [ ] Confirm migration 010 applies after 007 because `segment_completions.completion_evidence_id` references `completion_evidence`.
-- [ ] Confirm no local-only/demo publication artifacts are loaded into production.
+- [ ] Confirm no local-only/demo publication or activity-matching artifacts are loaded into production.
+- [ ] Confirm migration 011 applies after migrations 007, 009, and 010 and adds only M7D-A materialization objects.
 
 ## Public Trail API
 
@@ -40,20 +41,27 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 
 - [ ] Confirm `completion_evidence` has no direct anon/authenticated table access.
 - [ ] Confirm activity matching tables have no direct anon/authenticated table access.
-- [ ] Confirm service_role-only evidence/admin workflows are not exposed to browser code.
-- [ ] Confirm M7D evidence confirmation/read RPCs are not assumed to exist until implemented and reviewed.
+- [ ] Confirm `load_reviewed_completion_evidence_batch` is executable only by `service_role` and remains invoker-rights.
+- [ ] Confirm demo payloads, stale/unverified segment keys, and semantic identity conflicts roll back the complete batch.
+- [ ] Confirm accepted evidence semantic updates and FK relinking fail, while existing non-null FK links can become null through `ON DELETE SET NULL`.
+- [ ] Confirm loader results contain counts/fingerprint only, never geometry, evidence, or provenance.
+- [ ] Confirm M7D-B sanitized evidence read/confirmation RPCs and M7D-C UI are not assumed to exist.
 
 ## Profile And Activity RLS
 
 - [ ] Confirm public profile reads expose only `is_public = true`.
 - [ ] Confirm authenticated users can read/update only their own private profile.
-- [ ] Confirm activities are owner-only for select/insert/update/delete.
+- [ ] Confirm activities remain owner-scoped through RLS.
+- [ ] Confirm authenticated activity INSERT/UPDATE grants are column-limited and exclude `activity_key`; UPDATE also excludes `user_id`.
 - [ ] Confirm activity UPDATE policies include both `USING` and `WITH CHECK`.
 
 ## Service Role Tooling
 
 - [ ] Confirm `load_source_trail_feature_batch` execute is service_role-only and remains invoker-rights.
 - [ ] Confirm `load_verified_publication_batch` execute is service_role-only.
+- [ ] Confirm `load_reviewed_completion_evidence_batch` execute is service_role-only and the CLI verifies an exact auth UUID before one atomic RPC.
+- [ ] Confirm the service role has migration-defined schema, activity identity-sequence, trail base-table read, PostGIS execute, and activity/evidence mutation privileges required by the invoker-rights loader.
+- [ ] Confirm the deployed Supabase `service_role` retains `BYPASSRLS`; the loader does not add service-role RLS policies or use `SECURITY DEFINER`.
 - [ ] Confirm service-role keys are not committed, not in browser env vars, and not reachable from client components.
 
 ## Runtime Tests Required
@@ -63,3 +71,4 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Test column-level insert privileges through PostgREST/Supabase client.
 - [ ] Test account deletion/cascade behavior for profiles, activities, completions, and evidence.
 - [ ] Test evidence deletion blocked when referenced by `segment_completions.completion_evidence_id`.
+- [ ] Test migration 011 exact reruns, activity/evidence conflicts, full rollback, accepted-evidence trigger behavior, and verified parent/segment resolution in real PostgreSQL.

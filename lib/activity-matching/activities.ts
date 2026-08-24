@@ -179,7 +179,7 @@ function normalizeLine(value: unknown): { coordinates: Position[]; originalPoint
   return { coordinates, originalPointCount: value.length, malformedPointCount };
 }
 
-function stableActivityKey(source: ActivitySource, sourceActivityId: string | undefined, startTime: string | undefined, geometry: MultiLineString) {
+export function stableActivityKey(source: ActivitySource, sourceActivityId: string | undefined, startTime: string | undefined, geometry: MultiLineString) {
   if (sourceActivityId) return `activity_${crypto.createHash("sha1").update([ACTIVITY_KEY_VERSION, source, sourceActivityId].join("|")).digest("hex").slice(0, 16)}`;
   const fingerprint = geometry.coordinates.map(orientationStableFingerprint).sort().join("|");
   return `activity_${crypto.createHash("sha1").update([ACTIVITY_KEY_VERSION, source, startTime, fingerprint].join("|")).digest("hex").slice(0, 16)}`;

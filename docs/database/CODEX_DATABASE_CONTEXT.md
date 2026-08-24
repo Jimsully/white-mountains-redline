@@ -4,7 +4,7 @@ Read this at the start of future database work. Migrations in `supabase/migratio
 
 ## Current State
 
-Migrations 001-010 define the current database. M7A introduced the authenticated manual completion database boundary. M7B composes per-user completions into public trail segments at request time in application code. M7C browser/map selection is complete and passed manual localhost acceptance; it adds no database behavior. M7D evidence confirmation is future work.
+Migrations 001-011 define the current database. M7A introduced the authenticated manual completion database boundary. M7B composes per-user completions into public trail segments at request time. M7C browser/map selection is complete and adds no database behavior. M7D-A now provides controlled reviewed-evidence materialization. M7D-B sanitized evidence read/confirmation RPCs and M7D-C evidence UI are future work.
 
 ## Hard Product Rules
 
@@ -46,7 +46,9 @@ The INSERT policy also requires:
 
 ## Completion Evidence Boundary
 
-`completion_evidence` and activity matching tables are service/admin controlled. Raw evidence JSON and provenance are not exposed to authenticated users. M7D may add sanitized evidence read/confirmation RPCs later, but they are not current schema.
+`completion_evidence` and activity matching tables remain service/admin controlled. Raw evidence JSON and provenance are not exposed to authenticated users. Migration 011 adds user-scoped stable `activity_key`/`evidence_key` identities, accepted-evidence immutability, and the invoker-rights service-role-only `load_reviewed_completion_evidence_batch` RPC. The loader persists owned activities and accepted private evidence only; it never creates `segment_completions`.
+
+Authenticated activity mutation is column-limited: users cannot insert/update controlled `activity_key`, and cannot update `user_id`. M7D-B/C user evidence exposure and confirmation are not current schema.
 
 ## Security Definer Helpers
 
@@ -70,4 +72,4 @@ Do not join private completion state into `trail_segment_api`.
 
 ## Before Deployment
 
-Static tests are not enough. Run live PostgreSQL/Supabase checks for RLS, grants, column-level insert privileges, `SECURITY DEFINER` execution, and `security_invoker` view behavior.
+Static tests are not enough. Run live PostgreSQL/Supabase checks for RLS, grants, column-level activity privileges, migration 011 invoker-rights loader execution/atomicity/idempotency, accepted-evidence trigger behavior, `SECURITY DEFINER` execution, and `security_invoker` view behavior.

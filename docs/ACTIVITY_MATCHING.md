@@ -1,68 +1,62 @@
 # Activity Matching
 
-Milestone 4 introduces local historical activity-to-segment matching. It answers which human-approved prototype segment-construction candidates a GPS trace may support as completion evidence.
+Milestone 4 introduced local historical activity-to-segment matching. It answers which human-approved, published segments a GPS trace may support as completion evidence.
 
-Lifecycle:
-
-raw GIS -> reconciliation -> segment construction -> approved canonical matching segment -> historical GPS activity -> algorithmic match candidate -> human-reviewed completion evidence -> future SegmentCompletion
-
-Core boundaries:
-
-- GPS trace geometry is evidence, not canonical trail geometry.
-- A `strong_candidate` is not a completion.
-- Accepting completion evidence does not create a production `SegmentCompletion` row.
-- Activity matching only uses explicitly accepted segment candidates whose start and end junctions are also explicitly accepted.
-- Missing or stale segment-construction decision exports fail; the matcher does not fall back to proposed topology.
-
-Local inputs:
-
-- Demo activities live in `data/demo/activities/` and are committed synthetic fixtures only.
-- Real activity files belong in `data/local/activities/`, which is ignored except `.gitkeep`.
-- Private generated artifacts are written as `data/generated/activity-matching/activity-matching.local.<timestamp>.json` and are ignored.
-
-Admin artifact loading:
-
-`/admin/activity-matching` shows the committed demo artifact by default. `ACTIVITY_MATCHING_ARTIFACT_PATH` can point at a local private artifact for development. Private artifacts are blocked when `NODE_ENV === "production"` until authenticated admin access exists.
-
-Privacy:
-
-Historical activity data is user-location history. Do not commit real GPS traces, OAuth tokens, service credentials, or private artifact paths. Future user-facing activity privacy should default to private unless a user explicitly shares it.
-
-CLI:
-
-```bash
-npm run data:activity:validate -- data/demo/activities
-npm run data:activity:match -- --segments data/generated/segments/demo-segment-construction.json --segment-decisions data/demo/segment-construction-decisions.demo.json --activities data/demo/activities
+```text
+raw GIS -> reconciliation -> segment construction -> verified publication -> historical GPS activity -> algorithmic match candidate -> human-reviewed completion evidence -> future explicit user confirmation -> SegmentCompletion
 ```
 
-The v1 matcher samples canonical segment geometry at configured meter intervals and measures each sample's distance to the activity trace. It does not define completion by counting GPS points near a trail.
+## Safety Rules
+
+- GPS trace geometry is evidence, not canonical trail geometry.
+- A strong candidate is not a completion.
+- Accepting completion evidence does not create a production `SegmentCompletion` row.
+- Demo geometry and activities are synthetic and NOT FOR NAVIGATION.
+- Normal authenticated users do not receive raw matching evidence or provenance.
+
+## Local Inputs
+
+Demo activities live in `data/demo/activities/` and are committed synthetic fixtures. Real activity files belong in `data/local/activities/`, which is ignored except for `.gitkeep`.
+
+Private generated and loaded artifacts redact filesystem provenance from `sourceMetadata`, including Windows/POSIX absolute paths and nested path-like keys. Ordinary safe metadata may remain in local artifacts, but M7D-A does not persist raw `sourceMetadata` or original filenames.
+
+## Commands
+
+```powershell
+npm.cmd run data:activity:validate -- data/demo/activities
+npm.cmd run data:activity:match -- --verified-network data/generated/publication/demo-verified-network.json --activities data/demo/activities
+```
+
+The unpublished topology input lane remains explicit legacy/development tooling. Normal matching uses the verified-network artifact so evidence stays downstream of the publication gate.
 
 ## Matcher Integrity
 
-Activity edges longer than maximumInterpolatedActivityEdgeMeters are treated as GPS evidence gaps. The endpoint points remain evidence, but the matcher does not interpolate across that distance and call it observed traversal.
+Activity edges longer than `maximumInterpolatedActivityEdgeMeters` are GPS evidence gaps. Endpoint points remain evidence, but the matcher does not interpolate across the gap and call it observed traversal.
 
-Strong candidates use stricter proximity thresholds (strongMaximumMedianDistanceMeters and strongMaximumP95DistanceMeters) than general review candidates. A high-coverage nearby parallel trace that misses those strong thresholds is held for 
-eeds_review rather than treated as complete-quality evidence.
+Strong candidates require one activity trace component to satisfy coverage, endpoint, and proximity requirements on its own. Separate GPX `trkseg` components can provide useful union evidence, but cannot silently combine into strong traversal continuity.
 
-Strong candidates also require one activity trace component to satisfy the coverage and endpoint requirements on its own. Separate GPX 	rkseg components can produce useful union evidence, but they cannot silently combine into strong traversal continuity.
+The spatial prefilter expands latitude and longitude independently using meter-aware conversion. It is conservative because full scoring follows.
 
-The spatial prefilter expands latitude and longitude independently using meter-aware conversion at the relevant latitude. It is intentionally conservative: false positives are acceptable because full scoring follows; false negatives are not.
+Activity identity uses `activity-key-v2`. When `sourceActivityId` exists, identity derives from version, source, and source ID. Otherwise it uses source, start time, and an orientation-stable geometry fingerprint.
 
-Activity identity is stable when a source activity ID exists: the key is derived from the activity-key version, source, and source activity ID, not mutable title or filename text. Without a source ID, fallback identity uses source, start time, and an orientation-stable geometry fingerprint.
+Each match stores `componentEvidence`, raw and trusted trace lengths, ignored-edge diagnostics, stable algorithm versions, and a deterministic match key. Admin previews use the same trusted-trace gap handling as scoring.
 
+## M7D-A Reviewed Evidence Materialization
 
-## Final Integrity Corrections
+Migration 011 and the controlled CLI materialize reviewed private evidence without creating completions:
 
-Each match now stores componentEvidence records with per-component coverage, endpoint distances, median/p95/max sample distance, and uncovered gap ratio. estStrongComponentIndex is set only when one same activity component independently satisfies every strong threshold; coverage from one component cannot be combined with endpoint or proximity evidence from another.
+```powershell
+npm.cmd run data:activity:evidence:load -- --artifact <private-activity-match-artifact> --decisions <review-export.json> --user-id <auth-user-uuid>
+```
 
-Admin map previews are rendered from the shared trusted-trace helper used by scoring. Edges longer than maximumInterpolatedActivityEdgeMeters are split and shown as dashed evidence gaps instead of continuous traversed lines.
+The default is an offline dry run. It validates both artifacts, rejects demo/manual material, recomputes stable identities, reports the semantic SHA-256 fingerprint and serialized payload size, and performs no network operation.
 
-Artifact-level ignoredActivityEdgeCount counts unique ignored activity edges once per activity. Per-match ignoredLongActivityEdgeCount remains available as evidence, but global diagnostics are not multiplied by the number of segments scored.
+Add `--load` only from controlled admin tooling. Load mode requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, verifies the exact auth user UUID through the Admin API, and invokes one atomic service-role-only RPC. The service-role key must never use a `NEXT_PUBLIC_` variable or enter browser code.
 
-Match evidence keeps both awActivityTraceLengthMeters and 	rustedActivityEvidenceLengthMeters; raw length may include GPS gaps that were not used as continuous traversal evidence.
+M7D-A persists only accepted decisions into owned `activities` and private `completion_evidence`. Rejected and needs-review decisions create nothing. It does not populate activity match run/candidate/decision tables and never inserts `segment_completions`.
 
-Private generated and loaded artifacts redact filesystem provenance from activity sourceMetadata, including obvious Windows/POSIX absolute paths and nested path-like metadata keys, while preserving ordinary safe metadata.
+Stable activity/evidence identities make exact reruns reusable. Existing rows are compared, not overwritten. A changed immutable semantic payload is a conflict. Review timestamps must be valid ISO timestamps and may be at most five minutes ahead of the loader clock. Evidence provenance includes an immutable `activityDate` snapshot for future confirmation; future completion dates must not be derived from mutable `activities.activity_date`.
 
-## Verified Network Input
-Activity matching can now run from data/generated/publication/demo-verified-network.json with --verified-network. This keeps GPS evidence downstream of the publication gate. Matching still creates evidence candidates only; it never creates completions.
+## Future M7D-B/C
 
+M7D-B sanitized evidence read/confirmation RPCs and M7D-C account evidence UI are not implemented. Accepted evidence remains evidence until a future explicit user confirmation creates `SegmentCompletion(method = gpx_match)`.
