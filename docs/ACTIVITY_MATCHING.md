@@ -57,6 +57,12 @@ M7D-A persists only accepted decisions into owned `activities` and private `comp
 
 Stable activity/evidence identities make exact reruns reusable. Existing rows are compared, not overwritten. A changed immutable semantic payload is a conflict. Review timestamps must be valid ISO timestamps and may be at most five minutes ahead of the loader clock. Evidence provenance includes an immutable `activityDate` snapshot for future confirmation; future completion dates must not be derived from mutable `activities.activity_date`.
 
-## Future M7D-B/C
+## M7D-B Evidence Confirmation Boundary
 
-M7D-B sanitized evidence read/confirmation RPCs and M7D-C account evidence UI are not implemented. Accepted evidence remains evidence until a future explicit user confirmation creates `SegmentCompletion(method = gpx_match)`.
+Migration 012 implements the local database authorization boundary for future M7D-C UI. `list_confirmable_completion_evidence()` exposes only an owner-scoped sanitized projection; raw evidence, provenance, geometry, matching keys, metrics, and service metadata remain private. `confirm_completion_evidence(uuid)` requires explicit authenticated confirmation and derives every protected completion field internally.
+
+Evidence-backed `completed_on` comes only from the immutable M7D-A `provenance.activityDate` snapshot after strict validation. It never falls back to mutable `activities.activity_date`, `accepted_at`, or the current date. A successful confirmation creates `SegmentCompletion(method = gpx_match)`; accepted evidence alone still creates no completion. Migration 012 has not been applied live.
+
+## Future M7D-C
+
+M7D-C account evidence UI, browser integration, and confirmation actions are not implemented.

@@ -4,11 +4,12 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 
 ## Migration Chain
 
-- [ ] Apply migrations 001 through 011 in order to a disposable clean Supabase/PostgreSQL instance.
+- [ ] Apply migrations 001 through 012 in order to a disposable clean Supabase/PostgreSQL instance.
 - [ ] Confirm PostGIS extension is available in `extensions`.
 - [ ] Confirm migration 010 applies after 007 because `segment_completions.completion_evidence_id` references `completion_evidence`.
 - [ ] Confirm no local-only/demo publication or activity-matching artifacts are loaded into production.
 - [ ] Confirm migration 011 applies after migrations 007, 009, and 010 and adds only M7D-A materialization objects.
+- [ ] Confirm migration 012 applies after migration 011 and adds only the internal date helper plus sanitized list/confirm RPCs, with no table, FK, RLS, or direct table-grant changes.
 
 ## Public Trail API
 
@@ -45,7 +46,9 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Confirm demo payloads, stale/unverified segment keys, and semantic identity conflicts roll back the complete batch.
 - [ ] Confirm accepted evidence semantic updates and FK relinking fail, while existing non-null FK links can become null through `ON DELETE SET NULL`.
 - [ ] Confirm loader results contain counts/fingerprint only, never geometry, evidence, or provenance.
-- [ ] Confirm M7D-B sanitized evidence read/confirmation RPCs and M7D-C UI are not assumed to exist.
+- [ ] Confirm the internal activity-date helper rejects malformed dates and is not executable by application roles.
+- [ ] Confirm the list/confirm RPCs are executable by `authenticated` only and expose no raw evidence, provenance, geometry, matching keys, metrics, or service metadata.
+- [ ] Confirm M7D-C application/UI behavior is not assumed to exist.
 
 ## Profile And Activity RLS
 
@@ -57,9 +60,9 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 
 ## Service Role Tooling
 
-- [ ] Confirm `load_source_trail_feature_batch` execute is service_role-only and remains invoker-rights.
-- [ ] Confirm `load_verified_publication_batch` execute is service_role-only.
-- [ ] Confirm `load_reviewed_completion_evidence_batch` execute is service_role-only and the CLI verifies an exact auth UUID before one atomic RPC.
+- [ ] Confirm `load_source_trail_feature_batch` execute is `service_role`-only and remains invoker-rights.
+- [ ] Confirm `load_verified_publication_batch` execute is `service_role`-only.
+- [ ] Confirm `load_reviewed_completion_evidence_batch` execute is `service_role`-only and the CLI verifies an exact auth UUID before one atomic RPC.
 - [ ] Confirm the service role has migration-defined schema, activity identity-sequence, trail base-table read, PostGIS execute, and activity/evidence mutation privileges required by the invoker-rights loader.
 - [ ] Confirm the deployed Supabase `service_role` retains `BYPASSRLS`; the loader does not add service-role RLS policies or use `SECURITY DEFINER`.
 - [ ] Confirm service-role keys are not committed, not in browser env vars, and not reachable from client components.
@@ -67,8 +70,27 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 ## Runtime Tests Required
 
 - [ ] Run actual PostgreSQL/Supabase RLS tests; static SQL text tests are not enough.
-- [ ] Test grants with anon, authenticated user A, authenticated user B, and service_role.
+- [ ] Test grants with anon, authenticated user A, authenticated user B, and `service_role`.
 - [ ] Test column-level insert privileges through PostgREST/Supabase client.
 - [ ] Test account deletion/cascade behavior for profiles, activities, completions, and evidence.
 - [ ] Test evidence deletion blocked when referenced by `segment_completions.completion_evidence_id`.
 - [ ] Test migration 011 exact reruns, activity/evidence conflicts, full rollback, accepted-evidence trigger behavior, and verified parent/segment resolution in real PostgreSQL.
+- [ ] List own confirmable evidence and prove foreign evidence is absent.
+- [ ] Deny direct raw evidence reads for anon/authenticated callers.
+- [ ] Prove a foreign evidence UUID is indistinguishable from a nonexistent UUID.
+- [ ] Confirm eligible evidence creates the exact `gpx_match` row and `completed_on` equals immutable `provenance.activityDate`.
+- [ ] Prove changing `activities.activity_date` cannot affect the confirmation date.
+- [ ] Reject manual evidence; accept `historical_gps`, `gpx_import`, and `connected_service` using fixtures for each available source.
+- [ ] Reject stale/unverified segments and evidence whose parent trail is unverified.
+- [ ] Verify null/deleted activity behavior, and reject an activity owned by another user.
+- [ ] Retry the same evidence and classify it as already confirmed.
+- [ ] Classify an existing manual completion and a completion from different evidence as already completed.
+- [ ] Race two confirmations of the same evidence, two evidence rows for one segment, and manual versus evidence completion.
+- [ ] Unmark by deleting only the completion; prove evidence remains, reappears, and can be explicitly reconfirmed.
+- [ ] Verify activity `ON DELETE SET NULL`, segment deletion behavior, evidence `ON DELETE NO ACTION`, and account cascades.
+- [ ] Verify authenticated RPC execution, anon denial, and that normal confirmation does not require `service_role`.
+- [ ] Query `pg_proc.proowner` for all three migration-012 functions; a clean standard Supabase CLI deployment is expected to show `postgres`, never an application/browser role.
+- [ ] Verify that owner can select `completion_evidence`, `activities`, `trail_segments`, `trails`, and `segment_completions`; insert `segment_completions`; invoke the internal helper; and acquire the required row locks.
+- [ ] Repeat ownership checks for custom `--db-url` or self-hosted deployment paths instead of assuming standard hosted behavior.
+- [ ] Race activity/evidence/segment/account deletion against confirmation and verify only safe serial outcomes or `not_confirmable` for expected FK failures.
+- [ ] Exercise RLS and GRANT behavior through actual Supabase/PostgREST, not only direct SQL or static tests.

@@ -1,6 +1,6 @@
 # Database Security Contract
 
-The migrations remain authoritative. This document summarizes the intended current security boundary after migrations 001 through 011.
+The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 012. Migration 012 is implemented locally and has not been applied live.
 
 ## Core Rules
 
@@ -82,7 +82,7 @@ Execution is revoked from `public`, `anon`, and `authenticated`, then granted ex
 
 ## Evidence Isolation
 
-Migration 007 creates `completion_evidence`; migrations 009-011 keep raw evidence isolated:
+Migration 007 creates `completion_evidence`; migrations 009-012 keep raw evidence isolated:
 
 - `revoke all on public.completion_evidence from public, anon, authenticated`
 - related activity matching tables remain revoked from public roles
@@ -90,7 +90,20 @@ Migration 007 creates `completion_evidence`; migrations 009-011 keep raw evidenc
 - accepted evidence is protected from semantic update by migration 011
 - nullable activity/match/segment FKs may only transition non-null to null for existing `ON DELETE SET NULL` cleanup
 
-M7D-A can materialize reviewed private evidence through controlled tooling. M7D-B sanitized user reads/confirmation and M7D-C UI are not current schema.
+M7D-A can materialize reviewed private evidence through controlled tooling. Migration 012 does not grant authenticated table access to `completion_evidence`.
+
+## Authenticated Evidence Confirmation RPCs
+
+Migration 012 defines two user-facing `SECURITY DEFINER` functions with `SET search_path = ''` and fully qualified relations:
+
+- `list_confirmable_completion_evidence()` derives identity only from `auth.uid()` and returns a fixed sanitized owner projection. It excludes raw evidence/provenance, geometry, matching internals, identifiers other than `evidence_id`/public segment identity, and any segment that already has an owner completion.
+- `confirm_completion_evidence(uuid)` treats the UUID as an opaque lookup token, revalidates owner/activity/evidence/publication state, locks the verified segment and parent trail, and derives every completion field internally. It creates only `gpx_match` rows after explicit confirmation.
+
+The immutable validated M7D-A `provenance.activityDate` snapshot is the sole source of evidence-backed `completed_on`; mutable activity dates and acceptance timestamps are not fallbacks. RPC execution is revoked from `PUBLIC`, `anon`, `authenticated`, and `service_role`, then granted back only to `authenticated`. The internal date helper is revoked from every application role. Function-owner rights and all race/authorization behavior require live PostgreSQL verification before deployment.
+
+Under the standard linked Supabase CLI `db push` path, migrations use the default `postgres` database role, so a clean migration 012 application is expected to create all three functions with `postgres` ownership. That role also created/owns the repository tables in a clean migration chain and therefore supplies the required table reads, completion insert, and row-lock authority. Custom `--db-url` roles, self-hosted ownership, or pre-existing function signatures can differ, so deployment must verify `pg_proc.proowner` and effective privileges rather than assuming this behavior.
+
+M7D-C application and UI integration remain future work.
 
 ## Service-Controlled RPCs
 

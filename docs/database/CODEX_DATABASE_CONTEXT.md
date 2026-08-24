@@ -4,7 +4,7 @@ Read this at the start of future database work. Migrations in `supabase/migratio
 
 ## Current State
 
-Migrations 001-011 define the current database. M7A introduced the authenticated manual completion database boundary. M7B composes per-user completions into public trail segments at request time. M7C browser/map selection is complete and adds no database behavior. M7D-A now provides controlled reviewed-evidence materialization. M7D-B sanitized evidence read/confirmation RPCs and M7D-C evidence UI are future work.
+Migrations 001-012 define the repository database contract; migration 012 is local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B now provides sanitized owner reads plus explicit owner confirmation. M7D-C application/UI integration remains future work.
 
 ## Hard Product Rules
 
@@ -48,15 +48,19 @@ The INSERT policy also requires:
 
 `completion_evidence` and activity matching tables remain service/admin controlled. Raw evidence JSON and provenance are not exposed to authenticated users. Migration 011 adds user-scoped stable `activity_key`/`evidence_key` identities, accepted-evidence immutability, and the invoker-rights service-role-only `load_reviewed_completion_evidence_batch` RPC. The loader persists owned activities and accepted private evidence only; it never creates `segment_completions`.
 
-Authenticated activity mutation is column-limited: users cannot insert/update controlled `activity_key`, and cannot update `user_id`. M7D-B/C user evidence exposure and confirmation are not current schema.
+Authenticated activity mutation is column-limited: users cannot insert/update controlled `activity_key`, and cannot update `user_id`.
+
+Migration 012 exposes no raw table access. `list_confirmable_completion_evidence()` returns only sanitized owner data. `confirm_completion_evidence(uuid)` derives ownership from `auth.uid()`, revalidates accepted GPS evidence and the verified segment/parent gate, locks publication rows, and inserts only a derived `gpx_match` completion after explicit confirmation. Evidence-backed `completed_on` comes only from validated immutable `provenance.activityDate`. Deleting/unmarking the completion does not consume evidence.
 
 ## Security Definer Helpers
 
-Current narrow `SECURITY DEFINER` helpers:
+Current narrow `SECURITY DEFINER` boundaries:
 - `handle_new_auth_user_profile()` for auth trigger profile creation.
 - `is_verified_published_segment(bigint)` for boolean segment eligibility inside completion INSERT RLS.
+- `list_confirmable_completion_evidence()` for sanitized owner evidence reads.
+- `confirm_completion_evidence(uuid)` for explicit owner confirmation.
 
-Both use fixed `search_path = ''` and fully qualified objects. Do not add broad helper frameworks.
+They use fixed `search_path = ''` and fully qualified objects. The date validator is internal and revoked from application roles. Do not add broad helper frameworks.
 
 ## M7B Composition
 
@@ -72,4 +76,4 @@ Do not join private completion state into `trail_segment_api`.
 
 ## Before Deployment
 
-Static tests are not enough. Run live PostgreSQL/Supabase checks for RLS, grants, column-level activity privileges, migration 011 invoker-rights loader execution/atomicity/idempotency, accepted-evidence trigger behavior, `SECURITY DEFINER` execution, and `security_invoker` view behavior.
+Static tests are not enough. Run live PostgreSQL/Supabase checks for RLS, grants, migration 011 loader behavior, accepted-evidence immutability, M7D-B ownership/enumeration/date/race/FK behavior, `SECURITY DEFINER` owner rights, and `security_invoker` view behavior. Retain the independent `trail_segment_api` clean-bootstrap privilege audit.
