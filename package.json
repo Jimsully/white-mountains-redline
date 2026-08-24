@@ -16,6 +16,7 @@
     "data:activity:validate": "node scripts/run-tsx.cjs scripts/validate-activity.ts",
     "data:activity:normalize": "node scripts/run-tsx.cjs scripts/normalize-activity.ts",
     "data:activity:match": "node scripts/run-tsx.cjs scripts/match-activities.ts",
+    "data:activity:evidence:load": "node scripts/run-tsx.cjs scripts/load-reviewed-evidence.ts",
     "data:publication:build": "node scripts/run-tsx.cjs scripts/build-publication.ts",
     "data:publication:load": "node scripts/run-tsx.cjs scripts/load-publication.ts",
     "prepare:maplibre-worker": "node scripts/prepare-maplibre-worker.mjs",

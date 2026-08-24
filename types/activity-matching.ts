@@ -3,6 +3,8 @@ import type { SegmentCandidate, SegmentReviewDecision } from "@/types/segment-co
 
 export const ACTIVITY_MATCHING_ALGORITHM_VERSION = "activity-matching-v1";
 export const ACTIVITY_KEY_VERSION = "activity-key-v2";
+export const REVIEWED_EVIDENCE_LOADER_SCHEMA_VERSION = "reviewed-evidence-loader-v1";
+export const EVIDENCE_KEY_VERSION = "evidence-key-v1";
 
 export type ActivitySource = "gpx" | "normalized_json" | "strava_export" | "coros_export" | "manual" | "demo";
 export type SegmentMatchClassification = "strong_candidate" | "candidate" | "needs_review" | "insufficient_coverage";
@@ -203,6 +205,68 @@ export type ActivityMatchReviewDecision = {
   sourceArtifact?: { generatedAt?: string; demoOnly?: boolean; algorithmVersion?: string };
 };
 
+export type ActivityMatchReviewDecisionExport = {
+  exportedAt?: string;
+  warning?: string;
+  activityMatchingAlgorithmVersion: string;
+  sourceArtifact: { generatedAt: string; demoOnly: boolean; algorithmVersion: string };
+  decisions: ActivityMatchReviewDecision[];
+};
+
+export type ReviewedEvidenceActivityPayload = {
+  activity_key: string;
+  title: string | null;
+  activity_date: string | null;
+  source: "gpx" | "strava" | "other";
+  geometry: MultiLineString;
+  distance_miles: number | null;
+};
+
+export type ReviewedCompletionEvidencePayload = {
+  evidence_key: string;
+  activity_key: string;
+  segment_key: string;
+  match_key: string;
+  decision: "accepted";
+  evidence_source: "historical_gps";
+  evidence: SegmentMatchEvidence;
+  accepted_at: string;
+  provenance: {
+    loaderSchemaVersion: typeof REVIEWED_EVIDENCE_LOADER_SCHEMA_VERSION;
+    artifactFingerprint: string;
+    matchKey: string;
+    activityKey: string;
+    segmentKey: string;
+    activityMatchingAlgorithmVersion: string;
+    segmentConstructionAlgorithmVersion: string;
+    classification: SegmentMatchClassification;
+    reviewDecision: { status: "accepted"; reviewTimestamp: string };
+    activityDate: string | null;
+  };
+};
+
+export type ReviewedEvidenceMaterializationPayload = {
+  targetUserId: string;
+  run: {
+    loader_schema_version: typeof REVIEWED_EVIDENCE_LOADER_SCHEMA_VERSION;
+    evidence_key_version: typeof EVIDENCE_KEY_VERSION;
+    artifact_fingerprint: string;
+    demo_only: false;
+    activity_matching_algorithm_version: string;
+    source_artifact: { generatedAt: string; demoOnly: false; algorithmVersion: string };
+  };
+  activities: ReviewedEvidenceActivityPayload[];
+  evidence: ReviewedCompletionEvidencePayload[];
+  summary: {
+    acceptedDecisionCount: number;
+    rejectedDecisionCount: number;
+    needsReviewDecisionCount: number;
+    activitiesRequired: number;
+    evidenceCount: number;
+    artifactFingerprint: string;
+    payloadBytes: number;
+  };
+};
 export type CompletionEvidenceCandidate = {
   evidenceKey: string;
   source: "historical_gps" | "gpx_import" | "manual" | "connected_service";

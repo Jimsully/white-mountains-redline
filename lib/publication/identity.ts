@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import type { PublicationCandidateSegment, PublicationCandidateTrail } from "@/types/publication";
 import { PRODUCTION_SEGMENT_KEY_VERSION, PRODUCTION_TRAIL_KEY_VERSION } from "@/types/publication";
+import { sha256Fingerprint } from "@/lib/canonical-json";
 
 export function stableHash(parts: unknown[], length = 16) {
   return crypto.createHash("sha1").update(JSON.stringify(parts)).digest("hex").slice(0, length);
@@ -12,7 +13,7 @@ export function stableUuid(parts: unknown[]) {
 }
 
 export function stableArtifactFingerprint(value: unknown) {
-  return crypto.createHash("sha256").update(stableSerialize(value)).digest("hex");
+  return sha256Fingerprint(value);
 }
 
 export function productionTrailKeyFor(trail: Pick<PublicationCandidateTrail, "parentInventoryItemKey" | "trailNormalizedName">) {
@@ -25,13 +26,4 @@ export function productionSegmentKeyFor(trailProductionKey: string, segment: Pic
 
 export function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "trail";
-}
-
-function stableSerialize(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stableSerialize).join(",")}]`;
-  if (value && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
-    return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableSerialize(entry)}`).join(",")}}`;
-  }
-  return JSON.stringify(value);
 }

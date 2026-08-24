@@ -1,6 +1,6 @@
 # Current Database Schema
 
-This document summarizes the current schema produced by migrations 001 through 010. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions.
+This document summarizes the current schema produced by migrations 001 through 011. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions.
 
 ## Core Production Tables
 
@@ -34,7 +34,7 @@ It exposes application fields and GeoJSON-derived geometry: `geom_geojson` and `
 ### `public.activities`
 Private user activity rows. They are owned by `auth.users(id)`.
 
-Columns include `id`, `user_id`, `title`, `activity_date`, `source`, optional `geom`, `distance_miles`, `trip_report_url`, `notes`, and `created_at`.
+Columns include `id`, `user_id`, nullable controlled `activity_key`, `title`, `activity_date`, `source`, optional `geom`, `distance_miles`, `trip_report_url`, `notes`, and `created_at`. Migration 011 adds partial uniqueness on `(user_id, activity_key)` when the key is present. Authenticated users retain owner-scoped SELECT/DELETE and column-limited INSERT/UPDATE, but cannot insert or update `activity_key` or update `user_id`; the controlled loader uses `service_role`.
 
 ### `public.segment_completions`
 Durable user completion rows. Unique per `(user_id, segment_id)`.
@@ -76,6 +76,8 @@ Migration 007 creates service-controlled activity matching persistence: `activit
 
 GPS activity geometry is evidence, not canonical trail geometry. Strong candidates and accepted evidence do not create `segment_completions`.
 
+Migration 011 implements M7D-A controlled materialization. It adds nullable `completion_evidence.evidence_key` with partial uniqueness on `(user_id, evidence_key)`, protects accepted evidence from semantic mutation while allowing existing FK links to transition non-null to null during `ON DELETE SET NULL` cleanup, and adds the invoker-rights service-role-only `load_reviewed_completion_evidence_batch(uuid, jsonb, jsonb, jsonb)` RPC. The loader persists only owned activities and accepted private evidence.
+
 ### Publication Tables
 Migration 008 creates `publication_runs` and service-role publication loading. Publication records the verified network load/fingerprint and does not create user completion rows.
 
@@ -96,6 +98,8 @@ applySegmentCompletions()
 
 Private completion state must not be joined into public trail API queries or shared caches.
 
-## Future, Not Current: M7D
+## M7D Status
 
-Evidence confirmation/read RPCs are not current schema. M7D is expected to design sanitized evidence read/confirmation paths. Until then, raw `completion_evidence` remains isolated from normal authenticated table access.
+M7D-A controlled reviewed-evidence materialization is current schema in migration 011. Raw `completion_evidence` remains isolated from normal authenticated table access.
+
+M7D-B sanitized evidence read/confirmation RPCs and M7D-C evidence UI are future work. No current RPC exposes evidence to users or creates a `gpx_match` completion. Accepted evidence remains evidence until explicit confirmation is implemented.

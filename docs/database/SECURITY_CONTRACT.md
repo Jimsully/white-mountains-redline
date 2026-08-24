@@ -1,6 +1,6 @@
 # Database Security Contract
 
-The migrations remain authoritative. This document summarizes the intended current security boundary after migrations 001 through 010.
+The migrations remain authoritative. This document summarizes the intended current security boundary after migrations 001 through 011.
 
 ## Core Rules
 
@@ -37,10 +37,7 @@ The auth trigger `handle_new_auth_user_profile()` is `SECURITY DEFINER` only bec
 
 ## Activities
 
-Migration 009 makes activities authenticated-owner-only:
-- authenticated users can select/insert/update/delete only their own rows.
-- update policies include both `USING` and `WITH CHECK`.
-- anon has no activity access.
+Migration 009 makes activities owner-scoped through RLS. Migration 011 resets grants so authenticated users have table-level `SELECT`/`DELETE`, column-limited `INSERT` on user-owned activity fields, and column-limited `UPDATE` excluding `user_id` and controlled `activity_key`. Authenticated callers cannot forge or rewrite `activity-key-v2`; anon has no activity access. `service_role` retains deliberate loader privileges.
 
 ## Segment Completions
 
@@ -85,21 +82,24 @@ Execution is revoked from `public`, `anon`, and `authenticated`, then granted ex
 
 ## Evidence Isolation
 
-Migration 007 creates `completion_evidence`, but migration 009 and 010 keep raw evidence isolated:
+Migration 007 creates `completion_evidence`; migrations 009-011 keep raw evidence isolated:
 
 - `revoke all on public.completion_evidence from public, anon, authenticated`
-- related activity matching tables are also revoked from public roles
-- service_role retains controlled access
+- related activity matching tables remain revoked from public roles
+- `service_role` retains controlled access
+- accepted evidence is protected from semantic update by migration 011
+- nullable activity/match/segment FKs may only transition non-null to null for existing `ON DELETE SET NULL` cleanup
 
-M7D evidence confirmation is future work, not current schema.
+M7D-A can materialize reviewed private evidence through controlled tooling. M7D-B sanitized user reads/confirmation and M7D-C UI are not current schema.
 
 ## Service-Controlled RPCs
 
 Current service-role-only RPCs:
 - `load_source_trail_feature_batch(jsonb, jsonb)`
 - `load_verified_publication_batch(jsonb, jsonb, jsonb)`
+- `load_reviewed_completion_evidence_batch(uuid, jsonb, jsonb, jsonb)`
 
-Both are controlled server-side/admin tooling. They must not be callable from browsers.
+These are controlled server-side/admin tooling. The M7D-A loader is invoker-rights, validates non-demo payloads, resolves verified production segment keys internally, compares stable identities without rewriting accepted rows, and returns safe counts only. Migration 011 explicitly grants `service_role` its required `public`/`extensions` schema usage, `activities` identity-sequence usage, `trails`/`trail_segments` reads, exact PostGIS function execution, and activity/evidence table mutations; it does not grant those loader dependencies to browser roles. Supabase `service_role` must retain its platform `BYPASSRLS` role property. These RPCs must not be callable from browsers.
 
 ## Predeployment Requirement
 

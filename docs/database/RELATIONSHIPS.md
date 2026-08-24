@@ -1,6 +1,6 @@
 # Database Relationships
 
-This document summarizes current foreign keys and deletion behavior from migrations 001 through 010. Migrations remain authoritative.
+This document summarizes current foreign keys and deletion behavior from migrations 001 through 011. Migrations remain authoritative.
 
 ## Auth Ownership
 
@@ -115,7 +115,9 @@ activity_segment_match_candidates
   -> completion_evidence.match_candidate_id on delete set null
 ```
 
-GPS traces, match candidates, and accepted evidence remain evidence. They do not create `segment_completions` without explicit confirmation.
+Migration 011 adds user-scoped stable identities through `activities.activity_key` and `completion_evidence.evidence_key`; these are unique only when non-null for backward compatibility. M7D-A leaves `completion_evidence.match_candidate_id` null and does not populate the match-run tables.
+
+After evidence is accepted, semantic fields are immutable. Existing nullable `activity_id`, `match_candidate_id`, and `future_trail_segment_id` links may transition from non-null to null so their `ON DELETE SET NULL` actions still work; they cannot be relinked. GPS traces, match candidates, and accepted evidence remain evidence and do not create `segment_completions` without explicit confirmation.
 
 ## API Projection Relationship
 
