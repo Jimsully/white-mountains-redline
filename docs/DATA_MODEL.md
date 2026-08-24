@@ -34,6 +34,8 @@ Join between user and segment. It records completion date, method, linked activi
 
 M7D-B adds no columns or relationships. Its database RPC boundary creates an evidence-backed row only after explicit authenticated confirmation, with `completion_method = 'gpx_match'`, null confidence/notes, and `completed_on` derived only from the immutable validated `completion_evidence.provenance.activityDate` snapshot. Accepted evidence without confirmation remains evidence, not completion. Raw evidence stays private; the read RPC returns only a fixed sanitized owner projection.
 
+M7D-C adds application types for that fixed projection and confirmation result, not new persistence. Dates remain serializable strings and production bigint segment IDs remain validated decimal strings. The SSR repository validates the complete sanitized projection, while the client account section receives only the opaque evidence ID and fields it displays: trail/segment names, region, evidence source, optional activity title, and immutable activity date. It does not receive the unused segment ID or acceptance timestamp, raw evidence, or matching internals.
+
 ## TypeScript domain concepts
 - `SourceTrailFeature`: raw source GIS feature, original attributes, raw geometry, source URLs/record refs, and reconciliation status.
 - `Trail`: named route concept after reconciliation.

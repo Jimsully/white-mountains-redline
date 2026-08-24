@@ -30,7 +30,7 @@ Protected routes must verify the session server-side. UI code must not trust arb
 - `/login` supports email magic links, Google OAuth, and Apple OAuth.
 - `/auth/callback` exchanges PKCE/code callbacks and accepts only safe same-origin relative return paths.
 - `/auth/sign-out` signs out and redirects to a safe relative path.
-- `/account` is protected and allows editing `display_name`, `username`, and `is_public`.
+- `/account` is protected, allows editing `display_name`, `username`, and `is_public`, and lists the owner's sanitized confirmable evidence through the M7D-B RPC boundary.
 
 ## Profile Persistence
 
@@ -71,7 +71,11 @@ Segment completions:
 - authenticated insert/update/delete privileges are revoked
 - M7 will deliberately introduce the completion mutation contract
 
-Completion evidence and activity-matching review tables remain service/admin controlled. GPS evidence is not completion state.
+Completion evidence and activity-matching review tables remain service/admin controlled. Normal account code never queries raw `completion_evidence`. It uses `list_confirmable_completion_evidence()` for a fixed sanitized owner projection and submits only an opaque evidence UUID to `confirm_completion_evidence(uuid)`.
+
+The M7D-C account section shows trail name, segment name, region, activity date, optional activity title, and a friendly source label. Raw evidence, provenance, geometry, activity IDs, matching keys, metrics, and service metadata do not enter UI state. Confirmation is explicit; accepted evidence alone does not change progress. The database derives `completed_on` solely from the immutable M7D-A `provenance.activityDate` snapshot.
+
+Manual mark/unmark and evidence confirmation revalidate both the authenticated progress route and `/account`, allowing evidence to disappear after completion and naturally return after unmarking. Migrations 011/012 remain unapplied live, so database-backed acceptance is still required.
 
 ## Product Boundary
 
