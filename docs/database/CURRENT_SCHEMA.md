@@ -1,6 +1,6 @@
 # Current Database Schema
 
-This document summarizes the current schema produced by migrations 001 through 011. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions.
+This document summarizes the repository schema produced by migrations 001 through 012. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions. Migration 012 is implemented locally and has not been applied live.
 
 ## Core Production Tables
 
@@ -78,6 +78,8 @@ GPS activity geometry is evidence, not canonical trail geometry. Strong candidat
 
 Migration 011 implements M7D-A controlled materialization. It adds nullable `completion_evidence.evidence_key` with partial uniqueness on `(user_id, evidence_key)`, protects accepted evidence from semantic mutation while allowing existing FK links to transition non-null to null during `ON DELETE SET NULL` cleanup, and adds the invoker-rights service-role-only `load_reviewed_completion_evidence_batch(uuid, jsonb, jsonb, jsonb)` RPC. The loader persists only owned activities and accepted private evidence.
 
+Migration 012 adds no tables or FKs. It defines the internal `validated_completion_evidence_activity_date(jsonb)` helper, the authenticated owner-only sanitized `list_confirmable_completion_evidence()` RPC, and the explicit owner-only `confirm_completion_evidence(uuid)` RPC. Confirmation derives `completed_on` only from validated immutable `provenance.activityDate` and creates a `gpx_match` completion only after explicit user action. Raw evidence remains unavailable through table privileges or RPC output.
+
 ### Publication Tables
 Migration 008 creates `publication_runs` and service-role publication loading. Publication records the verified network load/fingerprint and does not create user completion rows.
 
@@ -100,6 +102,6 @@ Private completion state must not be joined into public trail API queries or sha
 
 ## M7D Status
 
-M7D-A controlled reviewed-evidence materialization is current schema in migration 011. Raw `completion_evidence` remains isolated from normal authenticated table access.
+M7D-A controlled reviewed-evidence materialization is implemented in migration 011. M7D-B's database authorization boundary is implemented locally in migration 012, which has not been applied live. Raw `completion_evidence` remains isolated from normal authenticated table access; user-facing RPCs expose only fixed sanitized data.
 
-M7D-B sanitized evidence read/confirmation RPCs and M7D-C evidence UI are future work. No current RPC exposes evidence to users or creates a `gpx_match` completion. Accepted evidence remains evidence until explicit confirmation is implemented.
+Accepted evidence remains evidence until the owner explicitly invokes confirmation. M7D-C application repositories, server actions, browser RPC integration, and evidence UI remain future work.

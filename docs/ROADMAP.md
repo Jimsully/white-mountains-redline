@@ -22,7 +22,7 @@ Added the verified publication gate between topology-approved segment constructi
 Added authenticated user accounts, durable user profile state, and private ownership boundaries for account and activity persistence.
 
 ## M7 User completion workflow + activity evidence promotion — IN PROGRESS
-M7A manual completion security, M7B persisted manual completion, and M7C segment browsing with synchronized map selection are complete. M7C passed manual localhost acceptance. M7D-A now provides controlled service-role materialization of reviewed private GPS evidence into owned activities and accepted completion evidence. M7D-B sanitized evidence read/confirmation RPCs and M7D-C evidence UI are not implemented; M7E scroll-active selection remains optional later polish. GPS evidence remains evidence and does not become completion without explicit user confirmation.
+M7A manual completion security, M7B persisted manual completion, and M7C segment browsing with synchronized map selection are complete. M7C passed manual localhost acceptance. M7D-A provides controlled service-role materialization of reviewed private GPS evidence into owned activities and accepted completion evidence. M7D-B now implements the local authenticated database authorization boundary for sanitized evidence reads and explicit evidence confirmation; migration 012 has not been applied live. M7D-C evidence UI is still future work, and M7E scroll-active selection remains optional later polish. GPS evidence remains evidence and does not become completion without explicit user confirmation.
 
 ## M8 Public trail pages / website / SEO
 Expand public trail browsing, static trail pages, search/indexing polish, and website integration for jamesscottsullivan.com.

@@ -1,6 +1,6 @@
 # Database Relationships
 
-This document summarizes current foreign keys and deletion behavior from migrations 001 through 011. Migrations remain authoritative.
+This document summarizes current foreign keys and deletion behavior from migrations 001 through 012. Migrations remain authoritative. Migration 012 adds functions only and does not change these relationships.
 
 ## Auth Ownership
 
@@ -50,7 +50,7 @@ Important implications:
 - Deleting evidence referenced by a completion is blocked by `ON DELETE NO ACTION`.
 - Authenticated users may not update `segment_completions`.
 
-M7A currently supports authenticated manual completion only. GPS/evidence confirmation is future M7D work.
+M7A direct authenticated inserts remain manual-only. M7D-B adds a separate owner-only confirmation RPC that can create a `gpx_match` completion from accepted evidence after explicit confirmation; it does not broaden direct table privileges. Deleting/unmarking that completion leaves the accepted evidence intact, so otherwise eligible evidence can be listed and explicitly confirmed again.
 
 ## Raw Source Import Graph
 

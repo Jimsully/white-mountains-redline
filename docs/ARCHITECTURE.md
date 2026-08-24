@@ -147,3 +147,9 @@ Auth/session code is centralized in `lib/supabase/*` and account/profile persist
 `proxy.ts` uses the current cookie-backed Supabase SSR pattern to refresh sessions, copies Supabase cache-protection headers, and no-ops when Supabase public config is absent, so CI and demo builds do not require credentials. Server routes verify users with `auth.getUser()` instead of trusting raw cookies; the proxy uses `auth.getClaims()` for request-time session refresh/validation. Production auth redirects require a configured HTTPS `NEXT_PUBLIC_SITE_URL`, while public Supabase trail reads remain available with only public API config.
 
 M6 does not create `segment_completions`, mark segments completed from auth state, or promote activity evidence. M7 owns the completion mutation contract.
+
+## Evidence Confirmation Boundary
+
+M7D-A materializes reviewed GPS evidence into private owned activities and accepted `completion_evidence` without creating completions. Migration 012 implements M7D-B locally as two authenticated `SECURITY DEFINER` RPCs: a sanitized owner-only confirmable-evidence projection and an explicit confirmation operation that derives a `gpx_match` completion internally. Both use an empty search path, owner identity from `auth.uid()`, and the verified/human-reviewed segment-plus-parent publication gate. Confirmation takes only an opaque evidence UUID; it never accepts caller-controlled completion fields.
+
+The evidence-backed completion date comes only from the immutable M7D-A `provenance.activityDate` snapshot. Raw evidence and matching internals remain unavailable to browser roles. M7D-C repository, server-action, and UI integration remain future work, and migration 012 has not been applied live.

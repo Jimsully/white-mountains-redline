@@ -32,6 +32,8 @@ A user's hike/import: date, title, source, optional GPS geometry, total distance
 ## `segment_completions`
 Join between user and segment. It records completion date, method, linked activity, optional confidence, notes. Unique per user+segment.
 
+M7D-B adds no columns or relationships. Its database RPC boundary creates an evidence-backed row only after explicit authenticated confirmation, with `completion_method = 'gpx_match'`, null confidence/notes, and `completed_on` derived only from the immutable validated `completion_evidence.provenance.activityDate` snapshot. Accepted evidence without confirmation remains evidence, not completion. Raw evidence stays private; the read RPC returns only a fixed sanitized owner projection.
+
 ## TypeScript domain concepts
 - `SourceTrailFeature`: raw source GIS feature, original attributes, raw geometry, source URLs/record refs, and reconciliation status.
 - `Trail`: named route concept after reconciliation.
