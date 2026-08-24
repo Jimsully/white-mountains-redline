@@ -103,7 +103,7 @@ The immutable validated M7D-A `provenance.activityDate` snapshot is the sole sou
 
 Under the standard linked Supabase CLI `db push` path, migrations use the default `postgres` database role, so a clean migration 012 application is expected to create all three functions with `postgres` ownership. That role also created/owns the repository tables in a clean migration chain and therefore supplies the required table reads, completion insert, and row-lock authority. Custom `--db-url` roles, self-hosted ownership, or pre-existing function signatures can differ, so deployment must verify `pg_proc.proowner` and effective privileges rather than assuming this behavior.
 
-M7D-C application and UI integration remain future work.
+M7D-C application and UI integration use only these two authenticated RPCs. Normal application code does not query `completion_evidence`, use `service_role`, or derive completion fields from browser input. The browser receives only the sanitized list projection and sends the opaque evidence UUID required for confirmation. Application authentication is defense in depth; database `auth.uid()` remains authoritative. Migrations 011/012 and database-backed M7D-C acceptance remain unapplied/unverified live.
 
 ## Service-Controlled RPCs
 

@@ -4,7 +4,7 @@ Read this at the start of future database work. Migrations in `supabase/migratio
 
 ## Current State
 
-Migrations 001-012 define the repository database contract; migration 012 is local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B now provides sanitized owner reads plus explicit owner confirmation. M7D-C application/UI integration remains future work.
+Migrations 001-012 define the repository database contract; migrations 011/012 are local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C now implements the local authenticated SSR repository, server action, and account evidence UI, but database-backed acceptance remains outstanding.
 
 ## Hard Product Rules
 
@@ -61,6 +61,8 @@ Current narrow `SECURITY DEFINER` boundaries:
 - `confirm_completion_evidence(uuid)` for explicit owner confirmation.
 
 They use fixed `search_path = ''` and fully qualified objects. The date validator is internal and revoked from application roles. Do not add broad helper frameworks.
+
+M7D-C application code uses `CompletionEvidenceRepository` with the authenticated SSR Supabase client and no caller user ID. It calls only the two RPCs above, validates response shapes, preserves bigint segment IDs as strings, and exposes only the fixed sanitized projection. The confirmation action reads only `evidenceId`; all ownership, publication, date, and completion semantics remain database-derived. Manual mark/unmark and evidence confirmation refresh both `/` and `/account` as applicable.
 
 ## M7B Composition
 

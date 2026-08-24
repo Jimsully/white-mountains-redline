@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { EvidenceConfirmationSection } from "@/app/account/EvidenceConfirmationSection";
+import type { EvidenceConfirmationItem } from "@/app/account/EvidenceConfirmationSection";
 import { updateProfileAction } from "@/lib/accounts/actions";
 import { ProfileRepository } from "@/lib/accounts/profile-repository";
 import { loginPathForReturn } from "@/lib/accounts/redirects";
+import { CompletionEvidenceRepository } from "@/lib/completions/completion-evidence-repository";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 type AccountPageProps = {
@@ -15,8 +18,21 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   if (!auth.supabase || !auth.user) redirect(loginPathForReturn("/account"));
 
   const params = await searchParams;
-  const repository = new ProfileRepository(auth.supabase, auth.user.id);
-  const profile = await repository.ensureProfile();
+  const profileRepository = new ProfileRepository(auth.supabase, auth.user.id);
+  const evidenceRepository = new CompletionEvidenceRepository(auth.supabase);
+  const evidencePromise = evidenceRepository.listConfirmableEvidence()
+    .then((evidence) => ({ evidence, loadFailed: false }))
+    .catch(() => ({ evidence: [], loadFailed: true }));
+  const [profile, evidenceState] = await Promise.all([profileRepository.ensureProfile(), evidencePromise]);
+  const evidenceItems: EvidenceConfirmationItem[] = evidenceState.evidence.map((item) => ({
+    evidenceId: item.evidenceId,
+    trailName: item.trailName,
+    segmentName: item.segmentName,
+    region: item.region,
+    evidenceSource: item.evidenceSource,
+    activityTitle: item.activityTitle,
+    activityDate: item.activityDate,
+  }));
   const provider = auth.user.app_metadata?.provider;
   const error = first(params?.error);
   const status = first(params?.status);
@@ -35,7 +51,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </form>
         </div>
 
-        <p className="lede">Your profile belongs only to your authenticated Supabase user. Completion workflows are intentionally not active in this milestone.</p>
+        <p className="lede">Manage your profile and review activity evidence associated with your authenticated account.</p>
         {status === "saved" ? <div className="notice" role="status">Profile saved.</div> : null}
         {error ? <div className="notice errorNotice" role="alert">{error}</div> : null}
 
@@ -61,6 +77,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </label>
           <button type="submit">Save profile</button>
         </form>
+
+        <EvidenceConfirmationSection evidence={evidenceItems} loadFailed={evidenceState.loadFailed} />
 
         <p className="accountFooter"><Link href="/">Back to public map</Link></p>
       </section>

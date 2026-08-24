@@ -3,6 +3,26 @@ export type SelectionOrigin = "initial" | "filter" | "list" | "map";
 
 export type CompletionMethod = "manual" | "gpx_match" | "admin";
 
+export type CompletionEvidenceSource = "historical_gps" | "gpx_import" | "connected_service";
+
+export type ConfirmableCompletionEvidence = {
+  evidenceId: string;
+  segmentId: string;
+  trailName: string;
+  segmentName: string;
+  region: string;
+  evidenceSource: CompletionEvidenceSource;
+  acceptedAt: string;
+  activityTitle: string | null;
+  activityDate: string;
+};
+
+export type EvidenceConfirmationStatus = "confirmed" | "already_confirmed" | "already_completed" | "not_confirmable";
+
+export type EvidenceConfirmationResult =
+  | { status: "not_confirmable"; segmentId: null }
+  | { status: Exclude<EvidenceConfirmationStatus, "not_confirmable">; segmentId: string };
+
 export type SegmentCompletion = {
   id: string;
   segmentId: string;
@@ -38,6 +58,7 @@ export type CompletionValidationResult =
 const positiveDecimalPattern = /^[1-9][0-9]*$/;
 const maxPostgresBigint = BigInt("9223372036854775807");
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const canonicalUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function mapSegmentCompletionRow(row: SegmentCompletionRow): SegmentCompletion {
   return {
@@ -70,6 +91,10 @@ export function validateManualCompletionInput(input: ManualCompletionInput): Com
 export function isValidProductionSegmentId(value: string) {
   if (!positiveDecimalPattern.test(value)) return false;
   return BigInt(value) <= maxPostgresBigint;
+}
+
+export function isValidCanonicalUuid(value: string) {
+  return canonicalUuidPattern.test(value);
 }
 
 export function normalizeCompletedOn(value: string | null | undefined) {

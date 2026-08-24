@@ -48,7 +48,8 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Confirm loader results contain counts/fingerprint only, never geometry, evidence, or provenance.
 - [ ] Confirm the internal activity-date helper rejects malformed dates and is not executable by application roles.
 - [ ] Confirm the list/confirm RPCs are executable by `authenticated` only and expose no raw evidence, provenance, geometry, matching keys, metrics, or service metadata.
-- [ ] Confirm M7D-C application/UI behavior is not assumed to exist.
+- [ ] Confirm the M7D-C application calls only the two sanitized RPCs and never queries raw `completion_evidence`.
+- [ ] Confirm evidence confirmation submits only the opaque evidence UUID and does not accept caller-controlled completion semantics.
 
 ## Profile And Activity RLS
 
@@ -94,3 +95,14 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Repeat ownership checks for custom `--db-url` or self-hosted deployment paths instead of assuming standard hosted behavior.
 - [ ] Race activity/evidence/segment/account deletion against confirmation and verify only safe serial outcomes or `not_confirmable` for expected FK failures.
 - [ ] Exercise RLS and GRANT behavior through actual Supabase/PostgREST, not only direct SQL or static tests.
+
+## M7D-C Database-Backed Acceptance
+
+- [ ] Use a disposable/local Supabase instance with migrations 001-012 and controlled QA-owned evidence; do not fabricate production evidence.
+- [ ] Confirm an authenticated account sees only its own sanitized confirmable evidence and foreign evidence remains invisible.
+- [ ] Confirm Mark complete invokes the confirmation RPC, removes the evidence row, and updates authenticated progress.
+- [ ] Confirm an existing manual completion is preserved and produces the benign already-completed outcome.
+- [ ] Confirm unmark deletes only the completion, leaves evidence intact, and allows eligible evidence to return.
+- [ ] Confirm `not_confirmable` is non-specific and does not enumerate foreign, deleted, malformed, or unpublished evidence.
+- [ ] Inspect browser/network application payloads and confirm no raw evidence fields appear beyond the fixed sanitized RPC contract and opaque UUID.
+- [ ] Treat automated M7D-C repository/action/UI tests as necessary but not a substitute for this database-backed acceptance.

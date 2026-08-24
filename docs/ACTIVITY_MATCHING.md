@@ -3,7 +3,7 @@
 Milestone 4 introduced local historical activity-to-segment matching. It answers which human-approved, published segments a GPS trace may support as completion evidence.
 
 ```text
-raw GIS -> reconciliation -> segment construction -> verified publication -> historical GPS activity -> algorithmic match candidate -> human-reviewed completion evidence -> future explicit user confirmation -> SegmentCompletion
+raw GIS -> reconciliation -> segment construction -> verified publication -> historical GPS activity -> algorithmic match candidate -> human-reviewed completion evidence -> explicit user confirmation -> SegmentCompletion
 ```
 
 ## Safety Rules
@@ -59,10 +59,12 @@ Stable activity/evidence identities make exact reruns reusable. Existing rows ar
 
 ## M7D-B Evidence Confirmation Boundary
 
-Migration 012 implements the local database authorization boundary for future M7D-C UI. `list_confirmable_completion_evidence()` exposes only an owner-scoped sanitized projection; raw evidence, provenance, geometry, matching keys, metrics, and service metadata remain private. `confirm_completion_evidence(uuid)` requires explicit authenticated confirmation and derives every protected completion field internally.
+Migration 012 implements the local database authorization boundary used by M7D-C. `list_confirmable_completion_evidence()` exposes only an owner-scoped sanitized projection; raw evidence, provenance, geometry, matching keys, metrics, and service metadata remain private. `confirm_completion_evidence(uuid)` requires explicit authenticated confirmation and derives every protected completion field internally.
 
 Evidence-backed `completed_on` comes only from the immutable M7D-A `provenance.activityDate` snapshot after strict validation. It never falls back to mutable `activities.activity_date`, `accepted_at`, or the current date. A successful confirmation creates `SegmentCompletion(method = gpx_match)`; accepted evidence alone still creates no completion. Migration 012 has not been applied live.
 
-## Future M7D-C
+## M7D-C Application Integration
 
-M7D-C account evidence UI, browser integration, and confirmation actions are not implemented.
+M7D-C implements an authenticated `/account` evidence section and server action. The SSR repository uses only the two M7D-B RPCs, validates their fixed response shapes, and preserves PostgreSQL bigint segment IDs as strings. The form submits only the opaque evidence UUID; it does not submit user, segment, activity, date, method, confidence, or notes.
+
+Confirmation success refreshes account evidence and authenticated progress. Manual mark/unmark also refreshes `/account`, so unmarking can make eligible evidence confirmable again without a client-side consumed flag. Migrations 011/012 have not been applied live, and automated application tests are not a substitute for database-backed confirmation acceptance.

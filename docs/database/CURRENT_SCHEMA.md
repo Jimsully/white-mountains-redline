@@ -104,4 +104,4 @@ Private completion state must not be joined into public trail API queries or sha
 
 M7D-A controlled reviewed-evidence materialization is implemented in migration 011. M7D-B's database authorization boundary is implemented locally in migration 012, which has not been applied live. Raw `completion_evidence` remains isolated from normal authenticated table access; user-facing RPCs expose only fixed sanitized data.
 
-Accepted evidence remains evidence until the owner explicitly invokes confirmation. M7D-C application repositories, server actions, browser RPC integration, and evidence UI remain future work.
+Accepted evidence remains evidence until the owner explicitly invokes confirmation. M7D-C application integration is implemented locally: an authenticated SSR repository uses only the two M7D-B RPCs, and the account action submits only the opaque evidence UUID. No schema or relationship changed for M7D-C. Migrations 011/012 remain unapplied live, and database-backed acceptance is outstanding.
