@@ -82,11 +82,18 @@ Use map-matching/graph continuity so overlapping trails, road walks, switchbacks
 ## SEO / website integration
 Preferred production URL: `jamesscottsullivan.com/redline` if the existing site stack can host/proxy Next.js cleanly. Otherwise use `trails.jamesscottsullivan.com` and cross-link strongly.
 
-Indexable routes:
-- `/redline`
-- `/trails/[slug]`
-- `/regions/[slug]`
-- `/redliners/[username]`
+`NEXT_PUBLIC_SITE_URL` is the full public app base URL and may include a path prefix such as `/redline`. SEO canonicals and metadata route URLs must preserve that prefix; do not use auth URL helpers that collapse to `url.origin` for SEO URL construction.
+
+M8C indexable route foundation:
+- `/`
+- `/trails`
+- `/trails/[trailSlug]`
+
+Filtered directory query URLs remain browseable but canonicalize to `/trails` and are `noindex, follow`. Account, login, auth, and admin routes are discouraged from indexing/crawling. Public indexing is enabled only for production HTTPS Supabase-backed public configuration; demo/runtime fallback must not advertise demo trail-detail URLs in the sitemap.
+
+The production SEO/indexing contract is build-sensitive. Before a production `next build`, the intended deployment values must already be present for `NEXT_PUBLIC_SITE_URL`, `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Next metadata routes such as sitemap/robots are cached by default, root metadata reads environment/config assumptions, `generateStaticParams()` runs during build, and trail static generation depends on repository/config state available at build time. Changing only runtime environment variables after the artifact is built must not be relied on to regenerate metadata assumptions, sitemap/robots behavior, or the statically generated trail route inventory. Rebuild when production configuration changes materially, and do not promote/reuse artifacts across different public app base URLs, repository modes, or public indexing configurations. This requires only public Supabase configuration, not service-role credentials; robots/noindex remain indexing guidance, while authentication/RLS remain the security boundary.
+
+Structured data is intentionally deferred until verified public trail records are paired with authored content rich enough to avoid semantic overclaiming.
 
 Keep the interactive app useful without login; require login only to save personal progress.
 

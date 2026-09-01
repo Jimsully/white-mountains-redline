@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EvidenceConfirmationSection } from "@/app/account/EvidenceConfirmationSection";
@@ -8,6 +9,12 @@ import { ProfileRepository } from "@/lib/accounts/profile-repository";
 import { loginPathForReturn } from "@/lib/accounts/redirects";
 import { CompletionEvidenceRepository } from "@/lib/completions/completion-evidence-repository";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
+import { privateRobots } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = {
+  title: "Account",
+  robots: privateRobots,
+};
 
 type AccountPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

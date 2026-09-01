@@ -26,8 +26,8 @@ Completed authenticated manual completion security, persisted user completion st
 
 ## M8 Public trail pages / website / SEO
 M8A - real public trail detail foundation - COMPLETE.
-M8B - public trail directory/search/navigation - implemented on this branch; pending acceptance before COMPLETE. Authenticated directory progress filters remain later polish; the directory currently stays public-only.
-M8C - SEO/indexing foundation.
+M8B - public trail directory/search/navigation - COMPLETE. Authenticated directory progress filters remain later polish; the directory currently stays public-only.
+M8C - SEO/indexing foundation - implemented/current on this branch pending acceptance.
 M8D - confirmed jamesscottsullivan.com / authored-content integration.
 M8E - responsive/accessibility/design polish.
 

@@ -7,7 +7,7 @@ Independent White Mountains trail-completion tracker intended to live alongside 
 - MapLibre interactive map.
 - Trail repository abstraction with demo and Supabase adapters.
 - Demo trail segment completion toggles, filtering, and progress calculation.
-- Indexable demo trail route.
+- Public map, trail directory, and trail detail routes with SEO metadata guarded against demo indexing.
 - Supabase/PostGIS production schema, raw source GIS staging schema, and read-only API projection view.
 - Repeatable USFS ArcGIS importer for a Franconia/Pemigewasset pilot ingestion envelope.
 - Product, architecture, data-model, data-pipeline, IP/data, and roadmap docs.
@@ -45,6 +45,22 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
 The Supabase adapter reads from `public.trail_segment_api`, a read-only projection view created by migration 003 and hardened by migration 013. Browser roles (`anon` and `authenticated`) read verified trail network records through that view only; they do not have direct privileges on `public.trails` or `public.trail_segments`. The view runs as owner-rights with `security_barrier=true`, and its explicit verified plus human-verified predicates are the public publication boundary. Service-controlled/admin workflows retain separate privileges. Clients never parse PostGIS WKB/hex.
+
+## Public URLs and indexing
+`NEXT_PUBLIC_SITE_URL` is the full public app base URL, not just an origin. It may include a path prefix such as `https://jamesscottsullivan.com/redline`. M8C does not choose the final production host or configure reverse-proxy/basePath behavior.
+
+Public indexing is enabled only when all of these are true:
+
+- `NODE_ENV=production`
+- `NEXT_PUBLIC_SITE_URL` is a valid HTTPS URL
+- `TRAIL_REPOSITORY=supabase`
+- `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present
+
+Production SEO/indexing configuration is a build-time deployment input. Before running a production `next build`, set the intended production `NEXT_PUBLIC_SITE_URL`, `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and the supported public Supabase publishable/anon key variable. A build without the intended full public app base URL, including any path prefix, is invalid for promotion. Do not promote or reuse production artifacts across different public app base URLs, repository modes, or public indexing configurations. Changing only runtime environment variables after a build must not be relied on to regenerate metadata assumptions, sitemap/robots behavior, or the statically generated trail route inventory; rebuild the application when production configuration changes materially. Service-role credentials are not required for this public SEO build contract.
+
+Demo/local browsing remains usable, but robots metadata, `robots.txt`, and `sitemap.xml` err toward noindex behavior unless that deterministic configuration gate passes. The sitemap includes `/`, `/trails`, and verified public trail-detail URLs only in the safe Supabase-backed production configuration. Query-state directory URLs such as `/trails?q=...` and `/trails?region=...` canonicalize to `/trails` and are marked `noindex, follow`.
+
+Structured data is intentionally deferred until authored public trail content is rich enough to avoid overclaiming hiking-trail/place semantics.
 
 ## Import raw USFS source data
 Download and write deterministic staging artifacts only:
