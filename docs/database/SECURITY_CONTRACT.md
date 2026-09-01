@@ -1,6 +1,6 @@
 # Database Security Contract
 
-The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 012. Migration 012 is implemented locally and has not been applied live.
+The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 013. Migrations 011-013 are implemented locally and have not been applied live.
 
 ## Core Rules
 
@@ -21,9 +21,13 @@ Public production trail data is available only through verified/human-reviewed r
 - `trail_segments.data_status = 'verified'`
 - `trail_segments.verification_status = 'human_verified'`
 
-Migration 008 recreates `trail_segment_api` as a verified-only `security_invoker` view and grants `SELECT` on that view to `anon` and `authenticated`.
+Migration 008 recreates `trail_segment_api` as a verified-only view and grants `SELECT` on that view to `anon` and `authenticated`.
 
-Outstanding audit: clean-bootstrap behavior for `trail_segment_api` needs review because the view is `security_invoker` and migrations grant `SELECT` on the view, but do not explicitly grant anon/authenticated `SELECT` on base `trails` and `trail_segments`.
+Clean local Supabase bootstrap/runtime inspection of migrations 001-012 proved the row-security gate passed but public projection isolation failed: default public-schema ACLs let anon/authenticated PostgREST requests hit `/rest/v1/trails` and `/rest/v1/trail_segments` directly and retrieve internal columns, including `verification_notes`, publication fingerprints, timestamps, and raw geometry. A synthetic internal `verification_notes` value was returned through anon PostgREST.
+
+Migration 013 is the corrective boundary. It changes `trail_segment_api` to owner-rights with `security_invoker = false` and `security_barrier = true`, revokes all privileges on `trails`, `trail_segments`, and `trail_segment_api` from `PUBLIC`, `anon`, and `authenticated`, then grants only `SELECT` on `trail_segment_api` to `anon` and `authenticated`. It does not revoke `service_role`, alter default privileges, change table RLS policies, remove RLS, or change the view SELECT definition.
+
+After migration 013, `trail_segment_api` is the only trail-network relation available to anon/authenticated application roles. Base `trails` and `trail_segments` are administrative/publication tables, not direct browser/API relations. Because the view owner is expected to be `postgres`, public filtering relies on the view's explicit verified-only predicates rather than base-table RLS during view execution.
 
 ## Profiles
 
@@ -116,4 +120,4 @@ These are controlled server-side/admin tooling. The M7D-A loader is invoker-righ
 
 ## Predeployment Requirement
 
-Static migration-contract tests are helpful, but they do not prove live PostgreSQL behavior. Before deployment, run actual PostgreSQL/Supabase tests for RLS policies, grants, column-level insert privileges, `SECURITY DEFINER` execution, and view/base-table privilege behavior.
+Static migration-contract tests are helpful, but they do not prove live PostgreSQL behavior. Before deployment, run actual PostgreSQL/Supabase tests for RLS policies, grants, column-level insert privileges, `SECURITY DEFINER` execution, and view/base-table privilege behavior, including the migration 013 projection hardening runtime gates.

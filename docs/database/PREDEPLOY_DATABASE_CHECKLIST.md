@@ -4,19 +4,21 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 
 ## Migration Chain
 
-- [ ] Apply migrations 001 through 012 in order to a disposable clean Supabase/PostgreSQL instance.
+- [ ] Apply migrations 001 through 013 in order to a disposable clean Supabase/PostgreSQL instance.
 - [ ] Confirm PostGIS extension is available in `extensions`.
 - [ ] Confirm migration 010 applies after 007 because `segment_completions.completion_evidence_id` references `completion_evidence`.
 - [ ] Confirm no local-only/demo publication or activity-matching artifacts are loaded into production.
 - [ ] Confirm migration 011 applies after migrations 007, 009, and 010 and adds only M7D-A materialization objects.
 - [ ] Confirm migration 012 applies after migration 011 and adds only the internal date helper plus sanitized list/confirm RPCs, with no table, FK, RLS, or direct table-grant changes.
+- [ ] Confirm migration 013 applies after migration 012 and changes only `trail_segment_api` reloptions plus trail-network relation privileges.
 
 ## Public Trail API
 
 - [ ] Verify `trail_segment_api` returns only rows where both segment and parent trail are `verified` and `human_verified`.
 - [ ] Verify clients receive GeoJSON coordinates and do not need PostGIS WKB/hex.
-- [ ] Audit clean-bootstrap privileges for `trail_segment_api`: it is `security_invoker`, and migrations explicitly grant `SELECT` on the view but not explicit anon/authenticated `SELECT` on underlying `trails` / `trail_segments`.
-- [ ] Decide whether to add explicit base-table grants, change view security strategy, or otherwise document the Supabase default privilege requirement before production.
+- [ ] Confirm `trail_segment_api` has `security_invoker = false` and `security_barrier = true`.
+- [ ] Confirm anon/authenticated can `SELECT` only `trail_segment_api`; direct `trails` and `trail_segments` PostgREST requests are denied.
+- [ ] Confirm the runtime defect found on clean migrations 001-012 is closed: anon/authenticated cannot retrieve internal base-table columns such as `verification_notes`, publication fingerprints, timestamps, or raw `geom`.
 
 ## Segment Completion Security
 
@@ -95,6 +97,7 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Repeat ownership checks for custom `--db-url` or self-hosted deployment paths instead of assuming standard hosted behavior.
 - [ ] Race activity/evidence/segment/account deletion against confirmation and verify only safe serial outcomes or `not_confirmable` for expected FK failures.
 - [ ] Exercise RLS and GRANT behavior through actual Supabase/PostgREST, not only direct SQL or static tests.
+- [ ] Run migration 013 runtime acceptance on disposable/local Supabase: migrations 001-013 apply from zero, a second clean reset also succeeds, view reloptions are correct, anon/authenticated view SELECT succeeds, anon/authenticated direct `trails` and `trail_segments` reads are denied, verified fixtures remain visible, unverified fixtures are hidden, verified segments with unverified parents are hidden, base internal columns cannot be retrieved through PostgREST, anon/auth write attempts fail, service-role publication behavior remains functional, and application tests/build remain green.
 
 ## M7D-C Database-Backed Acceptance
 
