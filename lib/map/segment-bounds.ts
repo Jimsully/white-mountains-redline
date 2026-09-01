@@ -36,6 +36,16 @@ export function getSegmentBounds(coordinates: TrailSegment["coordinates"]): Segm
   return [roundBound(west), roundBound(south), roundBound(east), roundBound(north)];
 }
 
+export function mergeSegmentBounds(current: SegmentBounds | undefined, next: SegmentBounds): SegmentBounds {
+  if (!current) return next;
+  return [
+    roundBound(Math.min(current[0], next[0])),
+    roundBound(Math.min(current[1], next[1])),
+    roundBound(Math.max(current[2], next[2])),
+    roundBound(Math.max(current[3], next[3])),
+  ];
+}
+
 export function cameraDurationForReducedMotion(reducedMotion: boolean) {
   return reducedMotion ? 0 : 500;
 }

@@ -20,6 +20,7 @@ function segment(id: string, completed = false): TrailSegment {
     id,
     slug: `segment-${id}`,
     trailId: "trail-1",
+    trailSlug: "trail",
     trailName: "Trail",
     segmentName: `Segment ${id}`,
     region: "Franconia-Pemigewasset",
