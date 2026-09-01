@@ -1,4 +1,5 @@
 import type { TrailRepository } from "@/lib/repositories/trail-repository";
+import { aggregateTrailSegments, getTrailBySlugFromSegments } from "@/lib/trails/trail-aggregation";
 import type { DataStatus, TrailRegion, TrailSegment, VerificationStatus } from "@/types/trails";
 
 type TrailSegmentApiRow = {
@@ -47,6 +48,21 @@ export class SupabaseTrailRepository implements TrailRepository {
     return mapSupabaseSegmentRow(rows[0]);
   }
 
+  async listTrails() {
+    return aggregateTrailSegments(await this.listSegments());
+  }
+
+  async getTrailBySlug(slug: string) {
+    const params = new URLSearchParams({
+      select: "*",
+      trail_slug: `eq.${slug}`,
+      order: "segment_name.asc",
+    });
+    const rows = await this.fetchRows(`/rest/v1/trail_segment_api?${params.toString()}`);
+    const segments = rows.map(mapSupabaseSegmentRow).filter((segment): segment is TrailSegment => Boolean(segment));
+    return getTrailBySlugFromSegments(segments, slug);
+  }
+
   private async fetchRows(path: string): Promise<TrailSegmentApiRow[]> {
     const response = await fetch(`${this.supabaseUrl.replace(/\/$/, "")}${path}`, {
       headers: {
@@ -78,6 +94,7 @@ export function mapSupabaseSegmentRow(row?: TrailSegmentApiRow): TrailSegment | 
     id: row.id,
     slug: row.slug,
     trailId: row.trail_id,
+    trailSlug: row.trail_slug,
     trailName: row.trail_name,
     segmentName: row.segment_name,
     region: row.trail_region,

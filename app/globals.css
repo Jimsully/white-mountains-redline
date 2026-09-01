@@ -149,3 +149,53 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .segmentState.complete { color: #8d261c; }
 .segmentState.open { color: var(--muted); }
 @media (max-width: 800px) { .segmentBrowser { max-height: 220px; } }
+
+.trailDetailShell { min-height: 100vh; padding: 28px clamp(18px, 4vw, 56px) 56px; background: var(--paper); color: var(--ink); }
+.trailDetailBreadcrumb { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 auto 42px; max-width: 1180px; font-size: 13px; color: var(--muted); }
+.trailDetailBreadcrumb a { min-height: 34px; display: inline-flex; align-items: center; color: var(--ink); text-decoration-color: rgba(22,26,24,.35); text-underline-offset: 3px; }
+.trailDetailBreadcrumb a:focus-visible, .trailDetailButton:focus-visible { outline: 3px solid rgba(217,74,58,.42); outline-offset: 3px; }
+.trailDetailHero { max-width: 1180px; margin: 0 auto 34px; }
+.trailDetailHero h1 { max-width: 920px; font-size: clamp(46px, 8vw, 86px); letter-spacing: 0; }
+.trailDetailLede { max-width: 620px; margin: 18px 0 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
+.trailDetailLayout { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 520px); gap: 34px; align-items: start; }
+.trailDetailPrimary { display: grid; gap: 22px; min-width: 0; }
+.trailStats, .trailProgressPanel, .publicationNote { border-top: 1px solid var(--line); padding-top: 20px; }
+.trailStats h2, .trailProgressPanel h2, .trailSegmentListSection h2, .publicationNote h2 { margin: 0 0 14px; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; font-weight: 700; letter-spacing: 0; }
+.trailStats dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--line); border: 1px solid var(--line); }
+.trailStats dl div { display: grid; align-content: start; gap: 8px; min-height: 112px; padding: 16px; border: 0; background: rgba(255,255,255,.34); }
+.trailStats dt { font-size: 12px; color: var(--muted); }
+.trailStats dd { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; overflow-wrap: anywhere; }
+.trailProgressPanel p, .publicationNote p { margin: 0; color: var(--muted); line-height: 1.55; }
+.trailProgressPanel .progressTrack { max-width: 520px; margin: 12px 0; }
+.trailDetailButton { width: fit-content; min-height: 42px; display: inline-flex; align-items: center; margin-top: 16px; padding: 10px 14px; background: var(--ink); color: white; text-decoration: none; }
+.trailSegmentListSection { border-top: 1px solid var(--line); padding-top: 20px; }
+.trailSegmentList { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.trailSegmentListItem { display: flex; justify-content: space-between; gap: 18px; align-items: center; padding: 16px 0; border-top: 1px solid var(--line); }
+.trailSegmentListItem:first-child { border-top: 0; }
+.trailSegmentListItem h3 { margin: 0; font-size: 16px; line-height: 1.35; }
+.trailSegmentListItem p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.trailSegmentListItem .segmentState { flex: 0 0 auto; padding: 6px 9px; border: 1px solid var(--line); background: rgba(255,255,255,.32); font-size: 12px; }
+.trailDetailAside { display: grid; gap: 18px; min-width: 0; }
+.trailDetailMap { position: relative; display: grid; gap: 10px; margin: 0; }
+.trailDetailMapCanvas { width: 100%; min-height: 460px; background: #c8c7bf; border: 1px solid var(--line); }
+.trailDetailMapCanvas.maplibregl-map { width: 100%; min-height: 460px; }
+.trailDetailMap figcaption { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+@media (max-width: 900px) {
+  .trailDetailLayout { grid-template-columns: 1fr; }
+  .trailDetailAside { order: -1; }
+  .trailDetailMapCanvas, .trailDetailMapCanvas.maplibregl-map { min-height: 380px; }
+}
+
+@media (max-width: 640px) {
+  .trailDetailShell { padding: 22px 16px 42px; }
+  .trailDetailBreadcrumb { margin-bottom: 28px; }
+  .trailDetailHero { margin-bottom: 24px; }
+  .trailDetailHero h1 { font-size: 46px; }
+  .trailDetailLede { font-size: 16px; }
+  .trailStats dl { grid-template-columns: 1fr; }
+  .trailStats dl div { min-height: 88px; }
+  .trailDetailAside { order: 0; }
+  .trailDetailMapCanvas, .trailDetailMapCanvas.maplibregl-map { min-height: 320px; }
+  .trailSegmentListItem { align-items: flex-start; flex-direction: column; gap: 10px; }
+}

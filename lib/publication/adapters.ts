@@ -5,14 +5,16 @@ import { assertValidVerifiedNetworkArtifact } from "@/lib/publication/validator"
 
 export function verifiedNetworkToTrailSegments(artifact: VerifiedNetworkArtifact): TrailSegment[] {
   assertValidVerifiedNetworkArtifact(artifact);
-  return artifact.trailSegments.map(verifiedSegmentToTrailSegment);
+  const trailSlugs = new Map(artifact.trails.map((trail) => [trail.id, trail.slug]));
+  return artifact.trailSegments.map((segment) => verifiedSegmentToTrailSegment(segment, trailSlugs.get(segment.trailId)));
 }
 
-export function verifiedSegmentToTrailSegment(segment: VerifiedPublishedSegment): TrailSegment {
+export function verifiedSegmentToTrailSegment(segment: VerifiedPublishedSegment, trailSlug?: string): TrailSegment {
   return {
     id: segment.id,
     slug: segment.slug,
     trailId: segment.trailId,
+    trailSlug: trailSlug ?? segment.trailProductionKey,
     trailName: segment.trailName,
     segmentName: segment.segmentName,
     region: segment.region,

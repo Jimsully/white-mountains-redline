@@ -1,26 +1,171 @@
-import { createTrailRepository } from "@/lib/repositories";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TrailDetailMap } from "@/components/TrailDetailMap";
+import { CompletionRepository } from "@/lib/completions/completion-repository";
+import { applySegmentCompletions } from "@/lib/completions/composition";
+import { createTrailRepositoryRuntime } from "@/lib/repositories";
+import { getTrailBySlugFromSegments } from "@/lib/trails/trail-aggregation";
+import { getSupabaseAuthRuntimeConfig } from "@/lib/supabase/config";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
+import type { CompletionMode } from "@/types/completion";
+import type { TrailDetail } from "@/types/trails";
+
+type TrailPageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  const repository = createTrailRepository();
-  const segments = await repository.listSegments();
-  return segments.map((trail) => ({ slug: trail.slug }));
+  const runtime = createTrailRepositoryRuntime();
+  const trails = await runtime.repository.listTrails();
+  return trails.map((trail) => ({ slug: trail.trailSlug }));
 }
 
-export default async function TrailPage({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: TrailPageProps) {
   const { slug } = await params;
-  const repository = createTrailRepository();
-  const trail = await repository.getSegmentBySlug(slug);
-  if (!trail) notFound();
+  const runtime = createTrailRepositoryRuntime();
+  const trail = await runtime.repository.getTrailBySlug(slug);
+
+  if (!trail) {
+    return { title: "Trail not found | White Mountains Redline" };
+  }
+
+  return {
+    title: `${trail.name} | White Mountains Redline`,
+    description: `${trail.name} public redline trail detail with ${trail.segmentCount} verified segment${trail.segmentCount === 1 ? "" : "s"} in ${trail.region}.`,
+  };
+}
+
+export default async function TrailPage({ params }: TrailPageProps) {
+  const { slug } = await params;
+  const runtime = createTrailRepositoryRuntime();
+  const publicTrail = await runtime.repository.getTrailBySlug(slug);
+  if (!publicTrail) notFound();
+
+  const { trail, completionMode } = await composeTrailCompletion(publicTrail, runtime.mode);
+  const progressLabel = completionMode === "authenticated" || completionMode === "demo"
+    ? `${trail.completedSegments} of ${trail.segmentCount} segments complete`
+    : "Sign in to track completed segments";
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "64px 24px" }}>
-      <p style={{ letterSpacing: ".16em", fontSize: 12 }}>DEMO TRAIL PAGE</p>
-      <h1>{trail.trailName}</h1>
-      <p>{trail.segmentName}</p>
-      <p><strong>{trail.miles.toFixed(1)} miles</strong> · {trail.region}</p>
-      <p>This route is prototype data and is not intended for navigation.</p>
-      <p>Production pages will hold verified trail facts, original descriptions, completion status, trip reports, photographs, and internal links back into jamesscottsullivan.com.</p>
+    <main className="trailDetailShell">
+      <nav className="trailDetailBreadcrumb" aria-label="Breadcrumb">
+        <Link href="/">Interactive redline map</Link>
+        <span aria-hidden="true">/</span>
+        <span>{trail.region}</span>
+      </nav>
+
+      <header className="trailDetailHero">
+        <p className="eyebrow">{trail.region}</p>
+        <h1>{trail.name}</h1>
+        <p className="trailDetailLede">
+          A public trail page assembled from verified constituent completion segments.
+        </p>
+      </header>
+
+      <section className="trailDetailLayout" aria-label={`${trail.name} trail facts and map`}>
+        <div className="trailDetailPrimary">
+          <section className="trailStats" aria-labelledby="trail-facts-heading">
+            <h2 id="trail-facts-heading">Trail Facts</h2>
+            <dl>
+              <div>
+                <dt>Total verified mileage</dt>
+                <dd>{trail.totalMiles.toFixed(1)} mi</dd>
+              </div>
+              <div>
+                <dt>Verified segments</dt>
+                <dd>{trail.segmentCount}</dd>
+              </div>
+              <div>
+                <dt>Region</dt>
+                <dd>{trail.region}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="trailProgressPanel" aria-labelledby="trail-progress-heading">
+            <div>
+              <p className="eyebrow">Personal Progress</p>
+              <h2 id="trail-progress-heading">{progressLabel}</h2>
+            </div>
+            {completionMode === "authenticated" || completionMode === "demo" ? (
+              <>
+                <div className="progressTrack" aria-hidden="true">
+                  <div className="progressFill" style={{ width: `${trail.completionPercent}%` }} />
+                </div>
+                <p>
+                  {trail.completedMiles.toFixed(1)} of {trail.totalMiles.toFixed(1)} verified miles complete.
+                  Segment completions remain the underlying tracking unit.
+                </p>
+              </>
+            ) : (
+              <p>
+                Public trail facts remain visible without an account. Sign in only when you want to save personal progress.
+              </p>
+            )}
+            {completionMode === "anonymous" ? <Link className="trailDetailButton" href="/login">Sign in to track progress</Link> : null}
+            {completionMode === "unavailable" ? <p className="muted">Progress saving is unavailable in this environment.</p> : null}
+          </section>
+
+          <section className="trailSegmentListSection" aria-labelledby="trail-segments-heading">
+            <h2 id="trail-segments-heading">Constituent Segments</h2>
+            <ul className="trailSegmentList">
+              {trail.segments.map((segment) => (
+                <li key={segment.id} className="trailSegmentListItem">
+                  <div>
+                    <h3>{segment.segmentName}</h3>
+                    <p>{segment.miles.toFixed(1)} mi</p>
+                  </div>
+                  {completionMode === "authenticated" || completionMode === "demo" ? (
+                    <span className={segment.completed ? "segmentState complete" : "segmentState open"}>
+                      {segment.completed ? "Completed" : "Incomplete"}
+                    </span>
+                  ) : (
+                    <span className="segmentState open">Progress not shown</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <aside className="trailDetailAside" aria-label="Trail map and publication note">
+          <TrailDetailMap trail={trail} />
+          <section className="publicationNote">
+            <h2>Publication Note</h2>
+            <p>
+              This page uses verified public trail-segment records for redline progress context. It is not a navigation
+              product and does not include private GPS evidence or internal review notes.
+            </p>
+          </section>
+        </aside>
+      </section>
     </main>
   );
+}
+
+async function composeTrailCompletion(publicTrail: TrailDetail, mode: "demo" | "supabase"): Promise<{
+  trail: TrailDetail;
+  completionMode: CompletionMode;
+}> {
+  if (mode === "demo") {
+    return { trail: publicTrail, completionMode: "demo" };
+  }
+
+  if (getSupabaseAuthRuntimeConfig() === null) {
+    return { trail: publicTrail, completionMode: "unavailable" };
+  }
+
+  const auth = await getAuthenticatedUser();
+  if (!auth.supabase || !auth.user) {
+    return { trail: publicTrail, completionMode: "anonymous" };
+  }
+
+  const completionRepository = new CompletionRepository(auth.supabase, auth.user.id);
+  const completions = await completionRepository.listOwnCompletions();
+  const personalizedSegments = applySegmentCompletions(publicTrail.segments, completions);
+  const personalizedTrail = getTrailBySlugFromSegments(personalizedSegments, publicTrail.trailSlug);
+
+  return { trail: personalizedTrail ?? publicTrail, completionMode: "authenticated" };
 }

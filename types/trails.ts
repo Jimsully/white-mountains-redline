@@ -48,6 +48,7 @@ export type TrailSegment = {
   id: string;
   slug: string;
   trailId: string;
+  trailSlug: string;
   trailName: string;
   segmentName: string;
   region: TrailRegion;
@@ -58,6 +59,20 @@ export type TrailSegment = {
   dataStatus: DataStatus;
   verificationStatus: VerificationStatus;
   provenance: SourceProvenance;
+};
+
+export type TrailDetail = {
+  trailId: string;
+  trailSlug: string;
+  name: string;
+  region: TrailRegion;
+  segments: TrailSegment[];
+  totalMiles: number;
+  segmentCount: number;
+  completedMiles: number;
+  completedSegments: number;
+  completionPercent: number;
+  bounds?: [west: number, south: number, east: number, north: number];
 };
 
 export type ReconciliationStatus =

@@ -28,6 +28,7 @@ describe("mapSupabaseSegmentRow", () => {
       id: "42",
       slug: "sample-segment",
       trailId: "7",
+      trailSlug: "sample-trail",
       trailName: "Sample Trail",
       region: "Franconia-Pemigewasset",
       miles: 1.75,
