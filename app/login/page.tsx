@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicNav } from "@/components/PublicNav";
 import { AUTH_ERROR_STATUS, AUTH_UNAVAILABLE_STATUS, MAGIC_LINK_SENT_STATUS } from "@/lib/accounts/auth-errors";
 import { safeRelativeRedirect } from "@/lib/accounts/redirects";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { signInWithMagicLinkAction, signInWithOAuthAction } from "@/app/login/actions";
+import { privateRobots } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  robots: privateRobots,
+};
 
 type LoginPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

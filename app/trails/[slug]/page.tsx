@@ -5,6 +5,7 @@ import { TrailDetailMap } from "@/components/TrailDetailMap";
 import { CompletionRepository } from "@/lib/completions/completion-repository";
 import { applySegmentCompletions } from "@/lib/completions/composition";
 import { createTrailRepositoryRuntime } from "@/lib/repositories";
+import { trailMetadata } from "@/lib/seo/metadata";
 import { getTrailBySlugFromSegments } from "@/lib/trails/trail-aggregation";
 import { getSupabaseAuthRuntimeConfig } from "@/lib/supabase/config";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
@@ -29,13 +30,10 @@ export async function generateMetadata({ params }: TrailPageProps) {
   const trail = await runtime.repository.getTrailBySlug(slug);
 
   if (!trail) {
-    return { title: "Trail not found | White Mountains Redline" };
+    return { title: "Trail not found", robots: { index: false, follow: false } };
   }
 
-  return {
-    title: `${trail.name} | White Mountains Redline`,
-    description: `${trail.name} public redline trail detail with ${trail.segmentCount} verified segment${trail.segmentCount === 1 ? "" : "s"} in ${trail.region}.`,
-  };
+  return trailMetadata(trail);
 }
 
 export default async function TrailPage({ params }: TrailPageProps) {

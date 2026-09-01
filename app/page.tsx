@@ -1,9 +1,13 @@
+import type { Metadata } from "next";
 import { RedlineApp } from "@/app/redline/RedlineApp";
 import { CompletionRepository } from "@/lib/completions/completion-repository";
 import { applySegmentCompletions } from "@/lib/completions/composition";
 import { createTrailRepositoryRuntime } from "@/lib/repositories";
+import { homeMetadata } from "@/lib/seo/metadata";
 import { getSupabaseAuthRuntimeConfig } from "@/lib/supabase/config";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
+
+export const metadata: Metadata = homeMetadata();
 
 export default async function HomePage() {
   const runtime = createTrailRepositoryRuntime();

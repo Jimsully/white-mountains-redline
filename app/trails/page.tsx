@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TrailDirectoryControls } from "@/app/trails/TrailDirectoryControls";
 import { PublicNav } from "@/components/PublicNav";
 import { createTrailRepository } from "@/lib/repositories";
+import { trailDirectoryMetadata } from "@/lib/seo/metadata";
 import {
   compareTrailDirectoryEntries,
   filterTrailDirectory,
@@ -13,14 +14,13 @@ import {
 import type { TrailDirectorySearchParams } from "@/lib/trails/trail-directory";
 import type { TrailDetail } from "@/types/trails";
 
-export const metadata: Metadata = {
-  title: "White Mountains Trails | White Mountains Redline",
-  description: "Browse verified public White Mountains redline trail pages by name and region.",
-};
-
 type TrailsPageProps = {
   searchParams?: Promise<TrailDirectorySearchParams>;
 };
+
+export async function generateMetadata({ searchParams }: TrailsPageProps): Promise<Metadata> {
+  return trailDirectoryMetadata(searchParams);
+}
 
 export default async function TrailsPage({ searchParams }: TrailsPageProps) {
   const repository = createTrailRepository();
