@@ -4,7 +4,7 @@ Read this at the start of future database work. Migrations in `supabase/migratio
 
 ## Current State
 
-Migrations 001-012 define the repository database contract; migrations 011/012 are local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C now implements the local authenticated SSR repository, server action, and account evidence UI, but database-backed acceptance remains outstanding.
+Migrations 001-013 define the repository database contract; migrations 011-013 are local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C now implements the local authenticated SSR repository, server action, and account evidence UI, but database-backed acceptance remains outstanding. Migration 013 implements the locally proven public projection hardening boundary and still needs clean-bootstrap/runtime acceptance.
 
 ## Hard Product Rules
 
@@ -24,9 +24,9 @@ data_status = 'verified'
 verification_status = 'human_verified'
 ```
 
-`trail_segment_api` is the app read projection. It is verified-only and returns GeoJSON coordinates. It is `security_invoker`.
+`trail_segment_api` is the app read projection. It is verified-only and returns GeoJSON coordinates. Migration 013 sets it to owner-rights (`security_invoker = false`) with `security_barrier = true`.
 
-Outstanding audit: migrations grant anon/authenticated `SELECT` on `trail_segment_api`, but not explicit base-table `SELECT` on `trails` / `trail_segments`. Clean-bootstrap privilege behavior must be tested before deployment.
+Clean local Supabase runtime testing of migrations 001-012 proved anon PostgREST could bypass the projection and read internal `trails`/`trail_segments` columns under default public-schema ACLs. Migration 013 revokes direct base-table privileges from `PUBLIC`, `anon`, and `authenticated`, normalizes view privileges, grants only view `SELECT` to anon/authenticated, and preserves `service_role`. Since the view owner is expected to be `postgres`, public filtering now depends on the view's explicit verified-only predicates for both segment and parent trail.
 
 ## Private User Data Boundary
 
@@ -78,4 +78,14 @@ Do not join private completion state into `trail_segment_api`.
 
 ## Before Deployment
 
-Static tests are not enough. Run live PostgreSQL/Supabase checks for RLS, grants, migration 011 loader behavior, accepted-evidence immutability, M7D-B ownership/enumeration/date/race/FK behavior, `SECURITY DEFINER` owner rights, and `security_invoker` view behavior. Retain the independent `trail_segment_api` clean-bootstrap privilege audit.
+Static tests are not enough. Run live PostgreSQL/Supabase checks for RLS, grants, migration 011 loader behavior, accepted-evidence immutability, M7D-B ownership/enumeration/date/race/FK behavior, `SECURITY DEFINER` owner rights, and migration 013 owner-rights view behavior.
+
+Migration 013 public-projection hardening has passed disposable local runtime acceptance.
+
+Local acceptance included two clean migrations 001-013 bootstraps, verified
+trail_segment_api ownership/reloptions and privilege boundaries, anon and
+authenticated PostgREST isolation, service-role verified-publication loading,
+and M7D-A reviewed-evidence materialization.
+
+This acceptance was local/disposable only. Migration 013 has not been deployed
+to production, and production predeploy/deployment checks remain outstanding.

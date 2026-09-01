@@ -44,7 +44,7 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-The Supabase adapter reads from `public.trail_segment_api`, a read-only projection view created by migration 003. The view joins `trails` and `trail_segments`, exposes LineString coordinates via `ST_AsGeoJSON`, and uses `security_invoker` so base table RLS policies continue to apply. Clients never parse PostGIS WKB/hex.
+The Supabase adapter reads from `public.trail_segment_api`, a read-only projection view created by migration 003 and hardened by migration 013. Browser roles (`anon` and `authenticated`) read verified trail network records through that view only; they do not have direct privileges on `public.trails` or `public.trail_segments`. The view runs as owner-rights with `security_barrier=true`, and its explicit verified plus human-verified predicates are the public publication boundary. Service-controlled/admin workflows retain separate privileges. Clients never parse PostGIS WKB/hex.
 
 ## Import raw USFS source data
 Download and write deterministic staging artifacts only:

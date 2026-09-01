@@ -17,16 +17,31 @@
 This keeps the app buildable and browsable before a Supabase project exists, while preserving a stable contract for production trail reads.
 
 ## Supabase API contract
-Migration 003 creates `public.trail_segment_api`, the REST projection used by `SupabaseTrailRepository`.
+Migration 003 creates `public.trail_segment_api`, the REST projection used by `SupabaseTrailRepository`. Migration 013 hardens that projection as the public browser/auth client boundary.
 
 The view:
 - joins `trail_segments` to `trails`
 - exposes explicit verification/provenance fields
 - exposes LineString coordinates with `ST_AsGeoJSON(...)->'coordinates'`
 - is read-only from the app's perspective
-- uses `security_invoker = true` so RLS policies on base tables apply to view reads
+- runs as owner-rights with `security_invoker = false`
+- uses `security_barrier = true`
+- publishes only rows passing its explicit verified plus human-verified predicates
 
-Do not point the REST adapter at raw PostGIS geometry columns or require the client to parse WKB/hex.
+The public projection boundary is:
+
+```text
+public browser/auth client
+        |
+        v
+trail_segment_api
+(owner-rights, security_barrier)
+        |
+        v
+verified/human_verified projection
+```
+
+Direct application-role access to `public.trails` and `public.trail_segments` is revoked. Owner-rights execution must not be described as relying on base-table RLS for public trail filtering. Do not point the REST adapter at raw PostGIS geometry columns or require the client to parse WKB/hex.
 
 ## Backend
 - Supabase Auth for accounts.
@@ -83,7 +98,7 @@ GitHub Actions validates pull requests and pushes to `main` with `npm ci`, `npm 
 
 Migration 004 restricts `public.load_source_trail_feature_batch(jsonb, jsonb)` execution to `service_role` and keeps it as an invoker-rights function, not `SECURITY DEFINER`. The service-role key is only for controlled server-side/admin import tooling and must never be exposed to browser code or committed.
 
-Migration 004 also makes the intended `public.trail_segment_api` permission explicit: `SELECT` for `anon` and `authenticated`, with mutation privileges revoked.
+Migration 013 makes the public projection permission model explicit: browser roles (`anon` and `authenticated`) receive only `SELECT` on `public.trail_segment_api`, while direct application-role privileges on `public.trails` and `public.trail_segments` are revoked. The service-role key is reserved for controlled server-side/admin workflows.
 
 ## Reconciliation workspace
 Milestone 2 adds a development/admin route at `/admin/reconciliation`. It is not part of the public redlining experience and is marked not for navigation and not challenge verified. The route consumes committed demo reconciliation JSON so CI and local development do not require a private inventory.

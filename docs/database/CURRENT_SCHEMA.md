@@ -1,6 +1,6 @@
 # Current Database Schema
 
-This document summarizes the repository schema produced by migrations 001 through 012. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions. Migration 012 is implemented locally and has not been applied live.
+This document summarizes the repository schema produced by migrations 001 through 013. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions. Migrations 011-013 are implemented locally and have not been applied live.
 
 ## Core Production Tables
 
@@ -27,9 +27,11 @@ The atomic redline completion unit. A row is public production data only when th
 Important columns include `id`, `trail_id`, `segment_key`, `segment_name`, `miles`, `geom`, source labels, `verification_notes`, `data_status`, `verification_status`, `provenance`, `source_feature_ids`, `geometry_manually_modified`, `reviewed_at`, `publication_run_id`, and `publication_artifact_fingerprint`.
 
 ### `public.trail_segment_api`
-Read-only application projection for public trail segments. It is a `security_invoker` view and currently filters to verified/human-reviewed trail segments joined to verified/human-reviewed parent trails.
+Read-only application projection for public trail segments. Migration 013 hardens it to owner-rights (`security_invoker = false`) with `security_barrier = true` after clean local Supabase runtime testing proved anon PostgREST could bypass the projection and read internal base-table columns on `trails` and `trail_segments` under default public-schema ACLs.
 
 It exposes application fields and GeoJSON-derived geometry: `geom_geojson` and `coordinates`. Clients must not parse PostGIS WKB/hex from base tables.
+
+Because the view owner is expected to be `postgres`, base-table RLS is no longer the public read boundary for this projection. Public filtering depends on the view's explicit predicates: segment and parent trail must both have `data_status = 'verified'` and `verification_status = 'human_verified'`.
 
 ### `public.activities`
 Private user activity rows. They are owned by `auth.users(id)`.
@@ -102,6 +104,6 @@ Private completion state must not be joined into public trail API queries or sha
 
 ## M7D Status
 
-M7D-A controlled reviewed-evidence materialization is implemented in migration 011. M7D-B's database authorization boundary is implemented locally in migration 012, which has not been applied live. Raw `completion_evidence` remains isolated from normal authenticated table access; user-facing RPCs expose only fixed sanitized data.
+M7D-A controlled reviewed-evidence materialization is implemented in migration 011. M7D-B's database authorization boundary is implemented locally in migration 012. Migration 013 implements the public projection hardening boundary: anon/authenticated may select `trail_segment_api`, but have no direct table privileges on `trails` or `trail_segments`; `service_role` remains administrative. These migrations have not been applied live. Raw `completion_evidence` remains isolated from normal authenticated table access; user-facing RPCs expose only fixed sanitized data.
 
 Accepted evidence remains evidence until the owner explicitly invokes confirmation. M7D-C application integration is implemented locally: an authenticated SSR repository uses only the two M7D-B RPCs, and the account action submits only the opaque evidence UUID. No schema or relationship changed for M7D-C. Migrations 011/012 remain unapplied live, and database-backed acceptance is outstanding.
