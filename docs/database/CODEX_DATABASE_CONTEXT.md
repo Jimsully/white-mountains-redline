@@ -4,7 +4,7 @@ Read this at the start of future database work. Migrations in `supabase/migratio
 
 ## Current State
 
-Migrations 001-013 define the repository database contract; migrations 011-013 are local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C now implements the local authenticated SSR repository, server action, and account evidence UI, but database-backed acceptance remains outstanding. Migration 013 implements the locally proven public projection hardening boundary and still needs clean-bootstrap/runtime acceptance.
+Migrations 001-013 define the repository database contract; migrations 011-013 are local and not applied live. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C implements the local authenticated SSR repository, server action, and account evidence UI, and its database-backed runtime acceptance has passed on disposable local Supabase. Migration 013 implements the public projection hardening boundary and has passed clean-bootstrap/runtime acceptance locally.
 
 ## Hard Product Rules
 
