@@ -10,8 +10,16 @@
 html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); }
 body { font-family: Arial, Helvetica, sans-serif; }
 button { font: inherit; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(217,74,58,.42); outline-offset: 3px; }
 .appShell { min-height: 100vh; display: grid; grid-template-columns: 390px minmax(0, 1fr); align-items: stretch; }
 .panel { max-height: 100vh; padding: 42px 34px; background: var(--paper); border-right: 1px solid var(--line); z-index: 2; overflow-y: auto; }
+.publicNav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 auto 28px; max-width: 1180px; }
+.publicNav a { min-height: 38px; display: inline-flex; align-items: center; border: 1px solid var(--line); background: rgba(255,255,255,.28); padding: 8px 12px; color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 700; }
+.publicNav a:hover { background: rgba(255,255,255,.52); }
+.publicNav a[aria-current="page"] { border-color: rgba(217,74,58,.55); box-shadow: inset 3px 0 0 var(--red); }
+.publicNav.compact { margin: 0 0 24px; }
+.publicNav.compact a { min-height: 34px; padding: 7px 10px; font-size: 12px; }
 .eyebrow { font-size: 11px; letter-spacing: .22em; font-weight: 700; color: var(--muted); }
 h1 { margin: 8px 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: 54px; line-height: .95; letter-spacing: -.04em; }
 .lede { max-width: 300px; margin: 0 0 34px; color: var(--muted); line-height: 1.5; }
@@ -132,6 +140,8 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .mapError { position: absolute; right: 18px; bottom: 18px; z-index: 5; max-width: min(420px, calc(100% - 36px)); padding: 10px 12px; border: 1px solid #b85b50; background: #f6d8d4; color: #6f2119; font-size: 12px; line-height: 1.4; }
 
 .trailCard .buttonLink { display: block; width: 100%; box-sizing: border-box; background: var(--ink); color: white; padding: 12px 14px; text-align: center; text-decoration: none; }
+.trailDetailLink { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; width: 100%; margin-top: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.32); color: var(--ink); padding: 10px 14px; text-align: center; text-decoration: none; font-weight: 700; }
+.trailDetailLink:hover { background: rgba(255,255,255,.55); }
 .trailCard button:disabled { cursor: not-allowed; opacity: .65; }
 .formError { margin-top: 12px; color: #9f2f1f; font-size: 13px; }
 
@@ -151,6 +161,7 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 @media (max-width: 800px) { .segmentBrowser { max-height: 220px; } }
 
 .trailDetailShell { min-height: 100vh; padding: 28px clamp(18px, 4vw, 56px) 56px; background: var(--paper); color: var(--ink); }
+.trailDetailNavWrap { max-width: 1180px; margin: 0 auto; }
 .trailDetailBreadcrumb { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 auto 42px; max-width: 1180px; font-size: 13px; color: var(--muted); }
 .trailDetailBreadcrumb a { min-height: 34px; display: inline-flex; align-items: center; color: var(--ink); text-decoration-color: rgba(22,26,24,.35); text-underline-offset: 3px; }
 .trailDetailBreadcrumb a:focus-visible, .trailDetailButton:focus-visible { outline: 3px solid rgba(217,74,58,.42); outline-offset: 3px; }
@@ -168,6 +179,9 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
 .trailProgressPanel p, .publicationNote p { margin: 0; color: var(--muted); line-height: 1.55; }
 .trailProgressPanel .progressTrack { max-width: 520px; margin: 12px 0; }
 .trailDetailButton { width: fit-content; min-height: 42px; display: inline-flex; align-items: center; margin-top: 16px; padding: 10px 14px; background: var(--ink); color: white; text-decoration: none; }
+.trailDetailButton.secondary { border: 1px solid var(--line); background: rgba(255,255,255,.32); color: var(--ink); }
+.trailDetailActions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.trailDetailActions .trailDetailButton { margin-top: 0; }
 .trailSegmentListSection { border-top: 1px solid var(--line); padding-top: 20px; }
 .trailSegmentList { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .trailSegmentListItem { display: flex; justify-content: space-between; gap: 18px; align-items: center; padding: 16px 0; border-top: 1px solid var(--line); }
@@ -198,4 +212,36 @@ dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
   .trailDetailAside { order: 0; }
   .trailDetailMapCanvas, .trailDetailMapCanvas.maplibregl-map { min-height: 320px; }
   .trailSegmentListItem { align-items: flex-start; flex-direction: column; gap: 10px; }
+}
+
+.trailDirectoryShell { min-height: 100vh; padding: 28px clamp(18px, 4vw, 56px) 56px; background: var(--paper); color: var(--ink); }
+.trailDirectoryInner { max-width: 1180px; margin: 0 auto; }
+.trailDirectoryHero { margin-bottom: 26px; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+.trailDirectoryHero h1 { max-width: 920px; font-size: clamp(44px, 7vw, 76px); letter-spacing: 0; }
+.trailDirectoryHero p { max-width: 680px; margin: 16px 0 0; color: var(--muted); font-size: 17px; line-height: 1.55; }
+.trailDirectoryControls { display: grid; gap: 18px; }
+.trailDirectoryFilters { display: grid; grid-template-columns: minmax(220px, 1.1fr) minmax(190px, .7fr) auto; gap: 12px; align-items: end; }
+.trailDirectoryFilters label { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+.trailDirectoryFilters input, .trailDirectoryFilters select { width: 100%; min-height: 42px; border: 1px solid var(--line); background: rgba(255,255,255,.46); color: var(--ink); padding: 9px 10px; font: inherit; }
+.trailDirectoryFilters .secondaryButton { min-height: 42px; }
+.trailDirectoryResultBar { display: flex; justify-content: space-between; gap: 18px; align-items: baseline; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 15px 0; }
+.trailDirectoryResultBar h2 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; letter-spacing: 0; }
+.trailDirectoryResultBar p { margin: 0; color: var(--muted); font-size: 13px; }
+.trailDirectoryList { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.trailDirectoryRow { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(180px, .8fr) minmax(82px, .4fr) minmax(112px, .4fr); gap: 18px; align-items: center; min-height: 58px; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.trailDirectoryRow:hover { background: rgba(255,255,255,.32); }
+.trailDirectoryName { font-weight: 700; }
+.trailDirectoryRegion { color: var(--muted); }
+.trailDirectoryEmpty { border: 1px solid var(--line); background: rgba(255,255,255,.34); padding: 22px; }
+.trailDirectoryEmpty h3 { margin: 0 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: 25px; letter-spacing: 0; }
+.trailDirectoryEmpty p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; }
+
+@media (max-width: 760px) {
+  .trailDirectoryShell { padding: 22px 16px 42px; }
+  .trailDirectoryFilters { grid-template-columns: 1fr; }
+  .trailDirectoryResultBar { display: grid; gap: 5px; }
+  .trailDirectoryRow { grid-template-columns: 1fr; gap: 5px; padding: 13px 0; }
+  .trailDirectoryHero h1 { font-size: 44px; }
+  .publicNav { gap: 6px; margin-bottom: 22px; }
+  .publicNav a { min-height: 40px; padding: 8px 10px; }
 }

@@ -79,4 +79,11 @@ describe("M7C selection source contracts", () => {
     expect(progressPanelSource).toContain("onSelect={onSelectSegment}");
     expect(progressPanelSource).not.toMatch(/useState\(.*selected/i);
   });
+
+  it("selected segment trail-detail action uses the parent trailSlug", () => {
+    expect(progressPanelSource).toContain("href={`/trails/${selected.trailSlug}`}");
+    expect(progressPanelSource).toContain("View Trail Details");
+    expect(progressPanelSource).not.toContain("href={`/trails/${selected.slug}`}");
+    expect(progressPanelSource).not.toContain("segment_key");
+  });
 });

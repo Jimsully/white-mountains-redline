@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PublicNav } from "@/components/PublicNav";
 import { AUTH_ERROR_STATUS, AUTH_UNAVAILABLE_STATUS, MAGIC_LINK_SENT_STATUS } from "@/lib/accounts/auth-errors";
 import { safeRelativeRedirect } from "@/lib/accounts/redirects";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
@@ -17,6 +18,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="accountShell">
       <section className="accountPanel">
+        <PublicNav current="account" compact />
         <p className="eyebrow">Account</p>
         <h1>Sign in</h1>
         <p className="lede">Save private profile settings without changing the public trail map. Browsing remains available without an account.</p>

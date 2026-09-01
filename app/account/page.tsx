@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EvidenceConfirmationSection } from "@/app/account/EvidenceConfirmationSection";
+import { PublicNav } from "@/components/PublicNav";
 import type { EvidenceConfirmationItem } from "@/app/account/EvidenceConfirmationSection";
 import { updateProfileAction } from "@/lib/accounts/actions";
 import { ProfileRepository } from "@/lib/accounts/profile-repository";
@@ -40,6 +41,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   return (
     <main className="accountShell">
       <section className="accountPanel wideAccountPanel">
+        <PublicNav current="account" compact />
         <div className="accountHeaderRow">
           <div>
             <p className="eyebrow">Account</p>
