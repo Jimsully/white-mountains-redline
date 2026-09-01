@@ -25,8 +25,8 @@ Added authenticated user accounts, durable user profile state, and private owner
 Completed authenticated manual completion security, persisted user completion state, synchronized map/list segment selection, controlled reviewed-evidence materialization, sanitized authenticated evidence reads, explicit owner confirmation, account evidence-confirmation UI, Migration 013 public trail projection hardening, disposable local Supabase runtime acceptance, service-role publication regression acceptance, reviewed-evidence runtime acceptance, and GitHub CI coverage. GPS evidence, strong matches, and accepted evidence remain distinct from completion until explicit user confirmation. Migrations 011-013 have passed local/disposable acceptance but have not been deployed to production; production predeploy and deployment checks remain outstanding.
 
 ## M8 Public trail pages / website / SEO
-M8A - real public trail detail foundation.
-M8B - public trail directory/search.
+M8A - real public trail detail foundation - COMPLETE.
+M8B - public trail directory/search/navigation - implemented on this branch; pending acceptance before COMPLETE. Authenticated directory progress filters remain later polish; the directory currently stays public-only.
 M8C - SEO/indexing foundation.
 M8D - confirmed jamesscottsullivan.com / authored-content integration.
 M8E - responsive/accessibility/design polish.

@@ -1,0 +1,100 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { TrailDirectoryControls } from "@/app/trails/TrailDirectoryControls";
+import { PublicNav } from "@/components/PublicNav";
+import { createTrailRepository } from "@/lib/repositories";
+import {
+  compareTrailDirectoryEntries,
+  filterTrailDirectory,
+  getTrailDirectoryRegions,
+  hasActiveTrailDirectoryFilters,
+  normalizeTrailDirectoryFilters,
+} from "@/lib/trails/trail-directory";
+import type { TrailDirectorySearchParams } from "@/lib/trails/trail-directory";
+import type { TrailDetail } from "@/types/trails";
+
+export const metadata: Metadata = {
+  title: "White Mountains Trails | White Mountains Redline",
+  description: "Browse verified public White Mountains redline trail pages by name and region.",
+};
+
+type TrailsPageProps = {
+  searchParams?: Promise<TrailDirectorySearchParams>;
+};
+
+export default async function TrailsPage({ searchParams }: TrailsPageProps) {
+  const repository = createTrailRepository();
+  const trails = (await repository.listTrails()).sort(compareTrailDirectoryEntries);
+  const regions = getTrailDirectoryRegions(trails);
+  const filters = normalizeTrailDirectoryFilters(await searchParams, regions);
+  const filteredTrails = filterTrailDirectory(trails, filters);
+
+  return (
+    <main className="trailDirectoryShell">
+      <div className="trailDirectoryInner">
+        <PublicNav current="trails" />
+        <nav className="trailDetailBreadcrumb" aria-label="Breadcrumb">
+          <Link href="/">Interactive redline map</Link>
+          <span aria-hidden="true">/</span>
+          <span>Trails</span>
+        </nav>
+
+        <header className="trailDirectoryHero">
+          <p className="eyebrow">Trail Directory</p>
+          <h1>White Mountains Trails</h1>
+          <p>
+            Browse public trail pages assembled from verified completion segments. Segment records remain the tracking
+            unit; this directory is an index of their parent trails.
+          </p>
+        </header>
+
+        <section className="trailDirectoryControls" aria-labelledby="trail-directory-results-heading">
+          <TrailDirectoryControls filters={filters} regions={regions} />
+          <TrailDirectoryResults trails={trails} filteredTrails={filteredTrails} hasActiveFilters={hasActiveTrailDirectoryFilters(filters)} />
+        </section>
+      </div>
+    </main>
+  );
+}
+
+export function TrailDirectoryResults({
+  trails,
+  filteredTrails,
+  hasActiveFilters,
+}: {
+  trails: TrailDetail[];
+  filteredTrails: TrailDetail[];
+  hasActiveFilters: boolean;
+}) {
+  return (
+    <>
+      <div className="trailDirectoryResultBar">
+        <h2 id="trail-directory-results-heading">
+          {filteredTrails.length} of {trails.length} trails
+        </h2>
+        <p>Alphabetical results from verified public trail data.</p>
+      </div>
+
+      {filteredTrails.length ? (
+        <ul className="trailDirectoryList">
+          {filteredTrails.map((trail) => (
+            <li key={trail.trailSlug}>
+              <Link className="trailDirectoryRow" href={`/trails/${trail.trailSlug}`}>
+                <span className="trailDirectoryName">{trail.name}</span>
+                <span className="trailDirectoryRegion">{trail.region}</span>
+                <span>{trail.totalMiles.toFixed(1)} mi</span>
+                <span>{trail.segmentCount} segment{trail.segmentCount === 1 ? "" : "s"}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="trailDirectoryEmpty" role="status">
+          <h3>No trails match those filters.</h3>
+          <p>{hasActiveFilters ? "Try a shorter trail name or switch back to all regions." : "No public trails are available yet."}</p>
+          <Link className="secondaryButton" href="/trails">Reset search</Link>
+        </div>
+      )}
+    </>
+  );
+}

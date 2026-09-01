@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PublicNav } from "@/components/PublicNav";
 import { SegmentBrowser } from "@/components/SegmentBrowser";
 import type { CompletionMode, SelectionOrigin } from "@/types/completion";
 import type { TrailFilters } from "@/lib/trail-filters";
@@ -47,6 +48,7 @@ export function ProgressPanel({
 
   return (
     <aside className="panel">
+      <PublicNav current="map" compact />
       <div className="eyebrow">WHITE MOUNTAINS</div>
       <h1>Redline</h1>
       <p className="lede">Turn the trail network red, one verified segment at a time.</p>
@@ -138,6 +140,7 @@ export function ProgressPanel({
               {completionPending ? "Saving..." : selected.completed ? "Mark unfinished" : "Mark completed"}
             </button>
           )}
+          <Link className="trailDetailLink" href={`/trails/${selected.trailSlug}`}>View Trail Details</Link>
           {completionMode === "demo" ? <p className="muted">Local demo only — progress is not saved.</p> : null}
           {completionMode === "unavailable" ? <p className="muted">Completion saving is unavailable in this environment.</p> : null}
           {completionError ? <p className="formError" role="alert">{completionError}</p> : null}

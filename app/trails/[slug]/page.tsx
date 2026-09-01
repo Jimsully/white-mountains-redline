@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PublicNav } from "@/components/PublicNav";
 import { TrailDetailMap } from "@/components/TrailDetailMap";
 import { CompletionRepository } from "@/lib/completions/completion-repository";
 import { applySegmentCompletions } from "@/lib/completions/composition";
@@ -50,8 +51,13 @@ export default async function TrailPage({ params }: TrailPageProps) {
 
   return (
     <main className="trailDetailShell">
+      <div className="trailDetailNavWrap">
+        <PublicNav current="trails" />
+      </div>
       <nav className="trailDetailBreadcrumb" aria-label="Breadcrumb">
         <Link href="/">Interactive redline map</Link>
+        <span aria-hidden="true">/</span>
+        <Link href="/trails">Browse all trails</Link>
         <span aria-hidden="true">/</span>
         <span>{trail.region}</span>
       </nav>
@@ -106,6 +112,10 @@ export default async function TrailPage({ params }: TrailPageProps) {
             )}
             {completionMode === "anonymous" ? <Link className="trailDetailButton" href="/login">Sign in to track progress</Link> : null}
             {completionMode === "unavailable" ? <p className="muted">Progress saving is unavailable in this environment.</p> : null}
+            <div className="trailDetailActions" aria-label="Trail navigation">
+              <Link className="trailDetailButton" href="/trails">Browse All Trails</Link>
+              <Link className="trailDetailButton secondary" href="/">Interactive Redline Map</Link>
+            </div>
           </section>
 
           <section className="trailSegmentListSection" aria-labelledby="trail-segments-heading">
