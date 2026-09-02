@@ -5,6 +5,8 @@ import * as maplibregl from "maplibre-gl";
 import type { FeatureCollection, LineString } from "geojson";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { getBrowserMapStyle } from "@/lib/map/basemap-style";
+import { startupMapErrorMessage } from "@/lib/map/map-load-errors";
 import { configureMapLibreWorker } from "@/lib/map/maplibre-worker";
 import { cameraDurationForReducedMotion, getSegmentBounds } from "@/lib/map/segment-bounds";
 import type { SelectionOrigin } from "@/types/completion";
@@ -38,43 +40,41 @@ export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Pro
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const data = useMemo(() => toGeoJSON(segments), [segments]);
+  const mapStyle = useMemo(() => getBrowserMapStyle(), []);
   const dataRef = useRef(data);
-  const [mapError, setMapError] = useState<string | null>(null);
+  const [mapError, setMapError] = useState<string | null>(mapStyle.ok ? null : mapStyle.message);
   const [mapReady, setMapReady] = useState(false);
+  const mapLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     configureMapLibreWorker(maplibregl);
+    if (!mapStyle.ok) return;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
       center: [-71.65, 44.14],
       zoom: 10.4,
       attributionControl: false,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: "raster",
-            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: "© OpenStreetMap contributors",
-          },
-        },
-        layers: [{ id: "osm", type: "raster", source: "osm" }],
-      },
+      style: mapStyle.style,
     });
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
 
     map.on("error", (event) => {
-      if (process.env.NODE_ENV !== "development") return;
-      setMapError(event.error?.message ?? "Map failed to load.");
+      const message = startupMapErrorMessage({
+        hasLoaded: mapLoadedRef.current,
+        nodeEnv: process.env.NODE_ENV,
+        errorMessage: event.error?.message,
+      });
+      if (message) setMapError(message);
     });
 
     map.on("load", () => {
+      mapLoadedRef.current = true;
+      setMapError(null);
       map.addSource("trail-segments", { type: "geojson", data: dataRef.current });
 
       map.addLayer({
@@ -113,8 +113,14 @@ export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Pro
     resizeObserver?.observe(containerRef.current);
 
     mapRef.current = map;
-    return () => { resizeObserver?.disconnect(); map.remove(); mapRef.current = null; setMapReady(false); };
-  }, [onSelect]);
+    return () => {
+      resizeObserver?.disconnect();
+      map.remove();
+      mapRef.current = null;
+      mapLoadedRef.current = false;
+      setMapReady(false);
+    };
+  }, [mapStyle, onSelect]);
 
   useEffect(() => {
     dataRef.current = data;
@@ -151,7 +157,7 @@ export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Pro
   return (
     <div className="mapShell">
       <div className="mapBadge">PROTOTYPE · NOT FOR NAVIGATION</div>
-      {mapError ? <div className="mapError" role="status">Map failed to load: {mapError}</div> : null}
+      {mapError ? <div className="mapError" role="status">{mapError}</div> : null}
       <div ref={containerRef} className="map" />
     </div>
   );

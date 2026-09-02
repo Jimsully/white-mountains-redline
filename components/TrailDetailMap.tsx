@@ -5,6 +5,8 @@ import * as maplibregl from "maplibre-gl";
 import type { FeatureCollection, LineString } from "geojson";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { getBrowserMapStyle } from "@/lib/map/basemap-style";
+import { startupMapErrorMessage } from "@/lib/map/map-load-errors";
 import { cameraDurationForReducedMotion } from "@/lib/map/segment-bounds";
 import { configureMapLibreWorker } from "@/lib/map/maplibre-worker";
 import type { TrailDetail, TrailSegment } from "@/types/trails";
@@ -33,12 +35,15 @@ export function TrailDetailMap({ trail }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const data = useMemo(() => toGeoJSON(trail.segments), [trail.segments]);
-  const [mapError, setMapError] = useState<string | null>(null);
+  const mapStyle = useMemo(() => getBrowserMapStyle(), []);
+  const [mapError, setMapError] = useState<string | null>(mapStyle.ok ? null : mapStyle.message);
+  const mapLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     configureMapLibreWorker(maplibregl);
+    if (!mapStyle.ok) return;
 
     const center = trail.bounds
       ? [(trail.bounds[0] + trail.bounds[2]) / 2, (trail.bounds[1] + trail.bounds[3]) / 2] as [number, number]
@@ -49,28 +54,23 @@ export function TrailDetailMap({ trail }: Props) {
       center,
       zoom: 11,
       attributionControl: false,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: "raster",
-            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: "(c) OpenStreetMap contributors",
-          },
-        },
-        layers: [{ id: "osm", type: "raster", source: "osm" }],
-      },
+      style: mapStyle.style,
     });
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
 
     map.on("error", (event) => {
-      if (process.env.NODE_ENV !== "development") return;
-      setMapError(event.error?.message ?? "Map failed to load.");
+      const message = startupMapErrorMessage({
+        hasLoaded: mapLoadedRef.current,
+        nodeEnv: process.env.NODE_ENV,
+        errorMessage: event.error?.message,
+      });
+      if (message) setMapError(message);
     });
 
     map.on("load", () => {
+      mapLoadedRef.current = true;
+      setMapError(null);
       map.addSource("trail-detail-segments", { type: "geojson", data });
       map.addLayer({
         id: "trail-detail-casing",
@@ -111,13 +111,14 @@ export function TrailDetailMap({ trail }: Props) {
       resizeObserver?.disconnect();
       map.remove();
       mapRef.current = null;
+      mapLoadedRef.current = false;
     };
-  }, [data, trail.bounds]);
+  }, [data, mapStyle, trail.bounds]);
 
   return (
     <figure className="trailDetailMap" aria-label={`${trail.name} verified trail segment map`}>
       <div className="mapBadge">NOT FOR NAVIGATION</div>
-      {mapError ? <div className="mapError" role="status">Map failed to load: {mapError}</div> : null}
+      {mapError ? <div className="mapError" role="status">{mapError}</div> : null}
       <div ref={containerRef} className="trailDetailMapCanvas" />
       <figcaption>
         Verified public segment geometry for completion tracking context only. Use official sources for navigation.

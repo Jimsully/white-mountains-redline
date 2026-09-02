@@ -33,6 +33,17 @@ npm run lint
 npm run build
 ```
 
+## Production hosting direction
+The intended first production host is Vercel for the Next.js Redline app at:
+
+`https://trails.jamesscottsullivan.com`
+
+`jamesscottsullivan.com` remains a separate static portfolio deployment. Do not merge the portfolio repository into this app, configure a `/redline` `basePath`, or add reverse-proxy routing for M8D.
+
+Use the normal Vercel Next.js preset unless a concrete future requirement says otherwise: install with `npm ci`, build with `npm run build`, and let Vercel manage the `.next` output/runtime. No `vercel.json` is currently required.
+
+See `docs/PRODUCTION_HOSTING.md` for the production environment contract, Supabase/auth checklist, smoke tests, rollback expectations, and remaining cutover blockers.
+
 ## Repository adapter
 The app loads trail segments through `createTrailRepository()`.
 
@@ -41,22 +52,33 @@ Default behavior uses the demo adapter and requires no Supabase credentials. To 
 ```bash
 TRAIL_REPOSITORY=supabase
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
 The Supabase adapter reads from `public.trail_segment_api`, a read-only projection view created by migration 003 and hardened by migration 013. Browser roles (`anon` and `authenticated`) read verified trail network records through that view only; they do not have direct privileges on `public.trails` or `public.trail_segments`. The view runs as owner-rights with `security_barrier=true`, and its explicit verified plus human-verified predicates are the public publication boundary. Service-controlled/admin workflows retain separate privileges. Clients never parse PostGIS WKB/hex.
 
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` remains a compatibility fallback. Prefer `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for new deployment configuration.
+
+## Map provider
+Browser maps use MapLibre with a provider-neutral `NEXT_PUBLIC_MAP_STYLE_URL`. Production must configure this to a hosted MapLibre style URL; the approved initial provider direction is MapTiler Cloud. Any MapTiler/browser tile key is public client configuration and should be restricted by domain with the provider where available.
+
+Local development may omit `NEXT_PUBLIC_MAP_STYLE_URL`; the app then uses an explicitly development-only OpenStreetMap community raster fallback with attribution. Production never falls back to the community OSM tile service. Missing, malformed, localhost, private-network, HTTP, or embedded-credential production map style config fails visibly in the map UI. Map provider API keys inside public style URLs are browser-visible and should use provider-side domain restrictions where supported.
+
 ## Public URLs and indexing
-`NEXT_PUBLIC_SITE_URL` is the full public app base URL, not just an origin. It may include a path prefix such as `https://jamesscottsullivan.com/redline`. M8C does not choose the final production host or configure reverse-proxy/basePath behavior.
+`NEXT_PUBLIC_SITE_URL` is the full public app base URL, not just an origin. It may include a path prefix for future flexibility, but the approved M8D production value is `https://trails.jamesscottsullivan.com`. M8D does not configure reverse-proxy/basePath behavior.
 
 Public indexing is enabled only when all of these are true:
 
+- server/build-only `PUBLIC_INDEXING_ENABLED=true`
+- if `VERCEL_ENV` exists, `VERCEL_ENV=production`
 - `NODE_ENV=production`
 - `NEXT_PUBLIC_SITE_URL` is a valid HTTPS URL
 - `TRAIL_REPOSITORY=supabase`
 - `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present
 
-Production SEO/indexing configuration is a build-time deployment input. Before running a production `next build`, set the intended production `NEXT_PUBLIC_SITE_URL`, `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and the supported public Supabase publishable/anon key variable. A build without the intended full public app base URL, including any path prefix, is invalid for promotion. Do not promote or reuse production artifacts across different public app base URLs, repository modes, or public indexing configurations. Changing only runtime environment variables after a build must not be relied on to regenerate metadata assumptions, sitemap/robots behavior, or the statically generated trail route inventory; rebuild the application when production configuration changes materially. Service-role credentials are not required for this public SEO build contract.
+Preview, staging, and production before final data/smoke approval must leave `PUBLIC_INDEXING_ENABLED=false` or absent. Enable it only for the approved production deployment after the final hostname is configured, production Supabase is ready, real non-demo published data is loaded, and smoke tests pass.
+
+Production SEO/indexing configuration is a build-time deployment input. Before running a production `next build`, set the intended production `NEXT_PUBLIC_SITE_URL`, `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, the supported public Supabase publishable/anon key variable, `NEXT_PUBLIC_MAP_STYLE_URL`, and the intended public-indexing state. A build without the intended full public app base URL, including any path prefix, is invalid for promotion. Do not promote or reuse production artifacts across Preview, staging, and production when public app base URL, map style URL, repository mode, Supabase config, or public-indexing state differs materially. Changing only runtime environment variables after a build must not be relied on to regenerate metadata assumptions, sitemap/robots behavior, browser map configuration, or the statically generated trail route inventory; rebuild the application when production configuration changes materially. Service-role credentials are not required for this public SEO build contract.
 
 Demo/local browsing remains usable, but robots metadata, `robots.txt`, and `sitemap.xml` err toward noindex behavior unless that deterministic configuration gate passes. The sitemap includes `/`, `/trails`, and verified public trail-detail URLs only in the safe Supabase-backed production configuration. Query-state directory URLs such as `/trails?q=...` and `/trails?region=...` canonicalize to `/trails` and are marked `noindex, follow`.
 
@@ -99,7 +121,7 @@ Open `prototype/index.html` directly in a browser. This prototype uses only HTML
 6. Replace demo mode with verified production reads when enough reviewed data exists.
 7. Add authentication/persistence.
 8. Add GPX matching with human confirmation.
-9. Integrate into `jamesscottsullivan.com` via `/redline` or a subdomain.
+9. Connect the app to Vercel at `trails.jamesscottsullivan.com` and cross-link from the separate portfolio site.
 
 ## Naming
 "White Mountains Redline" is a working independent name. Do not imply AMC sponsorship or endorsement.

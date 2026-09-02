@@ -2,6 +2,8 @@ import { resolveSupabasePublicConfig } from "@/lib/supabase/config";
 
 type PublicSiteEnv = {
   NODE_ENV?: string;
+  PUBLIC_INDEXING_ENABLED?: string;
+  VERCEL_ENV?: string;
   NEXT_PUBLIC_SITE_URL?: string;
   TRAIL_REPOSITORY?: string;
   NEXT_PUBLIC_SUPABASE_URL?: string;
@@ -36,16 +38,21 @@ export function publicUrl(path: string, env: PublicSiteEnv = process.env): strin
 }
 
 export function isPublicIndexingEnabled(env: PublicSiteEnv = process.env): boolean {
+  if (env.PUBLIC_INDEXING_ENABLED !== "true") return false;
+  if (clean(env.VERCEL_ENV) && env.VERCEL_ENV !== "production") return false;
+
   const siteUrl = parsePublicSiteUrl(env.NEXT_PUBLIC_SITE_URL);
   if (!siteUrl || siteUrl.protocol !== "https:") return false;
   if (env.NODE_ENV !== "production") return false;
   if (env.TRAIL_REPOSITORY?.toLowerCase() !== "supabase") return false;
 
-  return resolveSupabasePublicConfig({
+  const supabaseConfig = resolveSupabasePublicConfig({
     NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  }) !== null;
+  });
+
+  return supabaseConfig !== null && isHttpsUrl(supabaseConfig.url);
 }
 
 export function parsePublicSiteUrl(value: string | undefined): URL | null {
@@ -82,4 +89,12 @@ function normalizeRoutePath(path: string) {
 
 function clean(value: string | undefined) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function isHttpsUrl(value: string) {
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
 }

@@ -4,13 +4,19 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 
 ## Migration Chain
 
+- [ ] Explicitly designate the production Supabase project before cutover; do not assume any existing project is production.
 - [ ] Apply migrations 001 through 013 in order to a disposable clean Supabase/PostgreSQL instance.
+- [ ] Verify migrations 001 through 013 are applied in order and in the expected state in the designated production Supabase project before the public app relies on production completion/evidence behavior.
 - [ ] Confirm PostGIS extension is available in `extensions`.
+- [ ] Confirm migration 007 is present because later reviewed GPS evidence and evidence-backed completion flow depend on `completion_evidence` and activity matching persistence.
+- [ ] Confirm migration 009 is present because production account/profile/activity ownership and privacy depend on its RLS/grant hardening.
 - [ ] Confirm migration 010 applies after 007 because `segment_completions.completion_evidence_id` references `completion_evidence`.
 - [ ] Confirm no local-only/demo publication or activity-matching artifacts are loaded into production.
+- [ ] Confirm the hosted app remains noindex until production Supabase is ready, real non-demo published data is loaded, smoke tests pass, and `PUBLIC_INDEXING_ENABLED=true` is intentionally set only on the approved production deployment.
 - [ ] Confirm migration 011 applies after migrations 007, 009, and 010 and adds only M7D-A materialization objects.
 - [ ] Confirm migration 012 applies after migration 011 and adds only the internal date helper plus sanitized list/confirm RPCs, with no table, FK, RLS, or direct table-grant changes.
 - [ ] Confirm migration 013 applies after migration 012 and changes only `trail_segment_api` reloptions plus trail-network relation privileges.
+- [ ] Treat migrations 011-013 as local/disposable-runtime accepted only until this production verification is complete.
 
 ## Public Trail API
 
@@ -18,6 +24,10 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Verify clients receive GeoJSON coordinates and do not need PostGIS WKB/hex.
 - [ ] Confirm `trail_segment_api` has `security_invoker = false` and `security_barrier = true`.
 - [ ] Confirm anon/authenticated can `SELECT` only `trail_segment_api`; direct `trails` and `trail_segments` PostgREST requests are denied.
+- [ ] Confirm anon/authenticated can `SELECT public.trail_segment_api`.
+- [ ] Confirm anon/authenticated cannot directly `SELECT public.trails`.
+- [ ] Confirm anon/authenticated cannot directly `SELECT public.trail_segments`.
+- [ ] Confirm `service_role` retains the administrative/publication access required by service-controlled loaders.
 - [ ] Confirm the runtime defect found on clean migrations 001-012 is closed: anon/authenticated cannot retrieve internal base-table columns such as `verification_notes`, publication fingerprints, timestamps, or raw `geom`.
 
 ## Segment Completion Security
