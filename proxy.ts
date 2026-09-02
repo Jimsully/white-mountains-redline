@@ -1,10 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { shouldBlockAdminRoute } from "@/lib/admin/runtime";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 export async function proxy(request: NextRequest) {
+  if (shouldBlockAdminRoute(request.nextUrl.pathname)) {
+    return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
+  }
+
   const config = getSupabasePublicConfig();
   if (!config) return NextResponse.next({ request });
 

@@ -52,6 +52,14 @@ No `vercel.json` is currently required. The app uses supported Next.js 16 conven
 
 Production SEO/indexing behavior is build-sensitive. Rebuild after changing `NEXT_PUBLIC_SITE_URL`, repository mode, public Supabase config, public map style config, or public-indexing opt-in state.
 
+## Admin Route Contract
+
+`/admin/*` is development-only web tooling for reconciliation, segment construction, activity matching, and publication review. The public production application does not expose a web-admin interface.
+
+Production-like runtimes with `NODE_ENV=production`, including Vercel Production, Vercel Preview, and local `next build` plus `next start`, return the normal not-found experience for `/admin/*` before admin page content renders. Production administration and publication remain controlled server-side workflows, not public web pages.
+
+Robots/noindex are crawler guidance only. They are not the security boundary for admin tooling.
+
 ## Environment Contract
 
 Hosted public application variables:
@@ -166,7 +174,7 @@ Preview/staging callback strategy should be configured separately when stable st
 - Supabase publishable/anon keys may be client-visible.
 - RLS, grants, RPC ownership, and sanitized projections are the data security boundary.
 - Robots/noindex are crawler guidance only, not security.
-- Admin routes must remain protected by actual authorization before production admin use.
+- `/admin/*` web routes are development-only and return not-found in production-like runtimes, including Vercel Preview. Future production admin functionality requires a separate explicit security design.
 - Private artifact paths remain blocked in production.
 - Evidence RPCs remain owner-scoped and sanitized.
 - Completion RPC/action semantics remain unchanged.
