@@ -56,8 +56,8 @@ select
   t.slug as trail_slug,
   t.name as trail_name,
   t.region as trail_region,
-  jsonb_build_object('type', 'LineString', 'coordinates', (st_asgeojson(s.geom)::jsonb -> 'coordinates')) as geom_geojson,
-  (st_asgeojson(s.geom)::jsonb -> 'coordinates') as coordinates
+  jsonb_build_object('type', 'LineString', 'coordinates', (extensions.st_asgeojson(s.geom)::jsonb -> 'coordinates')) as geom_geojson,
+  (extensions.st_asgeojson(s.geom)::jsonb -> 'coordinates') as coordinates
 from public.trail_segments s
 join public.trails t on t.id = s.trail_id
 where s.data_status = 'verified'
@@ -199,7 +199,7 @@ begin
       where s.id = existing_segment_id
         and s.trail_id = target_trail_id
         and s.segment_name = segment_item->>'segment_name'
-        and st_equals(s.geom, st_setsrid(st_geomfromgeojson(jsonb_build_object('type', 'LineString', 'coordinates', segment_item->'coordinates')::text), 4326));
+        and extensions.st_equals(s.geom, extensions.st_setsrid(extensions.st_geomfromgeojson(jsonb_build_object('type', 'LineString', 'coordinates', segment_item->'coordinates')::text), 4326));
       if not found then
         raise exception 'Refusing to overwrite conflicting verified segment identity for %', segment_item->>'segment_key';
       end if;
@@ -223,7 +223,7 @@ begin
         segment_item->>'segment_key',
         segment_item->>'segment_name',
         (segment_item->>'miles')::numeric,
-        st_setsrid(st_geomfromgeojson(jsonb_build_object('type', 'LineString', 'coordinates', segment_item->'coordinates')::text), 4326),
+        extensions.st_setsrid(extensions.st_geomfromgeojson(jsonb_build_object('type', 'LineString', 'coordinates', segment_item->'coordinates')::text), 4326),
         segment_item->>'source_label',
         segment_item->>'source_ref',
         coalesce(array(select jsonb_array_elements_text(segment_item->'source_feature_ids')), array[]::text[]),

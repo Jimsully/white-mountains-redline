@@ -8,6 +8,8 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Apply migrations 001 through 013 in order to a disposable clean Supabase/PostgreSQL instance.
 - [ ] Verify migrations 001 through 013 are applied in order and in the expected state in the designated production Supabase project before the public app relies on production completion/evidence behavior.
 - [ ] Confirm PostGIS extension is available in `extensions`.
+- [ ] Confirm every migration/function reference to hosted Supabase PostGIS uses the `extensions` schema explicitly for extension functions and geometry types; do not rely on `extensions` being present in `search_path`.
+- [ ] Before retrying production migration deployment after the M8D-C Step 3 compatibility failure, verify production migration history: `001_init.sql` and `002_source_trail_features.sql` were applied, `003_api_projection_and_source_load.sql` failed on an unqualified PostGIS function, and migrations 003-013 remain pending.
 - [ ] Confirm migration 007 is present because later reviewed GPS evidence and evidence-backed completion flow depend on `completion_evidence` and activity matching persistence.
 - [ ] Confirm migration 009 is present because production account/profile/activity ownership and privacy depend on its RLS/grant hardening.
 - [ ] Confirm migration 010 applies after 007 because `segment_completions.completion_evidence_id` references `completion_evidence`.

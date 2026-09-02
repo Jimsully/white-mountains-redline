@@ -1,6 +1,6 @@
 # Database Security Contract
 
-The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 013. Migrations 011-013 are implemented locally and have not been applied live.
+The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 013. Production hosted Supabase applied migrations 001 and 002 during the first deployment attempt, then migration 003 failed before completion on an unqualified PostGIS function lookup. Migrations 003-013 remain pending until the compatibility fix is reviewed and production migration history is verified.
 
 ## Core Rules
 
@@ -11,6 +11,7 @@ The migrations remain authoritative. This document summarizes the repository sec
 - Accepted evidence is not completion.
 - Only explicit user confirmation creates `segment_completions`.
 - `service_role` keys are for controlled server-side/admin tooling only and must never be exposed to browser code.
+- Hosted Supabase PostGIS lives in `extensions`; durable SQL must schema-qualify PostGIS functions and geometry types instead of depending on `search_path`.
 
 ## Public Trail Boundary
 
