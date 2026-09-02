@@ -44,6 +44,8 @@ Use the normal Vercel Next.js preset unless a concrete future requirement says o
 
 See `docs/PRODUCTION_HOSTING.md` for the production environment contract, Supabase/auth checklist, smoke tests, rollback expectations, and remaining cutover blockers.
 
+`/admin/*` routes are development-only. Production-like runtimes, including Vercel Preview and local `next build` plus `next start`, return not-found before admin tooling renders. Noindex/robots settings are crawler guidance, not the admin security boundary; production administration and publication stay in approved controlled workflows rather than public web admin pages.
+
 ## Repository adapter
 The app loads trail segments through `createTrailRepository()`.
 
