@@ -80,7 +80,23 @@ The raw source layer intentionally remains broad. Snowmobile, XC, mountain-bike,
 Use map-matching/graph continuity so overlapping trails, road walks, switchbacks, and nearby parallel trails are handled more reliably.
 
 ## SEO / website integration
-Preferred production URL: `jamesscottsullivan.com/redline` if the existing site stack can host/proxy Next.js cleanly. Otherwise use `trails.jamesscottsullivan.com` and cross-link strongly.
+Approved M8D production architecture:
+
+```text
+jamesscottsullivan.com
+  static portfolio
+
+trails.jamesscottsullivan.com
+  Next.js Redline application
+
+Supabase
+  backend/auth/database
+
+External map provider
+  configurable MapLibre basemap style service
+```
+
+The portfolio remains a separate static deployment. Do not merge it into the Redline Next.js app. Do not configure a `/redline` `basePath` or reverse proxy for M8D. Cross-linking belongs to M8D-B.
 
 `NEXT_PUBLIC_SITE_URL` is the full public app base URL and may include a path prefix such as `/redline`. SEO canonicals and metadata route URLs must preserve that prefix; do not use auth URL helpers that collapse to `url.origin` for SEO URL construction.
 
@@ -89,16 +105,20 @@ M8C indexable route foundation:
 - `/trails`
 - `/trails/[trailSlug]`
 
-Filtered directory query URLs remain browseable but canonicalize to `/trails` and are `noindex, follow`. Account, login, auth, and admin routes are discouraged from indexing/crawling. Public indexing is enabled only for production HTTPS Supabase-backed public configuration; demo/runtime fallback must not advertise demo trail-detail URLs in the sitemap.
+Filtered directory query URLs remain browseable but canonicalize to `/trails` and are `noindex, follow`. Account, login, auth, and admin routes are discouraged from indexing/crawling. Public indexing is enabled only for production HTTPS Supabase-backed public configuration with the server/build-only `PUBLIC_INDEXING_ENABLED=true` opt-in. If `VERCEL_ENV` exists, it must be `production`; Vercel Preview and Development deployments remain non-indexable even if the opt-in is copied there by mistake. Demo/runtime fallback must not advertise demo trail-detail URLs in the sitemap.
 
-The production SEO/indexing contract is build-sensitive. Before a production `next build`, the intended deployment values must already be present for `NEXT_PUBLIC_SITE_URL`, `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, and either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Next metadata routes such as sitemap/robots are cached by default, root metadata reads environment/config assumptions, `generateStaticParams()` runs during build, and trail static generation depends on repository/config state available at build time. Changing only runtime environment variables after the artifact is built must not be relied on to regenerate metadata assumptions, sitemap/robots behavior, or the statically generated trail route inventory. Rebuild when production configuration changes materially, and do not promote/reuse artifacts across different public app base URLs, repository modes, or public indexing configurations. This requires only public Supabase configuration, not service-role credentials; robots/noindex remain indexing guidance, while authentication/RLS remain the security boundary.
+The production SEO/indexing contract is build-sensitive. Before a production `next build`, the intended deployment values must already be present for `NEXT_PUBLIC_SITE_URL`, `TRAIL_REPOSITORY=supabase`, `NEXT_PUBLIC_SUPABASE_URL`, either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_MAP_STYLE_URL`, and `PUBLIC_INDEXING_ENABLED`. Next metadata routes such as sitemap/robots are cached by default, root metadata reads environment/config assumptions, `generateStaticParams()` runs during build, browser maps read public build-time config, and trail static generation depends on repository/config state available at build time. Changing only runtime environment variables after the artifact is built must not be relied on to regenerate metadata assumptions, sitemap/robots behavior, browser map configuration, or the statically generated trail route inventory. Rebuild when production configuration changes materially, and do not promote/reuse artifacts across Preview, staging, and production when public app base URL, map style URL, repository mode, Supabase config, or public-indexing state differs materially. This requires only public Supabase configuration, not service-role credentials; robots/noindex remain indexing guidance, while authentication/RLS remain the security boundary.
 
 Structured data is intentionally deferred until verified public trail records are paired with authored content rich enough to avoid semantic overclaiming.
 
 Keep the interactive app useful without login; require login only to save personal progress.
 
-## Basemap warning
-The scaffold uses OpenStreetMap's standard raster tiles for local development only. Before public launch, select a production-appropriate tile/style provider and comply with its terms and attribution requirements.
+## Basemap provider
+Browser maps use MapLibre. The production basemap is provider-neutral application configuration through `NEXT_PUBLIC_MAP_STYLE_URL`, a hosted MapLibre style URL. The approved initial provider direction is MapTiler Cloud, but provider-specific behavior must not leak into unrelated application code.
+
+The browser map credential, if the provider requires one, is public client configuration and should be domain-restricted with the provider where available. No server secret is required for map rendering. Production `NEXT_PUBLIC_MAP_STYLE_URL` must be a valid HTTPS public provider endpoint with no embedded username/password credentials and no localhost, loopback, private-network, link-local, or `.local` host.
+
+Local development may omit `NEXT_PUBLIC_MAP_STYLE_URL`; the shared map style resolver then uses a development-only OpenStreetMap community raster fallback with attribution. Production never silently falls back to OSM community tiles. Missing, malformed, invalid, or unavailable production map style configuration fails visibly in the map UI without crashing surrounding page content.
 
 ## CI and security hardening
 GitHub Actions validates pull requests and pushes to `main` with `npm ci`, `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`. The live USFS importer is excluded from CI so tests do not depend on an external service.

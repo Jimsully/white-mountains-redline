@@ -21,6 +21,7 @@ import type { TrailDetail } from "@/types/trails";
 
 const safeProductionEnv = {
   NODE_ENV: "production",
+  PUBLIC_INDEXING_ENABLED: "true",
   NEXT_PUBLIC_SITE_URL: "https://jamesscottsullivan.com/redline",
   TRAIL_REPOSITORY: "supabase",
   NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
@@ -63,6 +64,22 @@ describe("SEO public site URL contract", () => {
 });
 
 describe("public indexing gate", () => {
+  it("requires an explicit server-side public indexing opt-in", () => {
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, PUBLIC_INDEXING_ENABLED: undefined })).toBe(false);
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, PUBLIC_INDEXING_ENABLED: "false" })).toBe(false);
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, PUBLIC_INDEXING_ENABLED: "TRUE" })).toBe(false);
+  });
+
+  it("allows explicitly opted-in production HTTPS Supabase indexing outside Vercel", () => {
+    expect(isPublicIndexingEnabled(safeProductionEnv)).toBe(true);
+  });
+
+  it("requires Vercel production context when VERCEL_ENV is present", () => {
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, VERCEL_ENV: "preview" })).toBe(false);
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, VERCEL_ENV: "development" })).toBe(false);
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, VERCEL_ENV: "production" })).toBe(true);
+  });
+
   it("does not enable production indexing in demo mode", () => {
     expect(isPublicIndexingEnabled({ ...safeProductionEnv, TRAIL_REPOSITORY: "demo" })).toBe(false);
   });
@@ -70,11 +87,18 @@ describe("public indexing gate", () => {
   it("requires public Supabase configuration but not service-role credentials", () => {
     expect(isPublicIndexingEnabled({ ...safeProductionEnv, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined })).toBe(false);
     expect(isPublicIndexingEnabled({ ...safeProductionEnv, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: undefined, NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key" })).toBe(true);
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, NEXT_PUBLIC_SUPABASE_URL: undefined })).toBe(false);
+    expect(isPublicIndexingEnabled({ ...safeProductionEnv, NEXT_PUBLIC_SUPABASE_URL: "not a url" })).toBe(false);
   });
 
   it("requires production and HTTPS for public indexing", () => {
     expect(isPublicIndexingEnabled({ ...safeProductionEnv, NODE_ENV: "development" })).toBe(false);
     expect(isPublicIndexingEnabled({ ...safeProductionEnv, NEXT_PUBLIC_SITE_URL: "http://example.com/redline" })).toBe(false);
+  });
+
+  it("cleans up environment mutations between tests", () => {
+    expect(process.env.PUBLIC_INDEXING_ENABLED).toBeUndefined();
+    expect(process.env.VERCEL_ENV).toBeUndefined();
   });
 });
 

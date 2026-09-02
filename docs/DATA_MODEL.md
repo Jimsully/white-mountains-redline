@@ -24,7 +24,7 @@ A production segment must retain provenance sufficient to answer:
 - What is the verification state?
 
 ## `trail_segment_api`
-Read-only REST projection for the app repository. It returns application fields plus GeoJSON LineString coordinates derived in SQL. It uses `security_invoker` so RLS on `trails` and `trail_segments` remains authoritative.
+Read-only REST projection for the app repository. It returns application fields plus GeoJSON LineString coordinates derived in SQL. Migration 013 hardens it as an owner-rights, `security_barrier` public projection with explicit verified plus human-verified predicates. Browser roles may select this projection only; they must not directly select `trails` or `trail_segments`.
 
 ## `activities`
 A user's hike/import: date, title, source, optional GPS geometry, total distance, notes, trip-report URL.
