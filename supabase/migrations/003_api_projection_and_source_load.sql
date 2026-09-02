@@ -41,7 +41,7 @@ select
   t.slug as trail_slug,
   t.name as trail_name,
   t.region as trail_region,
-  (st_asgeojson(s.geom)::jsonb -> 'coordinates') as coordinates
+  (extensions.st_asgeojson(s.geom)::jsonb -> 'coordinates') as coordinates
 from public.trail_segments s
 join public.trails t on t.id = s.trail_id;
 
@@ -78,7 +78,7 @@ begin
     p_batch->>'sourceDataset',
     p_batch->>'sourceUrl',
     case when p_batch ? 'envelopeGeoJson'
-      then st_setsrid(st_geomfromgeojson((p_batch->'envelopeGeoJson')::text), 4326)
+      then extensions.st_setsrid(extensions.st_geomfromgeojson((p_batch->'envelopeGeoJson')::text), 4326)
       else null
     end,
     coalesce(array(select jsonb_array_elements_text(p_batch->'requestedFields')), '{}'),
@@ -119,7 +119,7 @@ begin
       v_feature->>'sourceRecordRef',
       coalesce((v_feature->>'importedAt')::timestamptz, now()),
       coalesce(v_feature->'originalProperties', '{}'::jsonb),
-      st_setsrid(st_geomfromgeojson((v_feature->'geometry')::text), 4326),
+      extensions.st_setsrid(extensions.st_geomfromgeojson((v_feature->'geometry')::text), 4326),
       v_feature->>'regionHint',
       coalesce(v_feature->>'reconciliationStatus', 'raw'),
       v_feature->>'trailName',
