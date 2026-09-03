@@ -28,9 +28,12 @@ Protected routes must verify the session server-side. UI code must not trust arb
 ## Routes
 
 - `/login` supports email magic links, Google OAuth, and Apple OAuth.
-- `/auth/callback` exchanges PKCE/code callbacks and accepts only safe same-origin relative return paths.
+- `/auth/confirm` verifies Supabase email `token_hash` links server-side with `verifyOtp`, writes the resulting SSR cookie session through the server Supabase client, and accepts only safe same-origin relative return paths.
+- `/auth/callback` remains the OAuth authorization-code callback for Google and Apple and uses `exchangeCodeForSession`.
 - `/auth/sign-out` signs out and redirects to a safe relative path.
 - `/account` is protected, allows editing `display_name`, `username`, and `is_public`, and lists the owner's sanitized confirmable evidence through the M7D-B RPC boundary.
+
+Email authentication does not use the OAuth callback. The app sends Supabase email Auth a redirect destination at `/auth/confirm?returnTo=<safe-relative-path>`, and the Supabase Confirm signup and Magic Link templates must append `token_hash={{ .TokenHash }}` and `type=email` to `{{ .RedirectTo }}`. On success the route redirects to the sanitized `returnTo`, defaulting to `/account`; on missing/unsupported tokens or verification failure it redirects to `/login?status=auth-error&returnTo=<safe-relative-path>`. The final redirect URL must never contain `token_hash`.
 
 ## Profile Persistence
 
