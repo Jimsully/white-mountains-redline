@@ -12,6 +12,7 @@ const proxySource = fs.readFileSync(path.join(root, "proxy.ts"), "utf8");
 const browserConfigSource = fs.readFileSync(path.join(root, "lib/supabase/config.ts"), "utf8");
 const loginActionsSource = fs.readFileSync(path.join(root, "app/login/actions.ts"), "utf8");
 const callbackSource = fs.readFileSync(path.join(root, "app/auth/callback/route.ts"), "utf8");
+const confirmSource = fs.readFileSync(path.join(root, "app/auth/confirm/route.ts"), "utf8");
 const signOutSource = fs.readFileSync(path.join(root, "app/auth/sign-out/route.ts"), "utf8");
 
 function appSourceFiles() {
@@ -190,8 +191,14 @@ describe("Supabase SSR source contracts", () => {
     expect(callbackSource).toContain("const redirectBase = runtime.siteUrl");
     expect(callbackSource).toContain("loginUrl(redirectBase");
     expect(callbackSource).toContain("new URL(returnTo, redirectBase)");
+    expect(confirmSource).toContain("const runtime = getSupabaseAuthRuntimeConfig()");
+    expect(confirmSource).toContain("const redirectBase = runtime.siteUrl");
+    expect(confirmSource).toContain("loginUrl(redirectBase");
+    expect(confirmSource).toContain("new URL(returnTo, redirectBase)");
     expect(callbackSource).not.toContain("requestUrl.origin");
     expect(callbackSource).not.toMatch(/new URL\(returnTo,\s*request/i);
+    expect(confirmSource).not.toContain("requestUrl.origin");
+    expect(confirmSource).not.toMatch(/new URL\(returnTo,\s*request/i);
   });
 
   it("sign-out returns a sanitized relative Location without request-origin resolution", () => {
@@ -203,11 +210,22 @@ describe("Supabase SSR source contracts", () => {
   });
 
   it("auth routes do not use host-derived origins, expose raw Supabase errors, or cache auth responses", () => {
-    const authRouteSource = `${loginActionsSource}\n${callbackSource}\n${signOutSource}`;
+    const authRouteSource = `${loginActionsSource}\n${callbackSource}\n${confirmSource}\n${signOutSource}`;
     expect(authRouteSource).not.toContain("error.message");
     expect(authRouteSource).not.toMatch(/x-forwarded|next\/headers|\.headers\.get\(["']host/i);
     expect(callbackSource).toContain("Cache-Control");
     expect(callbackSource).toContain("private, no-store");
+    expect(confirmSource).toContain("Cache-Control");
+    expect(confirmSource).toContain("private, no-store");
     expect(signOutSource).toContain("private, no-store");
+  });
+
+  it("keeps email token-hash confirmation separate from OAuth code exchange", () => {
+    expect(loginActionsSource).toContain("/auth/confirm?returnTo=");
+    expect(confirmSource).toContain("verifyOtp");
+    expect(confirmSource).toContain("token_hash");
+    expect(confirmSource).not.toContain("exchangeCodeForSession");
+    expect(callbackSource).toContain("exchangeCodeForSession");
+    expect(callbackSource).not.toContain("verifyOtp");
   });
 });
