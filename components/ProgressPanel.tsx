@@ -47,7 +47,7 @@ export function ProgressPanel({
   const mileageUnit = isDemo ? "demo mi" : "mi";
 
   return (
-    <aside className="panel">
+    <section className="panel" aria-label="Progress and trail controls">
       <PublicNav current="map" compact />
       <div className="eyebrow">WHITE MOUNTAINS</div>
       <h1>Redline</h1>
@@ -58,7 +58,15 @@ export function ProgressPanel({
           <strong>{progress.completedMiles.toFixed(1)}</strong>
           <span>/ {progress.totalMiles.toFixed(1)} {mileageUnit}</span>
         </div>
-        <div className="progressTrack" aria-label="Overall mileage progress">
+        <div
+          className="progressTrack"
+          role="progressbar"
+          aria-label="Overall mileage progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Number(progress.mileagePercent.toFixed(1))}
+          aria-valuetext={`${progress.completedMiles.toFixed(1)} of ${progress.totalMiles.toFixed(1)} ${mileageUnit}`}
+        >
           <div className="progressFill" style={{ width: `${progress.mileagePercent}%` }} />
         </div>
         <div className="progressMeta">
@@ -77,8 +85,8 @@ export function ProgressPanel({
         {isDemo ? <span> Local demo only — progress is not saved.</span> : null}
       </div>
 
-      <div className="sectionHeading">Filters</div>
-      <div className="filters" aria-label="Trail filters">
+      <h2 className="sectionHeading" id="trail-filters-heading">Filters</h2>
+      <div className="filters" role="group" aria-labelledby="trail-filters-heading">
         <label>
           <span>Search</span>
           <input
@@ -105,6 +113,7 @@ export function ProgressPanel({
                 key={completion}
                 type="button"
                 className={filters.completion === completion ? "active" : ""}
+                aria-pressed={filters.completion === completion}
                 onClick={() => onFiltersChange({ ...filters, completion })}
               >
                 {completion === "all" ? "All" : completion === "completed" ? "Done" : "Open"}
@@ -115,19 +124,19 @@ export function ProgressPanel({
         <p className="filterCount">Showing {visibleSegments.length} of {segments.length} segments.</p>
       </div>
 
-      <div className="sectionHeading">Segments</div>
-      <SegmentBrowser segments={visibleSegments} selectedId={selectedId} selectionOrigin={selectionOrigin} onSelect={onSelectSegment} />
+      <h2 className="sectionHeading" id="trail-segments-heading">Segments</h2>
+      <SegmentBrowser segments={visibleSegments} selectedId={selectedId} selectionOrigin={selectionOrigin} onSelect={onSelectSegment} labelledBy="trail-segments-heading" />
 
-      <div className="sectionHeading">Selected segment</div>
+      <h2 className="sectionHeading">Selected segment</h2>
       {selected ? (
-        <div className="trailCard">
+        <div className="trailCard" aria-busy={completionPending || undefined}>
           <div className="statusRow">
-            <span className={selected.completed ? "status complete" : "status open"}>
+            <span className={selected.completed ? "status complete" : "status open"} aria-live="polite">
               {selected.completed ? "Completed" : "Unfinished"}
             </span>
             <span>{selected.miles.toFixed(1)} mi</span>
           </div>
-          <h2>{selected.trailName}</h2>
+          <h3>{selected.trailName}</h3>
           <p>{selected.segmentName}</p>
           <dl>
             <div><dt>Region</dt><dd>{selected.region}</dd></div>
@@ -148,6 +157,6 @@ export function ProgressPanel({
       ) : (
         <p className="muted">No visible segment matches the current filters.</p>
       )}
-    </aside>
+    </section>
   );
 }

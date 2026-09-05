@@ -13,6 +13,7 @@ import type { TrailDetail, TrailSegment } from "@/types/trails";
 
 type Props = {
   trail: TrailDetail;
+  demoOnly: boolean;
 };
 
 function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
@@ -31,12 +32,13 @@ function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
   };
 }
 
-export function TrailDetailMap({ trail }: Props) {
+export function TrailDetailMap({ trail, demoOnly }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const data = useMemo(() => toGeoJSON(trail.segments), [trail.segments]);
   const mapStyle = useMemo(() => getBrowserMapStyle(), []);
   const [mapError, setMapError] = useState<string | null>(mapStyle.ok ? null : mapStyle.message);
+  const [mapReady, setMapReady] = useState(false);
   const mapLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export function TrailDetailMap({ trail }: Props) {
       center,
       zoom: 11,
       attributionControl: false,
+      cooperativeGestures: window.matchMedia("(pointer: coarse)").matches,
       style: mapStyle.style,
     });
 
@@ -71,6 +74,7 @@ export function TrailDetailMap({ trail }: Props) {
     map.on("load", () => {
       mapLoadedRef.current = true;
       setMapError(null);
+      setMapReady(true);
       map.addSource("trail-detail-segments", { type: "geojson", data });
       map.addLayer({
         id: "trail-detail-casing",
@@ -112,16 +116,25 @@ export function TrailDetailMap({ trail }: Props) {
       map.remove();
       mapRef.current = null;
       mapLoadedRef.current = false;
+      setMapReady(false);
     };
   }, [data, mapStyle, trail.bounds]);
 
   return (
-    <figure className="trailDetailMap" aria-label={`${trail.name} verified trail segment map`}>
-      <div className="mapBadge">NOT FOR NAVIGATION</div>
-      {mapError ? <div className="mapError" role="status">{mapError}</div> : null}
-      <div ref={containerRef} className="trailDetailMapCanvas" />
-      <figcaption>
-        Verified public segment geometry for completion tracking context only. Use official sources for navigation.
+    <figure className="trailDetailMap">
+      <div
+        className="trailDetailMapViewport"
+        role="region"
+        aria-label={`${trail.name} ${demoOnly ? "demo" : "verified trail segment"} map`}
+        aria-describedby="trail-detail-map-caption"
+      >
+        <div className="mapBadge">{demoOnly ? "DEMO · NOT FOR NAVIGATION" : "NOT FOR NAVIGATION"}</div>
+        {!mapReady && !mapError ? <div className="mapLoading" role="status">Loading map…</div> : null}
+        {mapError ? <div className="mapError" role="status">{mapError}</div> : null}
+        <div ref={containerRef} className="trailDetailMapCanvas" />
+      </div>
+      <figcaption id="trail-detail-map-caption">
+        {demoOnly ? "Simplified demo geometry" : "Verified public segment geometry"} for completion tracking context only. Use official sources for navigation.
       </figcaption>
     </figure>
   );

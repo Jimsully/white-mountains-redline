@@ -25,7 +25,7 @@ export function TrailDirectoryControls({ filters, regions }: Props) {
   }
 
   return (
-    <div className="trailDirectoryFilters" aria-label="Trail directory filters">
+    <div className="trailDirectoryFilters" role="search" aria-label="Trail directory filters">
       <label>
         <span>Search trail names</span>
         <input

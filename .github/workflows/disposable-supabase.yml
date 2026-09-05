@@ -1,0 +1,77 @@
+name: Disposable Supabase acceptance
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/disposable-supabase.yml"
+      - "supabase/migrations/**"
+      - "tests/supabase-runtime-acceptance.mjs"
+      - "tests/supabase-runtime-schema-acceptance.sql"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migrations-and-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v2
+        with:
+          version: 2.116.0
+          github-token: ${{ github.token }}
+
+      - name: Create isolated Supabase project
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_dir="$RUNNER_TEMP/white-mountains-redline-supabase"
+          mkdir -p "$runtime_dir"
+          cd "$runtime_dir"
+          supabase init
+          mkdir -p supabase/migrations
+          cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
+          supabase start -x studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor
+
+      - name: Run two clean migration and runtime acceptance passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          runtime_dir="$RUNNER_TEMP/white-mountains-redline-supabase"
+          cd "$runtime_dir"
+
+          for pass in 1 2; do
+            if [ "$pass" -eq 2 ]; then
+              supabase db reset --no-seed
+            fi
+
+            supabase status -o env \
+              --override-name api.url=SUPABASE_URL \
+              --override-name auth.anon_key=SUPABASE_ANON_KEY \
+              --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+              > runtime.env
+            set -a
+            source runtime.env
+            set +a
+
+            psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+              -v ON_ERROR_STOP=1 \
+              -f "$GITHUB_WORKSPACE/tests/supabase-runtime-schema-acceptance.sql"
+            node "$GITHUB_WORKSPACE/tests/supabase-runtime-acceptance.mjs"
+          done
+
+      - name: Stop disposable Supabase project
+        if: always()
+        shell: bash
+        run: |
+          runtime_dir="$RUNNER_TEMP/white-mountains-redline-supabase"
+          if [ -d "$runtime_dir" ]; then
+            cd "$runtime_dir"
+            supabase stop --no-backup || true
+          fi

@@ -1,6 +1,6 @@
-# Production Hosting Readiness
+# Production Hosting and Operations
 
-M8D-A prepares this repository for a later human-operated Vercel and production Supabase cutover. It does not deploy, configure DNS, create a Vercel project, connect production Supabase, configure auth redirects, or apply migrations.
+M8D-A through M8D-C are complete. The human-operated Vercel, Supabase, DNS, authentication, data, portfolio-cross-linking, and production smoke acceptance finished after the original readiness plan was written. The application is live at `https://trails.jamesscottsullivan.com`, and production authentication has passed with a brand-new email address. This document retains the deployment contract and checklists for future releases.
 
 ## Approved Architecture
 
@@ -115,9 +115,9 @@ Preview, staging, and production before final data/smoke approval must leave `PU
 
 Do not treat robots/noindex as security, and do not use indexing eligibility as a substitute for the production data gate.
 
-## Supabase Predeploy Gate
+## Supabase Deployment Gate
 
-Before production cutover, explicitly designate the production Supabase project and verify migrations `001` through `013` are applied in order and in the expected state.
+The original cutover verified migrations `001` through `013` in production. For future releases, verify the designated production project and apply each new reviewed migration in order; migration 014 is the next pending change.
 
 Pay special attention to:
 
@@ -128,7 +128,7 @@ Pay special attention to:
 - `012_evidence_confirmation.sql`: adds sanitized owner-only evidence list and explicit confirmation RPCs.
 - `013_public_projection_hardening.sql`: makes `trail_segment_api` the only direct trail-network relation available to browser roles.
 
-Migrations 011-013 have passed disposable local/runtime acceptance only. Do not describe them as production deployed until verified in the production Supabase project.
+Migrations 011-013 passed disposable and production runtime acceptance. Migration 014 must receive the same reviewed production verification after this repository closeout.
 
 Migration 013 smoke acceptance must verify:
 
@@ -286,16 +286,8 @@ Bad published data: stop indexing/public promotion and correct publication data 
 
 Do not write destructive rollback SQL as part of routine first response.
 
-## Cutover Blockers
+## Accepted Cutover State
 
-Public cutover remains blocked until:
+The former M8D-C blockers are closed: Vercel and the production domain are live, production Supabase is designated with migrations 001-013 applied, public-only runtime configuration is in use, authentication and new-user email confirmation passed, verified non-demo data is served, the separate portfolio cross-link is live, and human production smoke acceptance succeeded. These facts supersede the pre-cutover wording while the detailed checks above remain the reusable release runbook.
 
-- a Vercel project is created and configured by a human operator
-- `trails.jamesscottsullivan.com` DNS/domain setup is completed
-- production Supabase is explicitly designated
-- migrations 001-013 are verified/applied in production order
-- production Supabase Auth Site URL and callbacks are configured
-- production MapTiler/provider style URL and browser-safe key are configured with provider-side domain restrictions where available
-- verified public non-demo trail data is loaded through the approved workflow
-- production smoke tests pass
-- `PUBLIC_INDEXING_ENABLED=true` is intentionally set only after the data gate and smoke tests pass
+Migration 014, added during M8E, is a new repository hardening change that minimizes the public trail projection. It was intentionally not applied to production in the repository-only closeout session and must follow the normal reviewed migration/deployment process.

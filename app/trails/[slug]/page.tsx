@@ -51,6 +51,11 @@ export default async function TrailPage({ params }: TrailPageProps) {
     <main className="trailDetailShell">
       <div className="trailDetailNavWrap">
         <PublicNav current="trails" />
+        {runtime.mode === "demo" ? (
+          <div className="notice" role="status">
+            Demo trail data only. The simplified geometry is not a complete challenge inventory and is not for navigation.
+          </div>
+        ) : null}
       </div>
       <nav className="trailDetailBreadcrumb" aria-label="Breadcrumb">
         <Link href="/">Interactive redline map</Link>
@@ -64,7 +69,9 @@ export default async function TrailPage({ params }: TrailPageProps) {
         <p className="eyebrow">{trail.region}</p>
         <h1>{trail.name}</h1>
         <p className="trailDetailLede">
-          A public trail page assembled from verified constituent completion segments.
+          {runtime.mode === "demo"
+            ? "A demonstration trail page assembled from simplified sample segments."
+            : "A public trail page assembled from verified constituent completion segments."}
         </p>
       </header>
 
@@ -74,11 +81,11 @@ export default async function TrailPage({ params }: TrailPageProps) {
             <h2 id="trail-facts-heading">Trail Facts</h2>
             <dl>
               <div>
-                <dt>Total verified mileage</dt>
+                <dt>{runtime.mode === "demo" ? "Total demo mileage" : "Total verified mileage"}</dt>
                 <dd>{trail.totalMiles.toFixed(1)} mi</dd>
               </div>
               <div>
-                <dt>Verified segments</dt>
+                <dt>{runtime.mode === "demo" ? "Demo segments" : "Verified segments"}</dt>
                 <dd>{trail.segmentCount}</dd>
               </div>
               <div>
@@ -139,12 +146,13 @@ export default async function TrailPage({ params }: TrailPageProps) {
         </div>
 
         <aside className="trailDetailAside" aria-label="Trail map and publication note">
-          <TrailDetailMap trail={trail} />
+          <TrailDetailMap trail={trail} demoOnly={runtime.mode === "demo"} />
           <section className="publicationNote">
             <h2>Publication Note</h2>
             <p>
-              This page uses verified public trail-segment records for redline progress context. It is not a navigation
-              product and does not include private GPS evidence or internal review notes.
+              {runtime.mode === "demo"
+                ? "This local demonstration uses simplified, non-navigational geometry and does not represent the complete challenge inventory."
+                : "This page uses verified public trail-segment records for redline progress context. It is not a navigation product and does not include private GPS evidence or internal review notes."}
             </p>
           </section>
         </aside>

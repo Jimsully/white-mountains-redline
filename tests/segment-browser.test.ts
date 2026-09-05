@@ -57,7 +57,8 @@ describe("M7C selection source contracts", () => {
     expect(redlineAppSource.match(/useState\(initialSegments\[0\]\?\.id\)/g)?.length).toBe(1);
     expect(redlineAppSource).toContain("const visibleSegments = useMemo(() => filterTrailSegments(segments, filters)");
     expect(redlineAppSource).toContain("visibleSegments={visibleSegments}");
-    expect(redlineAppSource).toContain("<RedlineMap segments={visibleSegments}");
+    expect(redlineAppSource).toContain("segments={visibleSegments}");
+    expect(redlineAppSource).toContain('demoOnly={completionMode === "demo"}');
   });
 
   it("list selection requests map focus while map selection only updates map origin", () => {

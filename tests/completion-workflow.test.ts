@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { CompletionRepository } from "@/lib/completions/completion-repository";
 import { applySegmentCompletions } from "@/lib/completions/composition";
 import { COMPLETION_SAVE_FAILED } from "@/lib/completions/errors";
-import { createTrailRepositoryRuntime } from "@/lib/repositories";
+import { createTrailRepositoryRuntime, TRAIL_REPOSITORY_CONFIGURATION_ERROR } from "@/lib/repositories";
 import { isValidProductionSegmentId, mapSegmentCompletionRow, normalizeCompletedOn, normalizeCompletionNotes, validateManualCompletionInput } from "@/types/completion";
 import type { SegmentCompletionRow } from "@/types/completion";
 import type { TrailSegment } from "@/types/trails";
@@ -155,28 +155,22 @@ describe("CompletionRepository", () => {
   });
 });
 
-function restoreEnv(previous: Record<string, string | undefined>) {
-  for (const [key, value] of Object.entries(previous)) {
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
-}
-
 describe("completion runtime and action source contracts", () => {
   it("uses explicit repository runtime modes without duplicating private completion reads into TrailRepository", () => {
-    const previous = { TRAIL_REPOSITORY: process.env.TRAIL_REPOSITORY, NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY };
-    delete process.env.TRAIL_REPOSITORY;
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-    expect(createTrailRepositoryRuntime().mode).toBe("demo");
-    process.env.TRAIL_REPOSITORY = "supabase";
-    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project.supabase.co";
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable";
-    expect(createTrailRepositoryRuntime().mode).toBe("supabase");
-    restoreEnv(previous);
-    expect(process.env.TRAIL_REPOSITORY).toBe(previous.TRAIL_REPOSITORY);
-    expect(process.env.NEXT_PUBLIC_SUPABASE_URL).toBe(previous.NEXT_PUBLIC_SUPABASE_URL);
-    expect(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBe(previous.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+    expect(createTrailRepositoryRuntime({}).mode).toBe("demo");
+    expect(createTrailRepositoryRuntime({
+      TRAIL_REPOSITORY: "supabase",
+      NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable",
+    }).mode).toBe("supabase");
+  });
+
+  it("fails closed instead of serving demo data in hosted production", () => {
+    expect(() => createTrailRepositoryRuntime({ VERCEL_ENV: "production" })).toThrow(TRAIL_REPOSITORY_CONFIGURATION_ERROR);
+    expect(() => createTrailRepositoryRuntime({ VERCEL_ENV: "production", TRAIL_REPOSITORY: "demo" })).toThrow(TRAIL_REPOSITORY_CONFIGURATION_ERROR);
+    expect(() => createTrailRepositoryRuntime({ VERCEL_ENV: "production", TRAIL_REPOSITORY: "supabase" })).toThrow(TRAIL_REPOSITORY_CONFIGURATION_ERROR);
+    expect(() => createTrailRepositoryRuntime({ TRAIL_REPOSITORY: "supabase" })).toThrow(TRAIL_REPOSITORY_CONFIGURATION_ERROR);
+    expect(createTrailRepositoryRuntime({ VERCEL_ENV: "preview", TRAIL_REPOSITORY: "demo" }).mode).toBe("demo");
   });
 
   it("serializes selected-segment completion mutations in the existing UI", () => {

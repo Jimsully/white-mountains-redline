@@ -1,6 +1,6 @@
 # Database Security Contract
 
-The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 013. Production hosted Supabase applied migrations 001 and 002 during the first deployment attempt, then migration 003 failed before completion on an unqualified PostGIS function lookup. Migrations 003-013 remain pending until the compatibility fix is reviewed and production migration history is verified.
+The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 014. The historical migration-003 hosted PostGIS lookup failure was corrected; migrations 001-013 are deployed and accepted in production. Migration 014 is an additive projection-minimization hardening step pending normal reviewed deployment.
 
 ## Core Rules
 
@@ -29,6 +29,8 @@ Clean local Supabase bootstrap/runtime inspection of migrations 001-012 proved t
 Migration 013 is the corrective boundary. It changes `trail_segment_api` to owner-rights with `security_invoker = false` and `security_barrier = true`, revokes all privileges on `trails`, `trail_segments`, and `trail_segment_api` from `PUBLIC`, `anon`, and `authenticated`, then grants only `SELECT` on `trail_segment_api` to `anon` and `authenticated`. It does not revoke `service_role`, alter default privileges, change table RLS policies, remove RLS, or change the view SELECT definition.
 
 After migration 013, `trail_segment_api` is the only trail-network relation available to anon/authenticated application roles. Base `trails` and `trail_segments` are administrative/publication tables, not direct browser/API relations. Because the view owner is expected to be `postgres`, public filtering relies on the view's explicit verified-only predicates rather than base-table RLS during view execution.
+
+Migration 014 retains that owner-rights/security-barrier/grant model and minimizes the view to the exact fields used by public rendering. Full provenance, source references and feature IDs, review timestamps, verification notes, and publication fingerprints are not browser-visible. The application repository also requests an explicit field allowlist and rejects any row outside the verified/human-verified gate as defense in depth.
 
 ## Profiles
 
@@ -108,7 +110,7 @@ The immutable validated M7D-A `provenance.activityDate` snapshot is the sole sou
 
 Under the standard linked Supabase CLI `db push` path, migrations use the default `postgres` database role, so a clean migration 012 application is expected to create all three functions with `postgres` ownership. That role also created/owns the repository tables in a clean migration chain and therefore supplies the required table reads, completion insert, and row-lock authority. Custom `--db-url` roles, self-hosted ownership, or pre-existing function signatures can differ, so deployment must verify `pg_proc.proowner` and effective privileges rather than assuming this behavior.
 
-M7D-C application and UI integration use only these two authenticated RPCs. Normal application code does not query `completion_evidence`, use `service_role`, or derive completion fields from browser input. The browser receives only the sanitized list projection and sends the opaque evidence UUID required for confirmation. Application authentication is defense in depth; database `auth.uid()` remains authoritative. Migrations 011/012 and database-backed M7D-C acceptance remain unapplied/unverified live.
+M7D-C application and UI integration use only these two authenticated RPCs. Normal application code does not query `completion_evidence`, use `service_role`, or derive completion fields from browser input. The browser receives only the sanitized list projection and sends the opaque evidence UUID required for confirmation. Application authentication is defense in depth; database `auth.uid()` remains authoritative. Migrations 011/012 and database-backed M7D-C production acceptance are complete.
 
 ## Service-Controlled RPCs
 
@@ -121,4 +123,4 @@ These are controlled server-side/admin tooling. The M7D-A loader is invoker-righ
 
 ## Predeployment Requirement
 
-Static migration-contract tests are helpful, but they do not prove live PostgreSQL behavior. Before deployment, run actual PostgreSQL/Supabase tests for RLS policies, grants, column-level insert privileges, `SECURITY DEFINER` execution, and view/base-table privilege behavior, including the migration 013 projection hardening runtime gates.
+Static migration-contract tests are helpful, but they do not prove live PostgreSQL behavior. Before deployment, run actual PostgreSQL/Supabase tests for RLS policies, grants, column-level insert privileges, `SECURITY DEFINER` execution, view/base-table privilege behavior, and migration 014's exact public response columns.

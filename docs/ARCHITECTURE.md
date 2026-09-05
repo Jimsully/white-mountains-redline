@@ -17,11 +17,11 @@
 This keeps the app buildable and browsable before a Supabase project exists, while preserving a stable contract for production trail reads.
 
 ## Supabase API contract
-Migration 003 creates `public.trail_segment_api`, the REST projection used by `SupabaseTrailRepository`. Migration 013 hardens that projection as the public browser/auth client boundary.
+Migration 003 creates `public.trail_segment_api`, the REST projection used by `SupabaseTrailRepository`. Migration 013 hardens that projection as the public browser/auth client boundary, and migration 014 minimizes its browser-visible columns.
 
 The view:
 - joins `trail_segments` to `trails`
-- exposes explicit verification/provenance fields
+- exposes an explicit public rendering allowlist and no internal provenance/source-review fields
 - exposes LineString coordinates with `ST_AsGeoJSON(...)->'coordinates'`
 - is read-only from the app's perspective
 - runs as owner-rights with `security_invoker = false`
@@ -96,7 +96,7 @@ External map provider
   configurable MapLibre basemap style service
 ```
 
-The portfolio remains a separate static deployment. Do not merge it into the Redline Next.js app. Do not configure a `/redline` `basePath` or reverse proxy for M8D. Cross-linking belongs to M8D-B.
+The portfolio remains a separate static deployment and now cross-links to the live Redline subdomain. Do not merge it into the Redline Next.js app or configure a `/redline` `basePath` or reverse proxy.
 
 `NEXT_PUBLIC_SITE_URL` is the full public app base URL and may include a path prefix such as `/redline`. SEO canonicals and metadata route URLs must preserve that prefix; do not use auth URL helpers that collapse to `url.origin` for SEO URL construction.
 
@@ -126,6 +126,8 @@ GitHub Actions validates pull requests and pushes to `main` with `npm ci`, `npm 
 Migration 004 restricts `public.load_source_trail_feature_batch(jsonb, jsonb)` execution to `service_role` and keeps it as an invoker-rights function, not `SECURITY DEFINER`. The service-role key is only for controlled server-side/admin import tooling and must never be exposed to browser code or committed.
 
 Migration 013 makes the public projection permission model explicit: browser roles (`anon` and `authenticated`) receive only `SELECT` on `public.trail_segment_api`, while direct application-role privileges on `public.trails` and `public.trail_segments` are revoked. The service-role key is reserved for controlled server-side/admin workflows.
+
+Migration 014 keeps the same owner-rights/security-barrier boundary but removes internal provenance, source/review metadata, and publication details from the public view. The Supabase repository requests the exact same allowlist rather than `select=*` and rejects rows outside the verified/human-verified gate as defense in depth.
 
 The shared `app/admin/layout.tsx` boundary allows `/admin/*` only when `NODE_ENV=development`. In production-like runtimes, including Vercel Preview and local `next start`, it calls the normal App Router not-found path before reconciliation, topology, activity matching, or publication tooling renders.
 
@@ -196,4 +198,4 @@ M6 does not create `segment_completions`, mark segments completed from auth stat
 
 M7D-A materializes reviewed GPS evidence into private owned activities and accepted `completion_evidence` without creating completions. Migration 012 implements M7D-B locally as two authenticated `SECURITY DEFINER` RPCs: a sanitized owner-only confirmable-evidence projection and an explicit confirmation operation that derives a `gpx_match` completion internally. Both use an empty search path, owner identity from `auth.uid()`, and the verified/human-reviewed segment-plus-parent publication gate. Confirmation takes only an opaque evidence UUID; it never accepts caller-controlled completion fields.
 
-The evidence-backed completion date comes only from the immutable M7D-A `provenance.activityDate` snapshot. Raw evidence and matching internals remain unavailable to browser roles. M7D-C adds a separate authenticated SSR `CompletionEvidenceRepository` that wraps only the two M7D-B RPCs, plus an account-page client boundary for explicit confirmation. The repository accepts no user ID, and the action accepts only an opaque evidence UUID; database `auth.uid()` remains authoritative. Migrations 011/012 have not been applied live, and database-backed acceptance remains outstanding.
+The evidence-backed completion date comes only from the immutable M7D-A `provenance.activityDate` snapshot. Raw evidence and matching internals remain unavailable to browser roles. M7D-C adds a separate authenticated SSR `CompletionEvidenceRepository` that wraps only the two M7D-B RPCs, plus an account-page client boundary for explicit confirmation. The repository accepts no user ID, and the action accepts only an opaque evidence UUID; database `auth.uid()` remains authoritative. Migrations 011/012 are deployed and the database-backed production account/evidence boundary has passed acceptance.

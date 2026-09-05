@@ -22,19 +22,19 @@ Added the verified publication gate between topology-approved segment constructi
 Added authenticated user accounts, durable user profile state, and private ownership boundaries for account and activity persistence.
 
 ## M7 User completion workflow + activity evidence promotion - COMPLETE
-Completed authenticated manual completion security, persisted user completion state, synchronized map/list segment selection, controlled reviewed-evidence materialization, sanitized authenticated evidence reads, explicit owner confirmation, account evidence-confirmation UI, Migration 013 public trail projection hardening, disposable local Supabase runtime acceptance, service-role publication regression acceptance, reviewed-evidence runtime acceptance, and GitHub CI coverage. GPS evidence, strong matches, and accepted evidence remain distinct from completion until explicit user confirmation. Migrations 011-013 have passed local/disposable acceptance but have not been deployed to production; production predeploy and deployment checks remain outstanding.
+Completed authenticated manual completion security, persisted user completion state, synchronized map/list segment selection, controlled reviewed-evidence materialization, sanitized authenticated evidence reads, explicit owner confirmation, account evidence-confirmation UI, Migration 013 public trail projection hardening, disposable local Supabase runtime acceptance, service-role publication regression acceptance, reviewed-evidence runtime acceptance, production migration/application acceptance, and GitHub CI coverage. GPS evidence, strong matches, and accepted evidence remain distinct from completion until explicit user confirmation.
 
-## M8 Public trail pages / website / SEO
+## M8 Public trail pages / website / SEO - COMPLETE
 M8A - real public trail detail foundation - COMPLETE.
 M8B - public trail directory/search/navigation - COMPLETE. Authenticated directory progress filters remain later polish; the directory currently stays public-only.
 M8C - SEO/indexing foundation - COMPLETE.
-M8D - production hosting and site integration:
+M8D - production hosting and site integration - COMPLETE:
 
-- M8D-A - Redline hosting readiness - implemented/current pending acceptance.
-- M8D-B - portfolio integration/cross-linking - pending.
-- M8D-C - production deployment/cutover - pending, human-operated.
+- M8D-A - Redline hosting readiness - COMPLETE.
+- M8D-B - portfolio integration/cross-linking - COMPLETE.
+- M8D-C - production deployment/cutover - COMPLETE following human-operated production acceptance. The live site is `https://trails.jamesscottsullivan.com`; production authentication passed with a brand-new email address.
 
-M8E - responsive/accessibility/design polish.
+M8E - responsive/accessibility/design polish - COMPLETE. Closeout corrected production/demo labeling, mobile viewport and scroll behavior, touch targets, contrast/focus treatment, progress/filter semantics, map loading/fallback affordances, public projection minimization, and hosted-production repository fail-closed behavior. Minor post-deploy viewport polish is tracked separately from the milestone.
 
 ## M9 Full challenge inventory + edition/versioning
 Introduce the complete privately verified challenge inventory, public-safe challenge editions, segment lineage, and historical versioning.

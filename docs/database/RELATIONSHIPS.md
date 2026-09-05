@@ -1,6 +1,6 @@
 # Database Relationships
 
-This document summarizes current foreign keys and deletion behavior from migrations 001 through 013. Migrations remain authoritative. Migration 012 adds functions only and migration 013 changes only view reloptions/grants, so neither migration changes these relationships.
+This document summarizes current foreign keys and deletion behavior from migrations 001 through 014. Migrations remain authoritative. Migrations 012-014 change functions/view definitions/grants only and do not change these relationships.
 
 ## Auth Ownership
 
@@ -121,4 +121,4 @@ After evidence is accepted, semantic fields are immutable. Existing nullable `ac
 
 ## API Projection Relationship
 
-`trail_segment_api` joins `trail_segments` to `trails` and filters to the verified/human-reviewed publication gate. It returns GeoJSON-derived coordinates for the application repository. Migration 013 makes it the only anon/authenticated trail-network relation; direct base-table access to `trails` and `trail_segments` is revoked from application roles while `service_role` remains administrative.
+`trail_segment_api` joins `trail_segments` to `trails` and filters to the verified/human-reviewed publication gate. It returns only minimal public rendering fields plus GeoJSON-derived coordinates. Migration 013 makes it the only anon/authenticated trail-network relation; migration 014 removes internal provenance/source/review columns while direct base-table access remains revoked and `service_role` remains administrative.
