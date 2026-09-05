@@ -9,9 +9,10 @@ type Props = {
   selectedId?: string;
   selectionOrigin: SelectionOrigin;
   onSelect: (id: string, origin: SelectionOrigin) => void;
+  labelledBy?: string;
 };
 
-export function SegmentBrowser({ segments, selectedId, selectionOrigin, onSelect }: Props) {
+export function SegmentBrowser({ segments, selectedId, selectionOrigin, onSelect, labelledBy }: Props) {
   const rowRefs = useRef(new Map<string, HTMLButtonElement>());
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export function SegmentBrowser({ segments, selectedId, selectionOrigin, onSelect
   }, [selectedId, selectionOrigin]);
 
   return (
-    <div className="segmentBrowser" aria-label="Trail segments">
+    <div className="segmentBrowser" role="group" aria-label={labelledBy ? undefined : "Trail segments"} aria-labelledby={labelledBy}>
       {segments.length ? segments.map((segment) => {
         const selected = segment.id === selectedId;
         return (

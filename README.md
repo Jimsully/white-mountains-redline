@@ -1,6 +1,6 @@
 # White Mountains Redline
 
-Independent White Mountains trail-completion tracker intended to live alongside `jamesscottsullivan.com`.
+Independent White Mountains trail-completion tracker live alongside `jamesscottsullivan.com` at `https://trails.jamesscottsullivan.com`.
 
 ## What is included now
 - Next.js 16 App Router scaffold.
@@ -33,8 +33,8 @@ npm run lint
 npm run build
 ```
 
-## Production hosting direction
-The intended first production host is Vercel for the Next.js Redline app at:
+## Production hosting
+The production Next.js Redline app is live on Vercel at:
 
 `https://trails.jamesscottsullivan.com`
 
@@ -42,7 +42,7 @@ The intended first production host is Vercel for the Next.js Redline app at:
 
 Use the normal Vercel Next.js preset unless a concrete future requirement says otherwise: install with `npm ci`, build with `npm run build`, and let Vercel manage the `.next` output/runtime. No `vercel.json` is currently required.
 
-See `docs/PRODUCTION_HOSTING.md` for the production environment contract, Supabase/auth checklist, smoke tests, rollback expectations, and remaining cutover blockers.
+See `docs/PRODUCTION_HOSTING.md` for the accepted production environment contract, Supabase/auth checklist, smoke tests, rollback expectations, and future deployment safeguards.
 
 `/admin/*` routes are development-only. Production-like runtimes, including Vercel Preview and local `next build` plus `next start`, return not-found before admin tooling renders. Noindex/robots settings are crawler guidance, not the admin security boundary; production administration and publication stay in approved controlled workflows rather than public web admin pages.
 
@@ -57,7 +57,7 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-The Supabase adapter reads from `public.trail_segment_api`, a read-only projection view created by migration 003 and hardened by migration 013. Browser roles (`anon` and `authenticated`) read verified trail network records through that view only; they do not have direct privileges on `public.trails` or `public.trail_segments`. The view runs as owner-rights with `security_barrier=true`, and its explicit verified plus human-verified predicates are the public publication boundary. Service-controlled/admin workflows retain separate privileges. Clients never parse PostGIS WKB/hex.
+The Supabase adapter reads from `public.trail_segment_api`, a read-only projection created by migration 003, privilege-hardened by migration 013, and field-minimized by migration 014. Browser roles (`anon` and `authenticated`) read verified trail network records through that view only; they do not have direct privileges on `public.trails` or `public.trail_segments`. The view runs as owner-rights with `security_barrier=true`, exposes only the public rendering allowlist, and enforces verified plus human-verified predicates. Internal provenance remains on protected base tables for controlled workflows. Clients never parse PostGIS WKB/hex.
 
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` remains a compatibility fallback. Prefer `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for new deployment configuration.
 

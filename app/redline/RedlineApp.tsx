@@ -101,7 +101,13 @@ export function RedlineApp({ initialSegments, completionMode }: Props) {
         completionError={completionError}
         completionPending={pendingSegmentId !== null}
       />
-      <RedlineMap segments={visibleSegments} selectedId={selectedId} focusRequest={focusRequest} onSelect={selectSegment} />
+      <RedlineMap
+        segments={visibleSegments}
+        selectedId={selectedId}
+        focusRequest={focusRequest}
+        onSelect={selectSegment}
+        demoOnly={completionMode === "demo"}
+      />
     </main>
   );
 }

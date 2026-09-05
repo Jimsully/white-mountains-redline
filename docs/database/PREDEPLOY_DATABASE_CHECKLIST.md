@@ -2,14 +2,16 @@
 
 Use this before applying migrations or exposing a Supabase project publicly. The migrations remain authoritative.
 
+Current status: the original production cutover and migrations 001-013 were accepted. Migration 014 passed two clean disposable acceptance passes and is applied to the documented linked Supabase project. That project currently has no trail rows while the live Vercel deployment serves old demo content, so application rollout remains blocked pending human production project/data/environment reconciliation.
+
 ## Migration Chain
 
 - [ ] Explicitly designate the production Supabase project before cutover; do not assume any existing project is production.
-- [ ] Apply migrations 001 through 013 in order to a disposable clean Supabase/PostgreSQL instance.
-- [ ] Verify migrations 001 through 013 are applied in order and in the expected state in the designated production Supabase project before the public app relies on production completion/evidence behavior.
+- [ ] Apply migrations 001 through 014 in order to a disposable clean Supabase/PostgreSQL instance.
+- [ ] Verify migrations 001 through 013 remain applied in the designated production project and migration 014 is the only expected pending repository migration before deployment.
 - [ ] Confirm PostGIS extension is available in `extensions`.
 - [ ] Confirm every migration/function reference to hosted Supabase PostGIS uses the `extensions` schema explicitly for extension functions and geometry types; do not rely on `extensions` being present in `search_path`.
-- [ ] Before retrying production migration deployment after the M8D-C Step 3 compatibility failure, verify production migration history: `001_init.sql` and `002_source_trail_features.sql` were applied, `003_api_projection_and_source_load.sql` failed on an unqualified PostGIS function, and migrations 003-013 remain pending.
+- [x] Historical recovery completed: the first M8D-C attempt applied 001-002 and stopped at migration 003; the PostGIS compatibility fix was reviewed and migrations 003-013 were later applied successfully.
 - [ ] Confirm migration 007 is present because later reviewed GPS evidence and evidence-backed completion flow depend on `completion_evidence` and activity matching persistence.
 - [ ] Confirm migration 009 is present because production account/profile/activity ownership and privacy depend on its RLS/grant hardening.
 - [ ] Confirm migration 010 applies after 007 because `segment_completions.completion_evidence_id` references `completion_evidence`.
@@ -18,7 +20,10 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Confirm migration 011 applies after migrations 007, 009, and 010 and adds only M7D-A materialization objects.
 - [ ] Confirm migration 012 applies after migration 011 and adds only the internal date helper plus sanitized list/confirm RPCs, with no table, FK, RLS, or direct table-grant changes.
 - [ ] Confirm migration 013 applies after migration 012 and changes only `trail_segment_api` reloptions plus trail-network relation privileges.
-- [ ] Treat migrations 011-013 as local/disposable-runtime accepted only until this production verification is complete.
+- [ ] Confirm migration 014 applies after migration 013 and changes only the public projection definition/grants, retaining verified-only predicates and owner-rights/security-barrier behavior.
+- [x] Migrations 011-013 passed production verification and application/account acceptance.
+- [x] Apply migration 014 through the normal reviewed process and verify its exact minimal column allowlist in two disposable runtime passes.
+- [ ] Reconcile the intended production Supabase project/data with Vercel Production, then repeat the direct production projection and application acceptance checks.
 
 ## Public Trail API
 
@@ -31,6 +36,7 @@ Use this before applying migrations or exposing a Supabase project publicly. The
 - [ ] Confirm anon/authenticated cannot directly `SELECT public.trail_segments`.
 - [ ] Confirm `service_role` retains the administrative/publication access required by service-controlled loaders.
 - [ ] Confirm the runtime defect found on clean migrations 001-012 is closed: anon/authenticated cannot retrieve internal base-table columns such as `verification_notes`, publication fingerprints, timestamps, or raw `geom`.
+- [ ] After migration 014, confirm anon/authenticated also cannot retrieve `provenance`, `source_ref`, `source_feature_ids`, `reviewed_at`, or `geometry_manually_modified` from `trail_segment_api`.
 
 ## Segment Completion Security
 

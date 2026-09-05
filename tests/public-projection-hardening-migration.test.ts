@@ -60,9 +60,8 @@ function grantsPrivilegeToRole(statement: string, relation: string, privileges: 
 }
 
 describe("migration 013 public projection hardening contract", () => {
-  it("exists as the only post-012 migration and alters the existing projection view", () => {
+  it("preserves migration 013 as the owner-rights/base-table privilege hardening step", () => {
     expect(fs.existsSync(migration013Path)).toBe(true);
-    expect(fs.readdirSync(migrationsDir).filter((file) => /^\d+_.*\.sql$/.test(file)).sort().at(-1)).toBe("013_public_projection_hardening.sql");
     expect(normalized013).toContain("alter view public.trail_segment_api set ( security_invoker = false, security_barrier = true )");
     expect(migration013).not.toMatch(/drop\s+view|create(?:\s+or\s+replace)?\s+view/i);
   });

@@ -98,12 +98,10 @@ describe("adapter trail identity contracts", () => {
     const segment = mapSupabaseSegmentRow({
       id: "42",
       slug: "segment-key-slug",
-      segment_key: "segment-key-slug",
       segment_name: "Segment",
       miles: 1,
       data_status: "verified",
       verification_status: "human_verified",
-      source_feature_ids: [],
       trail_id: "7",
       trail_slug: "public-trail-slug",
       trail_name: "Public Trail",

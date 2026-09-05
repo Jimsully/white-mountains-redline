@@ -38,6 +38,7 @@ const expectedPostgisUsageByMigration: Record<string, string[]> = {
     "extensions.st_isvalid",
     "extensions.st_setsrid",
   ],
+  "014_public_projection_minimization.sql": ["extensions.st_asgeojson"],
 };
 
 function readMigrations() {

@@ -17,6 +17,7 @@ type Props = {
   selectedId?: string;
   focusRequest: number;
   onSelect: (id: string, origin: SelectionOrigin) => void;
+  demoOnly: boolean;
 };
 
 function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
@@ -36,7 +37,7 @@ function toGeoJSON(segments: TrailSegment[]): FeatureCollection<LineString> {
   };
 }
 
-export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Props) {
+export function RedlineMap({ segments, selectedId, focusRequest, onSelect, demoOnly }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const data = useMemo(() => toGeoJSON(segments), [segments]);
@@ -57,6 +58,7 @@ export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Pro
       center: [-71.65, 44.14],
       zoom: 10.4,
       attributionControl: false,
+      cooperativeGestures: window.matchMedia("(pointer: coarse)").matches,
       style: mapStyle.style,
     });
 
@@ -148,17 +150,21 @@ export function RedlineMap({ segments, selectedId, focusRequest, onSelect }: Pro
     if (!bounds) return;
     const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     map.fitBounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]], {
-      padding: window.innerWidth <= 800 ? 32 : 64,
+      padding: window.innerWidth <= 900 ? 32 : 64,
       maxZoom: 14.5,
       duration: cameraDurationForReducedMotion(reducedMotion),
     });
   }, [focusRequest, mapReady, segments, selectedId]);
 
   return (
-    <div className="mapShell">
-      <div className="mapBadge">PROTOTYPE · NOT FOR NAVIGATION</div>
+    <section className="mapShell" aria-label={demoOnly ? "Demo trail map" : "Interactive trail map"} aria-describedby="redline-map-description">
+      <p id="redline-map-description" className="srOnly">
+        Trail selection and completion information is also available in the keyboard-accessible segment list.
+      </p>
+      <div className="mapBadge">{demoOnly ? "DEMO · NOT FOR NAVIGATION" : "NOT FOR NAVIGATION"}</div>
+      {!mapReady && !mapError ? <div className="mapLoading" role="status">Loading map…</div> : null}
       {mapError ? <div className="mapError" role="status">{mapError}</div> : null}
       <div ref={containerRef} className="map" />
-    </div>
+    </section>
   );
 }

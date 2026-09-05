@@ -61,10 +61,10 @@ Stable activity/evidence identities make exact reruns reusable. Existing rows ar
 
 Migration 012 implements the local database authorization boundary used by M7D-C. `list_confirmable_completion_evidence()` exposes only an owner-scoped sanitized projection; raw evidence, provenance, geometry, matching keys, metrics, and service metadata remain private. `confirm_completion_evidence(uuid)` requires explicit authenticated confirmation and derives every protected completion field internally.
 
-Evidence-backed `completed_on` comes only from the immutable M7D-A `provenance.activityDate` snapshot after strict validation. It never falls back to mutable `activities.activity_date`, `accepted_at`, or the current date. A successful confirmation creates `SegmentCompletion(method = gpx_match)`; accepted evidence alone still creates no completion. Migration 012 has not been applied live.
+Evidence-backed `completed_on` comes only from the immutable M7D-A `provenance.activityDate` snapshot after strict validation. It never falls back to mutable `activities.activity_date`, `accepted_at`, or the current date. A successful confirmation creates `SegmentCompletion(method = gpx_match)`; accepted evidence alone still creates no completion. Migration 012 is deployed.
 
 ## M7D-C Application Integration
 
 M7D-C implements an authenticated `/account` evidence section and server action. The SSR repository uses only the two M7D-B RPCs, validates their fixed response shapes, and preserves PostgreSQL bigint segment IDs as strings. The form submits only the opaque evidence UUID; it does not submit user, segment, activity, date, method, confidence, or notes.
 
-Confirmation success refreshes account evidence and authenticated progress. Manual mark/unmark also refreshes `/account`, so unmarking can make eligible evidence confirmable again without a client-side consumed flag. Migrations 011/012 have not been applied live, and automated application tests are not a substitute for database-backed confirmation acceptance.
+Confirmation success refreshes account evidence and authenticated progress. Manual mark/unmark also refreshes `/account`, so unmarking can make eligible evidence confirmable again without a client-side consumed flag. Migrations 011/012 and the production database-backed account flow have passed acceptance; automated application tests remain regression coverage rather than a replacement for future deployment smoke tests.

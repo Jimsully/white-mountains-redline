@@ -5,23 +5,30 @@ import type { DataStatus, TrailRegion, TrailSegment, VerificationStatus } from "
 type TrailSegmentApiRow = {
   id: string;
   slug: string;
-  segment_key: string;
   segment_name: string;
   miles: number | string;
   data_status: DataStatus;
   verification_status: VerificationStatus;
-  source_label?: string | null;
-  source_ref?: string | null;
-  source_feature_ids?: string[] | null;
-  geometry_manually_modified?: boolean | null;
-  reviewed_at?: string | null;
-  provenance?: Record<string, unknown> | null;
   trail_id: string;
   trail_slug: string;
   trail_name: string;
   trail_region: TrailRegion;
   coordinates?: unknown;
 };
+
+export const PUBLIC_TRAIL_SEGMENT_FIELDS = [
+  "id",
+  "slug",
+  "segment_name",
+  "miles",
+  "data_status",
+  "verification_status",
+  "trail_id",
+  "trail_slug",
+  "trail_name",
+  "trail_region",
+  "coordinates",
+].join(",");
 
 export class SupabaseTrailRepository implements TrailRepository {
   constructor(
@@ -31,7 +38,7 @@ export class SupabaseTrailRepository implements TrailRepository {
 
   async listSegments() {
     const params = new URLSearchParams({
-      select: "*",
+      select: PUBLIC_TRAIL_SEGMENT_FIELDS,
       order: "segment_name.asc",
     });
     const rows = await this.fetchRows(`/rest/v1/trail_segment_api?${params.toString()}`);
@@ -40,7 +47,7 @@ export class SupabaseTrailRepository implements TrailRepository {
 
   async getSegmentBySlug(slug: string) {
     const params = new URLSearchParams({
-      select: "*",
+      select: PUBLIC_TRAIL_SEGMENT_FIELDS,
       slug: `eq.${slug}`,
       limit: "1",
     });
@@ -54,7 +61,7 @@ export class SupabaseTrailRepository implements TrailRepository {
 
   async getTrailBySlug(slug: string) {
     const params = new URLSearchParams({
-      select: "*",
+      select: PUBLIC_TRAIL_SEGMENT_FIELDS,
       trail_slug: `eq.${slug}`,
       order: "segment_name.asc",
     });
@@ -79,16 +86,13 @@ export class SupabaseTrailRepository implements TrailRepository {
     return response.json() as Promise<TrailSegmentApiRow[]>;
   }
 }
-
 export function mapSupabaseSegmentRow(row?: TrailSegmentApiRow): TrailSegment | undefined {
   if (!row) return undefined;
+  if (row.data_status !== "verified" || row.verification_status !== "human_verified") return undefined;
   const coordinates = normalizeCoordinates(row.coordinates);
   if (!coordinates) return undefined;
-
-  const provenance = row.provenance ?? {};
-  const sourceFeatureIds = Array.isArray(row.source_feature_ids)
-    ? row.source_feature_ids.filter((id): id is string => typeof id === "string")
-    : [];
+  const miles = Number(row.miles);
+  if (!Number.isFinite(miles) || miles < 0) return undefined;
 
   return {
     id: row.id,
@@ -98,20 +102,16 @@ export function mapSupabaseSegmentRow(row?: TrailSegmentApiRow): TrailSegment | 
     trailName: row.trail_name,
     segmentName: row.segment_name,
     region: row.trail_region,
-    miles: Number(row.miles),
+    miles,
     completed: false,
     coordinates,
     dataStatus: row.data_status,
     verificationStatus: row.verification_status,
     provenance: {
-      provider: sourceProviderFrom(provenance.provider),
-      dataset: stringFrom(provenance.dataset) ?? row.source_label ?? "Supabase trail_segment_api",
-      sourceFeatureIds,
-      sourceUrl: stringFrom(provenance.sourceUrl) ?? row.source_ref ?? undefined,
-      importedAt: stringFrom(provenance.importedAt),
-      manuallyModified: row.geometry_manually_modified ?? Boolean(provenance.manuallyModified),
-      reviewedAt: row.reviewed_at ?? stringFrom(provenance.reviewedAt),
-      notes: stringFrom(provenance.notes),
+      provider: "other",
+      dataset: "Verified public trail segment projection",
+      sourceFeatureIds: [],
+      manuallyModified: false,
     },
   };
 }
@@ -125,14 +125,4 @@ function normalizeCoordinates(value: unknown): [number, number][] | undefined {
     && typeof coordinate[1] === "number");
 
   return coordinates.length === value.length ? coordinates : undefined;
-}
-
-function sourceProviderFrom(value: unknown) {
-  return value === "USFS" || value === "OSM" || value === "manual" || value === "demo" || value === "other"
-    ? value
-    : "other";
-}
-
-function stringFrom(value: unknown) {
-  return typeof value === "string" && value.trim() ? value : undefined;
 }

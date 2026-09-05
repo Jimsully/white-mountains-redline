@@ -78,7 +78,7 @@ Completion evidence and activity-matching review tables remain service/admin con
 
 The M7D-C account section shows trail name, segment name, region, activity date, optional activity title, and a friendly source label. Raw evidence, provenance, geometry, activity IDs, matching keys, metrics, and service metadata do not enter UI state. Confirmation is explicit; accepted evidence alone does not change progress. The database derives `completed_on` solely from the immutable M7D-A `provenance.activityDate` snapshot.
 
-Manual mark/unmark and evidence confirmation revalidate both the authenticated progress route and `/account`, allowing evidence to disappear after completion and naturally return after unmarking. Migrations 011/012 remain unapplied live, so database-backed acceptance is still required.
+Manual mark/unmark and evidence confirmation revalidate both the authenticated progress route and `/account`, allowing evidence to disappear after completion and naturally return after unmarking. Migrations 011/012 are deployed, and production authentication/account acceptance has succeeded, including the new-user email confirmation flow with an address that had never used the site.
 
 ## Product Boundary
 
