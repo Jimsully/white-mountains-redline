@@ -36,6 +36,8 @@ M8D - production hosting and site integration - COMPLETE:
 
 M8E - responsive/accessibility/design polish - COMPLETE. Closeout corrected production/demo labeling, mobile viewport and scroll behavior, touch targets, contrast/focus treatment, progress/filter semantics, map loading/fallback affordances, public projection minimization, and hosted-production repository fail-closed behavior. Minor post-deploy viewport polish is tracked separately from the milestone.
 
+M8E remains complete at the repository milestone level. Its September 5, 2026 production rollout acceptance is not complete: migration 014 is applied to the documented linked Supabase project, but that project has no trail data and the live Vercel production deployment still serves the previous demo repository. Do not merge/deploy the fail-closed M8E application until the production Supabase identity/data and Vercel Production environment are reconciled.
+
 ## M9 Full challenge inventory + edition/versioning
 Introduce the complete privately verified challenge inventory, public-safe challenge editions, segment lineage, and historical versioning.
 

@@ -2,7 +2,7 @@
 
 Use this before applying migrations or exposing a Supabase project publicly. The migrations remain authoritative.
 
-Current status: the original production cutover and migrations 001-013 are complete. Unchecked items below remain a reusable verification list for future deployments. Migration 014 is the next pending additive hardening migration.
+Current status: the original production cutover and migrations 001-013 were accepted. Migration 014 passed two clean disposable acceptance passes and is applied to the documented linked Supabase project. That project currently has no trail rows while the live Vercel deployment serves old demo content, so application rollout remains blocked pending human production project/data/environment reconciliation.
 
 ## Migration Chain
 
@@ -22,7 +22,8 @@ Current status: the original production cutover and migrations 001-013 are compl
 - [ ] Confirm migration 013 applies after migration 012 and changes only `trail_segment_api` reloptions plus trail-network relation privileges.
 - [ ] Confirm migration 014 applies after migration 013 and changes only the public projection definition/grants, retaining verified-only predicates and owner-rights/security-barrier behavior.
 - [x] Migrations 011-013 passed production verification and application/account acceptance.
-- [ ] Apply migration 014 through the normal reviewed process and verify the public projection exposes only its documented minimal column allowlist.
+- [x] Apply migration 014 through the normal reviewed process and verify its exact minimal column allowlist in two disposable runtime passes.
+- [ ] Reconcile the intended production Supabase project/data with Vercel Production, then repeat the direct production projection and application acceptance checks.
 
 ## Public Trail API
 

@@ -1,6 +1,6 @@
 # Current Database Schema
 
-This document summarizes the repository schema produced by migrations 001 through 014. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions. Production hosted Supabase recovered from the historical migration-003 PostGIS lookup failure and migrations 001-013 are deployed and accepted. Migration 014 is the next additive public-projection minimization migration and has not been applied by this repository-only M8E closeout session.
+This document summarizes the repository schema produced by migrations 001 through 014. The migrations in `supabase/migrations/` remain authoritative; this file is a durable orientation aid for future sessions. Production hosted Supabase recovered from the historical migration-003 PostGIS lookup failure. The documented linked project is aligned through migration 014 after two clean disposable acceptance passes, but it currently contains no trail rows and the live Vercel application still serves the old demo repository. Application rollout acceptance is pending production project/data/environment reconciliation.
 
 Hosted Supabase PostGIS is installed in `extensions` for this project. Migrations and durable SQL functions must schema-qualify PostGIS functions and types with `extensions`, rather than depending on migration or runtime `search_path`.
 

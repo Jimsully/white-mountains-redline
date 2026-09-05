@@ -4,7 +4,7 @@ Read this at the start of future database work. Migrations in `supabase/migratio
 
 ## Current State
 
-Migrations 001-014 define the repository database contract. The first production deployment attempt stopped after migrations 001-002 because hosted Supabase PostGIS was installed in `extensions`; the compatibility fix was reviewed, migrations 003-013 were subsequently applied, and production database/application acceptance passed. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C implements the authenticated SSR repository, server action, and account evidence UI. Migration 013 is the deployed public projection privilege boundary. Migration 014 is a new additive public-column minimization migration pending normal reviewed production deployment.
+Migrations 001-014 define the repository database contract. The first production deployment attempt stopped after migrations 001-002 because hosted Supabase PostGIS was installed in `extensions`; the compatibility fix was reviewed and migrations 003-013 were subsequently applied. M7A introduced authenticated manual completion security. M7B composes private completions per request, and M7C map/list selection adds no database behavior. M7D-A materializes reviewed private evidence without completions. M7D-B provides sanitized owner reads plus explicit owner confirmation. M7D-C implements the authenticated SSR repository, server action, and account evidence UI. Migration 013 is the public projection privilege boundary. Migration 014 passed two clean disposable acceptance passes and is applied to the documented linked project, but that project has no trail rows while the live Vercel deployment serves the old demo repository. End-to-end M8E production acceptance is pending human project/data/environment reconciliation.
 
 ## Hard Product Rules
 
@@ -91,4 +91,7 @@ and M7D-A reviewed-evidence materialization.
 
 That disposable acceptance was followed by successful human-operated production
 migration, account, and application acceptance for migrations 001-013. Migration
-014 is intentionally unapplied by the M8E repository session.
+014 later passed two clean disposable runs and was applied to the documented linked
+project. Direct checks then found no trail rows in that project and old demo content
+on the live Vercel site, so do not claim migration-014 application acceptance until
+the production project/data/environment mismatch is resolved and retested.

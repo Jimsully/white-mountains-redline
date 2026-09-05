@@ -6,6 +6,10 @@ M8E responsive/accessibility/design polish is complete at the repository level. 
 
 The live M8D-C deployment had already passed human public/auth/account acceptance, including a new-user flow with an email address that had never used the site. This closeout did not deploy or mutate production.
 
+## Production acceptance follow-up
+
+On September 5, 2026, migration 014 passed two clean disposable Supabase bootstraps and live PostgREST/Auth/RLS acceptance passes, then was applied to the repository's documented linked production Supabase project. The remote migration chain is aligned through 014. Direct follow-up found that linked project contains no `trails` or `trail_segments`, while `https://trails.jamesscottsullivan.com` still serves the pre-M8E demo repository and displays `DEMO`/`PROTOTYPE` sample content. The M8E application deployment and production acceptance are therefore blocked pending human reconciliation of the intended production Supabase project/data and Vercel Production environment. M9A schema work did not begin.
+
 ## Audit coverage
 
 The review covered the home map/progress experience, segment map/list synchronization, public directory and detail routes, login/account/profile surfaces, manual completion, evidence confirmation, primary navigation, map loading/failure behavior, directory/account empty and error states, production admin guards, repository selection, and the public database projection.

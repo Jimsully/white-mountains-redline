@@ -128,7 +128,7 @@ Pay special attention to:
 - `012_evidence_confirmation.sql`: adds sanitized owner-only evidence list and explicit confirmation RPCs.
 - `013_public_projection_hardening.sql`: makes `trail_segment_api` the only direct trail-network relation available to browser roles.
 
-Migrations 011-013 passed disposable and production runtime acceptance. Migration 014 must receive the same reviewed production verification after this repository closeout.
+Migrations 011-013 passed disposable and production runtime acceptance. Migration 014 passed two clean disposable runtime acceptance passes and was applied to the documented linked production Supabase project on September 5, 2026. The remote chain is aligned through 014, but application rollout acceptance is blocked because that project has no trail rows while the live Vercel deployment still serves the old demo repository.
 
 Migration 013 smoke acceptance must verify:
 
@@ -290,4 +290,4 @@ Do not write destructive rollback SQL as part of routine first response.
 
 The former M8D-C blockers are closed: Vercel and the production domain are live, production Supabase is designated with migrations 001-013 applied, public-only runtime configuration is in use, authentication and new-user email confirmation passed, verified non-demo data is served, the separate portfolio cross-link is live, and human production smoke acceptance succeeded. These facts supersede the pre-cutover wording while the detailed checks above remain the reusable release runbook.
 
-Migration 014, added during M8E, is a new repository hardening change that minimizes the public trail projection. It was intentionally not applied to production in the repository-only closeout session and must follow the normal reviewed migration/deployment process.
+Migration 014, added during M8E, minimizes the public trail projection. It is applied to the documented linked Supabase project. Before the M8E application is merged/deployed, a human operator must confirm whether that empty linked project is the intended production data project or correct the linkage, ensure the selected production project contains only reviewed non-demo verified publication data, and verify Vercel Production uses that project's public URL/key with `TRAIL_REPOSITORY=supabase`. The live production site currently displays the old demo repository, so M8E production acceptance is not complete.

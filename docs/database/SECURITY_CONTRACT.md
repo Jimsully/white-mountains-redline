@@ -1,6 +1,6 @@
 # Database Security Contract
 
-The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 014. The historical migration-003 hosted PostGIS lookup failure was corrected; migrations 001-013 are deployed and accepted in production. Migration 014 is an additive projection-minimization hardening step pending normal reviewed deployment.
+The migrations remain authoritative. This document summarizes the repository security boundary after migrations 001 through 014. The historical migration-003 hosted PostGIS lookup failure was corrected. Migration 014 passed two clean disposable runtime acceptance passes and is applied to the documented linked Supabase project. The live Vercel application still serves the old demo repository and the linked project has no trail rows, so end-to-end M8E production acceptance is pending human project/data/environment reconciliation.
 
 ## Core Rules
 
